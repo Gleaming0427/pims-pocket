@@ -1,0 +1,648 @@
+[debug] [2026-05-05T20:48:34.090Z] ----------------------------------------------------------------------
+[debug] [2026-05-05T20:48:34.092Z] Command:       /opt/homebrew/Cellar/node/23.5.0/bin/node /Users/julienchapron/.nvm/versions/node/v20.19.4/bin/firebase emulators:start --project wallet-jr
+[debug] [2026-05-05T20:48:34.092Z] CLI Version:   15.12.0
+[debug] [2026-05-05T20:48:34.092Z] Platform:      darwin
+[debug] [2026-05-05T20:48:34.092Z] Node Version:  v23.5.0
+[debug] [2026-05-05T20:48:34.092Z] Time:          Tue May 05 2026 22:48:34 GMT+0200 (Central European Summer Time)
+[debug] [2026-05-05T20:48:34.093Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-05T20:48:34.491Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-05T20:48:34.491Z] > authorizing via signed-in user (ladistillerhie@gmail.com)
+[debug] [2026-05-05T20:48:34.583Z] openjdk version "21.0.11" 2026-04-21
+
+[debug] [2026-05-05T20:48:34.583Z] OpenJDK Runtime Environment Homebrew (build 21.0.11)
+OpenJDK 64-Bit Server VM Homebrew (build 21.0.11, mixed mode, sharing)
+
+[debug] [2026-05-05T20:48:34.589Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, functions, firestore, extensions {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore, extensions"}}
+[debug] [2026-05-05T20:48:34.590Z] Checked if tokens are valid: false, expires at: 1777978905109
+[debug] [2026-05-05T20:48:34.590Z] Checked if tokens are valid: false, expires at: 1777978905109
+[debug] [2026-05-05T20:48:34.590Z] > refreshing access token with scopes: []
+[debug] [2026-05-05T20:48:34.591Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-05-05T20:48:34.591Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-05T20:48:34.721Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-05-05T20:48:34.721Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-05T20:48:34.732Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/wallet-jr [none]
+[debug] [2026-05-05T20:48:35.480Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/wallet-jr 200
+[debug] [2026-05-05T20:48:35.480Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/wallet-jr {"projectNumber":"809314964450","projectId":"wallet-jr","lifecycleState":"ACTIVE","name":"wallet-jr","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-04-19T09:45:19.328Z"}
+[debug] [2026-05-05T20:48:36.015Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-05T20:48:36.015Z] assigned listening specs for emulators {"user":{"ui":[{"address":"0.0.0.0","family":"IPv4","port":4000}],"auth":[{"address":"0.0.0.0","family":"IPv4","port":9099}],"firestore":[{"address":"0.0.0.0","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"0.0.0.0","family":"IPv4","port":8082}],"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-05-05T20:48:36.019Z] Found emulator hub locator: {"version":"15.12.0","origins":["http://127.0.0.1:4400","http://[::1]:4400"],"pid":88142}
+[debug] [2026-05-05T20:48:36.019Z] Write emulator hub locator at /var/folders/y4/26pkv68x47x3f5j6stzybzf00000gn/T/hub-wallet-jr.json
+[debug] [2026-05-05T20:48:36.022Z] [Extensions] Started Extensions emulator, this is a noop.
+[debug] [2026-05-05T20:48:36.343Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-05T20:48:36.343Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-05T20:48:36.343Z] late-assigned ports for functions and eventarc emulators {"user":{"ui":[{"address":"0.0.0.0","family":"IPv4","port":4000}],"auth":[{"address":"0.0.0.0","family":"IPv4","port":9099}],"firestore":[{"address":"0.0.0.0","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"0.0.0.0","family":"IPv4","port":8082}],"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"0.0.0.0","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] ⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, hosting, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, hosting, pubsub, storage, dataconnect"}}
+[debug] [2026-05-05T20:48:36.350Z] defaultcredentials: writing to file /Users/julienchapron/.config/firebase/ladistillerhie_gmail_com_application_default_credentials.json
+[debug] [2026-05-05T20:48:36.352Z] Setting GAC to /Users/julienchapron/.config/firebase/ladistillerhie_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to /Users/julienchapron/.config/firebase/ladistillerhie_gmail_com_application_default_credentials.json"}}
+[debug] [2026-05-05T20:48:36.352Z] Checked if tokens are valid: true, expires at: 1778017713721
+[debug] [2026-05-05T20:48:36.352Z] Checked if tokens are valid: true, expires at: 1778017713721
+[debug] [2026-05-05T20:48:36.352Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/wallet-jr/adminSdkConfig [none]
+[debug] [2026-05-05T20:48:36.696Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/wallet-jr/adminSdkConfig 200
+[debug] [2026-05-05T20:48:36.696Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/wallet-jr/adminSdkConfig {"projectId":"wallet-jr","storageBucket":"wallet-jr.firebasestorage.app"}
+[debug] [2026-05-05T20:48:36.709Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2026-05-05T20:48:36.709Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2026-05-05T20:48:36.709Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/Users/julienchapron/.cache/firebase/emulators/cloud-firestore-emulator-v1.20.4.jar","--host","0.0.0.0","--port",8080,"--websocket_port",8082,"--project_id","wallet-jr","--rules","/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5001"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/Users/julienchapron/.cache/firebase/emulators/cloud-firestore-emulator-v1.20.4.jar\",\"--host\",\"0.0.0.0\",\"--port\",8080,\"--websocket_port\",8082,\"--project_id\",\"wallet-jr\",\"--rules\",\"/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5001\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to firestore-debug.log"}}
+[debug] [2026-05-05T20:48:37.405Z] May 05, 2026 10:48:37 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://0.0.0.0:8082
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:48:37 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://0.0.0.0:8082\n"}}
+[debug] [2026-05-05T20:48:37.419Z] 
+API endpoint: http:// {"metadata":{"emulator":{"name":"firestore"},"message":"\nAPI endpoint: http://"}}
+[debug] [2026-05-05T20:48:37.419Z] 0.0.0.0:8080
+Database Edition: STANDARD
+Database Mode: CLOUD_FIRESTORE
+
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=0.0.0.0:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=0.0.0.0:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"0.0.0.0:8080\nDatabase Edition: STANDARD\nDatabase Mode: CLOUD_FIRESTORE\n\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=0.0.0.0:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=0.0.0.0:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 8082. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 8082."}}
+[debug] [2026-05-05T20:48:40.195Z] [Extensions] Connecting Extensions emulator, this is a noop.
+[info] i  functions: Watching "/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions\" for Cloud Functions..."}}
+[debug] [2026-05-05T20:48:40.197Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-05-05T20:48:40.779Z] > [functions] package.json contents: {
+  "name": "pocketkids-functions",
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^4.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "private": true
+}
+[debug] [2026-05-05T20:48:40.780Z] Building nodejs source
+[debug] [2026-05-05T20:48:40.780Z] Failed to find version of module node: reached end of search path /Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions/node_modules
+[warn] ⚠  functions: Your requested "node" version "20" doesn't match your global version "23". Using node@23 from host. 
+[info] i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly 
+[debug] [2026-05-05T20:48:40.781Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-05-05T20:48:40.785Z] Found firebase-functions binary at '/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8125
+
+[debug] [2026-05-05T20:48:41.131Z] Got response from /__/functions.yaml {"endpoints":{"createChildAccount":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"callableTrigger":{},"entryPoint":"createChildAccount"},"getChildLoginToken":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"callableTrigger":{},"entryPoint":"getChildLoginToken"},"processRecurringAllowances":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"scheduleTrigger":{"schedule":"0 8 * * *","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetryDuration":null,"maxBackoffDuration":null,"minBackoffDuration":null},"timeZone":"Europe/Paris"},"labels":{},"entryPoint":"processRecurringAllowances"},"checkBadges":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.create","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/transactions/{transactionId}"},"retry":false},"labels":{},"entryPoint":"checkBadges"},"onMissionUpdate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.update","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/missions/{missionId}"},"retry":false},"labels":{},"entryPoint":"onMissionUpdate"},"onMoneyRequestUpdate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.update","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/moneyRequests/{requestId}"},"retry":false},"labels":{},"entryPoint":"onMoneyRequestUpdate"},"onGoalUpdate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.update","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/goals/{goalId}"},"retry":false},"labels":{},"entryPoint":"onGoalUpdate"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}]}
+[info] ✔  functions: Loaded functions definitions from source: createChildAccount, getChildLoginToken, processRecurringAllowances, checkBadges, onMissionUpdate, onMoneyRequestUpdate, onGoalUpdate. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: createChildAccount, getChildLoginToken, processRecurringAllowances, checkBadges, onMissionUpdate, onMoneyRequestUpdate, onGoalUpdate."}}
+[info] ✔  functions[europe-west1-createChildAccount]: http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/createChildAccount). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/createChildAccount)."}}
+[info] ✔  functions[europe-west1-getChildLoginToken]: http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/getChildLoginToken). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/getChildLoginToken)."}}
+[info] i  functions[europe-west1-processRecurringAllowances]: function ignored because the pubsub emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the pubsub emulator does not exist or is not running."}}
+[debug] [2026-05-05T20:48:45.158Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.create\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/transactions/{transactionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.159Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 [none]
+[debug] [2026-05-05T20:48:45.159Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.create\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/transactions/{transactionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.166Z] May 05, 2026 10:48:45 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:48:45 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:48:45.265Z] May 05, 2026 10:48:45 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:48:45 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:48:45.811Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 200
+[debug] [2026-05-05T20:48:45.811Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 {}
+[info] ✔  functions[europe-west1-checkBadges]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:48:45.811Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/missions/{missionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.811Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 [none]
+[debug] [2026-05-05T20:48:45.811Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/missions/{missionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.816Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 200
+[debug] [2026-05-05T20:48:45.816Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 {}
+[info] ✔  functions[europe-west1-onMissionUpdate]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:48:45.816Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/moneyRequests/{requestId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.816Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 [none]
+[debug] [2026-05-05T20:48:45.816Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/moneyRequests/{requestId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.819Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 200
+[debug] [2026-05-05T20:48:45.819Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 {}
+[info] ✔  functions[europe-west1-onMoneyRequestUpdate]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:48:45.819Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/goals/{goalId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.819Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 [none]
+[debug] [2026-05-05T20:48:45.819Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/goals/{goalId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:48:45.822Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 200
+[debug] [2026-05-05T20:48:45.822Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 {}
+[info] ✔  functions[europe-west1-onGoalUpdate]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:48:45.828Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬──────────────┬──────────────────────────────────┐
+│ Emulator       │ Host:Port    │ View in Emulator UI              │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Authentication │ 0.0.0.0:9099 │ http://127.0.0.1:4000/auth       │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Functions      │ 0.0.0.0:5001 │ http://127.0.0.1:4000/functions  │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Firestore      │ 0.0.0.0:8080 │ http://127.0.0.1:4000/firestore  │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Extensions     │ 0.0.0.0:5001 │ http://127.0.0.1:4000/extensions │
+└────────────────┴──────────────┴──────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 8082
+┌─────────────────────────┬───────────────┬─────────────────────┐
+│ Extension Instance Name │ Extension Ref │ View in Emulator UI │
+└─────────────────────────┴───────────────┴─────────────────────┘
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[warn] ⚠  Firestore Emulator has exited upon receiving signal: SIGKILL 
+[debug] [2026-05-05T20:51:53.109Z] ----------------------------------------------------------------------
+[debug] [2026-05-05T20:51:53.115Z] Command:       /opt/homebrew/Cellar/node/23.5.0/bin/node /Users/julienchapron/.nvm/versions/node/v20.19.4/bin/firebase emulators:start --project wallet-jr
+[debug] [2026-05-05T20:51:53.115Z] CLI Version:   15.12.0
+[debug] [2026-05-05T20:51:53.115Z] Platform:      darwin
+[debug] [2026-05-05T20:51:53.115Z] Node Version:  v23.5.0
+[debug] [2026-05-05T20:51:53.115Z] Time:          Tue May 05 2026 22:51:53 GMT+0200 (Central European Summer Time)
+[debug] [2026-05-05T20:51:53.115Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-05T20:51:53.766Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-05T20:51:53.766Z] > authorizing via signed-in user (ladistillerhie@gmail.com)
+[debug] [2026-05-05T20:51:53.847Z] openjdk version "21.0.11" 2026-04-21
+
+[debug] [2026-05-05T20:51:53.847Z] OpenJDK Runtime Environment Homebrew (build 21.0.11)
+OpenJDK 64-Bit Server VM Homebrew (build 21.0.11, mixed mode, sharing)
+
+[debug] [2026-05-05T20:51:53.852Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, functions, firestore, extensions {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore, extensions"}}
+[debug] [2026-05-05T20:51:53.853Z] Checked if tokens are valid: true, expires at: 1778017713721
+[debug] [2026-05-05T20:51:53.853Z] Checked if tokens are valid: true, expires at: 1778017713721
+[debug] [2026-05-05T20:51:53.853Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/wallet-jr [none]
+[debug] [2026-05-05T20:51:54.539Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/wallet-jr 200
+[debug] [2026-05-05T20:51:54.539Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/wallet-jr {"projectNumber":"809314964450","projectId":"wallet-jr","lifecycleState":"ACTIVE","name":"wallet-jr","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-04-19T09:45:19.328Z"}
+[debug] [2026-05-05T20:51:55.077Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-05T20:51:55.077Z] assigned listening specs for emulators {"user":{"ui":[{"address":"0.0.0.0","family":"IPv4","port":4000}],"auth":[{"address":"0.0.0.0","family":"IPv4","port":9099}],"firestore":[{"address":"0.0.0.0","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"0.0.0.0","family":"IPv4","port":8082}],"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-05-05T20:51:55.081Z] Found emulator hub locator: {"version":"15.12.0","origins":["http://127.0.0.1:4400","http://[::1]:4400"],"pid":3532}
+[debug] [2026-05-05T20:51:55.081Z] Write emulator hub locator at /var/folders/y4/26pkv68x47x3f5j6stzybzf00000gn/T/hub-wallet-jr.json
+[debug] [2026-05-05T20:51:55.084Z] [Extensions] Started Extensions emulator, this is a noop.
+[debug] [2026-05-05T20:51:55.396Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-05T20:51:55.396Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-05-05T20:51:55.396Z] late-assigned ports for functions and eventarc emulators {"user":{"ui":[{"address":"0.0.0.0","family":"IPv4","port":4000}],"auth":[{"address":"0.0.0.0","family":"IPv4","port":9099}],"firestore":[{"address":"0.0.0.0","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"0.0.0.0","family":"IPv4","port":8082}],"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"0.0.0.0","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] ⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, hosting, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, hosting, pubsub, storage, dataconnect"}}
+[debug] [2026-05-05T20:51:55.402Z] defaultcredentials: writing to file /Users/julienchapron/.config/firebase/ladistillerhie_gmail_com_application_default_credentials.json
+[debug] [2026-05-05T20:51:55.404Z] Setting GAC to /Users/julienchapron/.config/firebase/ladistillerhie_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to /Users/julienchapron/.config/firebase/ladistillerhie_gmail_com_application_default_credentials.json"}}
+[debug] [2026-05-05T20:51:55.404Z] Checked if tokens are valid: true, expires at: 1778017713721
+[debug] [2026-05-05T20:51:55.404Z] Checked if tokens are valid: true, expires at: 1778017713721
+[debug] [2026-05-05T20:51:55.404Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/wallet-jr/adminSdkConfig [none]
+[debug] [2026-05-05T20:51:55.789Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/wallet-jr/adminSdkConfig 200
+[debug] [2026-05-05T20:51:55.789Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/wallet-jr/adminSdkConfig {"projectId":"wallet-jr","storageBucket":"wallet-jr.firebasestorage.app"}
+[debug] [2026-05-05T20:51:55.803Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2026-05-05T20:51:55.803Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2026-05-05T20:51:55.803Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/Users/julienchapron/.cache/firebase/emulators/cloud-firestore-emulator-v1.20.4.jar","--host","0.0.0.0","--port",8080,"--websocket_port",8082,"--project_id","wallet-jr","--rules","/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5001"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/Users/julienchapron/.cache/firebase/emulators/cloud-firestore-emulator-v1.20.4.jar\",\"--host\",\"0.0.0.0\",\"--port\",8080,\"--websocket_port\",8082,\"--project_id\",\"wallet-jr\",\"--rules\",\"/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5001\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to firestore-debug.log"}}
+[debug] [2026-05-05T20:51:56.551Z] May 05, 2026 10:51:56 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://0.0.0.0:8082
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:51:56 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://0.0.0.0:8082\n"}}
+[debug] [2026-05-05T20:51:56.566Z] 
+API endpoint: http:// {"metadata":{"emulator":{"name":"firestore"},"message":"\nAPI endpoint: http://"}}
+[debug] [2026-05-05T20:51:56.566Z] 0.0.0.0:8080
+Database Edition: STANDARD
+Database Mode: CLOUD_FIRESTORE
+
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=0.0.0.0:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=0.0.0.0:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"0.0.0.0:8080\nDatabase Edition: STANDARD\nDatabase Mode: CLOUD_FIRESTORE\n\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=0.0.0.0:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=0.0.0.0:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 8082. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 8082."}}
+[debug] [2026-05-05T20:51:59.549Z] [Extensions] Connecting Extensions emulator, this is a noop.
+[info] i  functions: Watching "/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions\" for Cloud Functions..."}}
+[debug] [2026-05-05T20:51:59.550Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-05-05T20:52:00.078Z] > [functions] package.json contents: {
+  "name": "pocketkids-functions",
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^4.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "private": true
+}
+[debug] [2026-05-05T20:52:00.078Z] Building nodejs source
+[debug] [2026-05-05T20:52:00.078Z] Failed to find version of module node: reached end of search path /Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions/node_modules
+[warn] ⚠  functions: Your requested "node" version "20" doesn't match your global version "23". Using node@23 from host. 
+[info] i  functions: You are using a version of firebase-functions SDK (4.9.0) that does not have support for the newest Firebase Extensions features. Please update firebase-functions SDK to >=5.1.0 to use them correctly 
+[debug] [2026-05-05T20:52:00.080Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-05-05T20:52:00.083Z] Found firebase-functions binary at '/Users/julienchapron/Documents/DEV/APPLICATIONS/wallet-jr/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8439
+
+[debug] [2026-05-05T20:52:00.412Z] Got response from /__/functions.yaml {"endpoints":{"createChildAccount":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"callableTrigger":{},"entryPoint":"createChildAccount"},"getChildLoginToken":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"callableTrigger":{},"entryPoint":"getChildLoginToken"},"processRecurringAllowances":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"scheduleTrigger":{"schedule":"0 8 * * *","retryConfig":{"retryCount":null,"maxDoublings":null,"maxRetryDuration":null,"maxBackoffDuration":null,"minBackoffDuration":null},"timeZone":"Europe/Paris"},"labels":{},"entryPoint":"processRecurringAllowances"},"checkBadges":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.create","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/transactions/{transactionId}"},"retry":false},"labels":{},"entryPoint":"checkBadges"},"onMissionUpdate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.update","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/missions/{missionId}"},"retry":false},"labels":{},"entryPoint":"onMissionUpdate"},"onMoneyRequestUpdate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.update","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/moneyRequests/{requestId}"},"retry":false},"labels":{},"entryPoint":"onMoneyRequestUpdate"},"onGoalUpdate":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"region":["europe-west1"],"eventTrigger":{"eventType":"providers/cloud.firestore/eventTypes/document.update","eventFilters":{"resource":"projects/wallet-jr/databases/(default)/documents/goals/{goalId}"},"retry":false},"labels":{},"entryPoint":"onGoalUpdate"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}]}
+[info] ✔  functions: Loaded functions definitions from source: createChildAccount, getChildLoginToken, processRecurringAllowances, checkBadges, onMissionUpdate, onMoneyRequestUpdate, onGoalUpdate. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: createChildAccount, getChildLoginToken, processRecurringAllowances, checkBadges, onMissionUpdate, onMoneyRequestUpdate, onGoalUpdate."}}
+[info] ✔  functions[europe-west1-createChildAccount]: http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/createChildAccount). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/createChildAccount)."}}
+[info] ✔  functions[europe-west1-getChildLoginToken]: http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/getChildLoginToken). {"metadata":{"emulator":{"name":"functions"},"message":"http function initialized (http://127.0.0.1:5001/wallet-jr/europe-west1/getChildLoginToken)."}}
+[info] i  functions[europe-west1-processRecurringAllowances]: function ignored because the pubsub emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the pubsub emulator does not exist or is not running."}}
+[debug] [2026-05-05T20:52:04.437Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.create\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/transactions/{transactionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.438Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 [none]
+[debug] [2026-05-05T20:52:04.438Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.create\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/transactions/{transactionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.444Z] May 05, 2026 10:52:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:04.536Z] May 05, 2026 10:52:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:04.952Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 200
+[debug] [2026-05-05T20:52:04.952Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-checkBadges-0 {}
+[info] ✔  functions[europe-west1-checkBadges]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:52:04.952Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/missions/{missionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.952Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 [none]
+[debug] [2026-05-05T20:52:04.952Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/missions/{missionId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.957Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 200
+[debug] [2026-05-05T20:52:04.957Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMissionUpdate-0 {}
+[info] ✔  functions[europe-west1-onMissionUpdate]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:52:04.957Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/moneyRequests/{requestId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.957Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 [none]
+[debug] [2026-05-05T20:52:04.957Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/moneyRequests/{requestId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.961Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 200
+[debug] [2026-05-05T20:52:04.961Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onMoneyRequestUpdate-0 {}
+[info] ✔  functions[europe-west1-onMoneyRequestUpdate]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:52:04.961Z] addFirestoreTrigger "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/goals/{goalId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.961Z] >>> [apiv2][query] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 [none]
+[debug] [2026-05-05T20:52:04.961Z] >>> [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 "{\"eventTrigger\":{\"eventType\":\"providers/cloud.firestore/eventTypes/document.update\",\"resource\":\"projects/wallet-jr/databases/(default)/documents/goals/{goalId}\",\"service\":\"firestore.googleapis.com\"}}"
+[debug] [2026-05-05T20:52:04.965Z] <<< [apiv2][status] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 200
+[debug] [2026-05-05T20:52:04.965Z] <<< [apiv2][body] PUT http://127.0.0.1:8080/emulator/v1/projects/wallet-jr/triggers/europe-west1-onGoalUpdate-0 {}
+[info] ✔  functions[europe-west1-onGoalUpdate]: firestore function initialized. {"metadata":{"emulator":{"name":"functions"},"message":"firestore function initialized."}}
+[debug] [2026-05-05T20:52:04.968Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬──────────────┬──────────────────────────────────┐
+│ Emulator       │ Host:Port    │ View in Emulator UI              │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Authentication │ 0.0.0.0:9099 │ http://127.0.0.1:4000/auth       │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Functions      │ 0.0.0.0:5001 │ http://127.0.0.1:4000/functions  │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Firestore      │ 0.0.0.0:8080 │ http://127.0.0.1:4000/firestore  │
+├────────────────┼──────────────┼──────────────────────────────────┤
+│ Extensions     │ 0.0.0.0:5001 │ http://127.0.0.1:4000/extensions │
+└────────────────┴──────────────┴──────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 8082
+┌─────────────────────────┬───────────────┬─────────────────────┐
+│ Extension Instance Name │ Extension Ref │ View in Emulator UI │
+└─────────────────────────┴───────────────┴─────────────────────┘
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2026-05-05T20:52:16.437Z] >>> [apiv2][query] POST http://127.0.0.1:5001/functions/projects/wallet-jr/trigger_multicast [none]
+[debug] [2026-05-05T20:52:16.437Z] >>> [apiv2][body] POST http://127.0.0.1:5001/functions/projects/wallet-jr/trigger_multicast {"eventId":"6e23733e-862d-4476-b579-e2c2f78d6afd","eventType":"providers/firebase.auth/eventTypes/user.create","resource":{"name":"projects/wallet-jr","service":"firebaseauth.googleapis.com"},"params":{},"timestamp":"2026-05-05T20:52:16.437Z","data":{"uid":"ZaaaNRPiVv4wvm6BmemZ8cPGUYcM","email":"fdvdf@hii.fr","emailVerified":false,"metadata":{"creationTime":"2026-05-05T20:52:16.436Z","lastSignInTime":"2026-05-05T20:52:16.436Z"},"customClaims":{},"providerData":[{"rawId":"fdvdf@hii.fr","providerId":"password","email":"fdvdf@hii.fr","federatedId":"fdvdf@hii.fr"}]}}
+[debug] [2026-05-05T20:52:16.442Z] <<< [apiv2][status] POST http://127.0.0.1:5001/functions/projects/wallet-jr/trigger_multicast 200
+[debug] [2026-05-05T20:52:16.442Z] <<< [apiv2][body] POST http://127.0.0.1:5001/functions/projects/wallet-jr/trigger_multicast {"status":"multicast_acknowledged"}
+[debug] [2026-05-05T20:52:16.521Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:16.539Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:16.584Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:16.594Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:16.677Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:16.704Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:16.885Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:16.933Z] May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:17.012Z] May 05, 2026 10:52:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:52:17.025Z] May 05, 2026 10:52:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:52:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:53:16.735Z] May 05, 2026 10:53:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:53:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:53:16.898Z] May 05, 2026 10:53:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:53:16 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:53:16.903Z] May 05, 2026 10:53:16 PM com.google.cloud.datastore.emulator.firestore.webchannel.FirestoreV1WebChannelAdapter$FirestoreWriteHandler onClose
+INFO: channel closed
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:53:16 PM com.google.cloud.datastore.emulator.firestore.webchannel.FirestoreV1WebChannelAdapter$FirestoreWriteHandler onClose\nINFO: channel closed\n"}}
+[debug] [2026-05-05T20:53:17.053Z] May 05, 2026 10:53:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:53:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:54:13.531Z] May 05, 2026 10:54:13 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:54:13 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-05T20:54:17.080Z] May 05, 2026 10:54:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:54:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:55:17.115Z] May 05, 2026 10:55:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:55:17 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:55:42.267Z] May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:55:42.275Z] May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:55:42.300Z] May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:55:42.350Z] May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:55:42.440Z] May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T20:55:42.450Z] May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 10:55:42 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T21:19:40.719Z] May 05, 2026 11:19:40 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:40 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-05T21:19:40.806Z] May 05, 2026 11:19:40 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:40 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-05T21:19:48.911Z] May 05, 2026 11:19:48 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:48 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T21:19:48.966Z] May 05, 2026 11:19:48 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:48 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T21:19:48.983Z] May 05, 2026 11:19:48 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:48 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T21:19:49.021Z] May 05, 2026 11:19:49 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:49 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T21:19:51.945Z] May 05, 2026 11:19:51 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:51 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2026-05-05T21:19:51.949Z] May 05, 2026 11:19:51 PM com.google.cloud.datastore.emulator.firestore.webchannel.FirestoreV1WebChannelAdapter$FirestoreListenHandler onClose
+INFO: channel closed
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:19:51 PM com.google.cloud.datastore.emulator.firestore.webchannel.FirestoreV1WebChannelAdapter$FirestoreListenHandler onClose\nINFO: channel closed\n"}}
+[debug] [2026-05-05T21:20:14.898Z] May 05, 2026 11:20:14 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:20:14 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-05T21:20:15.455Z] May 05, 2026 11:20:15 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 05, 2026 11:20:15 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T06:50:37.295Z] May 06, 2026 8:50:37 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 8:50:37 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T06:50:37.499Z] May 06, 2026 8:50:37 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 8:50:37 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T06:50:42.712Z] May 06, 2026 8:50:42 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 8:50:42 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:33:03.522Z] May 06, 2026 10:33:03 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:33:03 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:33:05.350Z] May 06, 2026 10:33:05 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:33:05 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:33:07.362Z] May 06, 2026 10:33:07 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:33:07 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:33:09.361Z] May 06, 2026 10:33:09 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:33:09 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:33:11.359Z] May 06, 2026 10:33:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:33:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:33:13.358Z] May 06, 2026 10:33:13 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:33:13 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:04.321Z] May 06, 2026 10:34:04 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:04 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:04.332Z] May 06, 2026 10:34:04 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:04 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:11.766Z] May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:11.767Z] May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\nMay 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:11.771Z] May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:11.824Z] May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:11.830Z] May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\nMay 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\nMay 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\nMay 06, 2026 10:34:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:13.351Z] May 06, 2026 10:34:13 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:13 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:15.451Z] May 06, 2026 10:34:15 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:15 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:15.462Z] May 06, 2026 10:34:15 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:15 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:17.426Z] May 06, 2026 10:34:17 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:17 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:17.433Z] May 06, 2026 10:34:17 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:17 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:19.652Z] May 06, 2026 10:34:19 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:19 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:19.658Z] May 06, 2026 10:34:19 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:19 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:21.408Z] May 06, 2026 10:34:21 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:21 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:21.413Z] May 06, 2026 10:34:21 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:21 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:24.699Z] May 06, 2026 10:34:24 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:24 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:24.703Z] May 06, 2026 10:34:24 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:24 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:30.478Z] May 06, 2026 10:34:30 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:30 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:30.487Z] May 06, 2026 10:34:30 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:30 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:31.581Z] May 06, 2026 10:34:31 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:31 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:31.587Z] May 06, 2026 10:34:31 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:31 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:33.508Z] May 06, 2026 10:34:33 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:33 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:33.516Z] May 06, 2026 10:34:33 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:33 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:35.073Z] May 06, 2026 10:34:35 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:35 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:35.079Z] May 06, 2026 10:34:35 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:35 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:36.983Z] May 06, 2026 10:34:36 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:36 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:36.992Z] May 06, 2026 10:34:36 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:36 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:39.197Z] May 06, 2026 10:34:39 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:39 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:39.203Z] May 06, 2026 10:34:39 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:39 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:41.047Z] May 06, 2026 10:34:41 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:41 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:41.055Z] May 06, 2026 10:34:41 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:41 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:43.540Z] May 06, 2026 10:34:43 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:43 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:43.546Z] May 06, 2026 10:34:43 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:43 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:44.841Z] May 06, 2026 10:34:44 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:44 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:44.843Z] May 06, 2026 10:34:44 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:44 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:46.838Z] May 06, 2026 10:34:46 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:46 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:46.843Z] May 06, 2026 10:34:46 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:46 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:48.872Z] May 06, 2026 10:34:48 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:48 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:48.878Z] May 06, 2026 10:34:48 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:48 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:51.358Z] May 06, 2026 10:34:51 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:51 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:51.373Z] May 06, 2026 10:34:51 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:51 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:53.291Z] May 06, 2026 10:34:53 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:53 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:34:53.375Z] May 06, 2026 10:34:53 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:53 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:34:57.313Z] May 06, 2026 10:34:57 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:34:57 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:01.853Z] May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:01.862Z] May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:35:01.864Z] May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:35:01.894Z] May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:01.898Z] May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:01.904Z] May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:35:01.904Z] May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:01 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:35:02.954Z] May 06, 2026 10:35:02 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:02 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:02.962Z] May 06, 2026 10:35:02 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:02 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:35:11.755Z] May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:11.760Z] May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2026-05-06T08:35:11.762Z] May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:11.764Z] May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:11.765Z] May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:11 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:12.855Z] May 06, 2026 10:35:12 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:12 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:15.059Z] May 06, 2026 10:35:15 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:15 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2026-05-06T08:35:17.261Z] May 06, 2026 10:35:17 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"May 06, 2026 10:35:17 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}

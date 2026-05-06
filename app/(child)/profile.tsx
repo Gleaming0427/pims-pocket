@@ -30,7 +30,7 @@ export default function ChildProfileScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
       <Header title="Mon profil" showBack />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <Card variant="child" style={{ alignItems: 'center', paddingVertical: 32, marginBottom: 20 }}>
           <View
             style={{

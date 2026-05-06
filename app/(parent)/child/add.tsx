@@ -55,7 +55,7 @@ export default function AddChildScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title="Ajouter un enfant" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24 }}
+        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <Input

@@ -83,7 +83,7 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title="Mot de passe oublié" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24 }}
+        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <Text

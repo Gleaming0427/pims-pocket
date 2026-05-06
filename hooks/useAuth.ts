@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { onAuthChange, getUserData } from '@/lib/auth';
-import { firebase, db } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 function wait(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -24,9 +25,8 @@ export function useAuth() {
           userData = await getUserData(firebaseUser.uid).catch(() => null);
         }
         if (!userData) {
-          const userDocRef = db.collection('users').doc(firebaseUser.uid);
-          const existing = await userDocRef.get().catch(() => null);
-          if (existing && existing.exists) {
+          const existing = await getDoc(doc(db, 'users', firebaseUser.uid)).catch(() => null);
+          if (existing && existing.exists()) {
             userData = { id: existing.id, ...existing.data() } as any;
           }
           // Ne pas créer de document utilisateur côté client.

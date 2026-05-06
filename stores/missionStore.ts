@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Mission } from '@/types';
 import * as firestoreLib from '@/lib/firestore';
-import { firebase } from '@/lib/firebase';
+import { Timestamp } from 'firebase/firestore';
 
 interface MissionState {
   missions: Mission[];
@@ -34,7 +34,7 @@ export const useMissionStore = create<MissionState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const id = await firestoreLib.createMission(data);
-      const newMission: Mission = { ...data, id, createdAt: firebase.firestore.Timestamp.now() };
+      const newMission: Mission = { ...data, id, createdAt: Timestamp.now() };
       set((state) => ({
         missions: [newMission, ...state.missions],
         isLoading: false,
@@ -68,7 +68,7 @@ export const useMissionStore = create<MissionState>((set, get) => ({
       set((state) => ({
         missions: state.missions.map((m) =>
           m.id === missionId
-            ? { ...m, status: 'completed' as const, completedAt: firebase.firestore.Timestamp.now() }
+            ? { ...m, status: 'completed' as const, completedAt: Timestamp.now() }
             : m
         ),
         isLoading: false,

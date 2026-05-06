@@ -13,14 +13,29 @@ const merged = withNativeWind(config, { input: "./global.css" });
 // https://stackoverflow.com/questions/79602687/react-native-expo-firebase-auth-component-auth-has-not-been-registered-yet
 merged.resolver.unstable_enablePackageExports = false;
 
-const firebaseAuthRnIndex = path.resolve(
-  __dirname,
-  "node_modules/@firebase/auth/dist/rn/index.js"
-);
-const firebaseAuthRnInternal = path.resolve(
-  __dirname,
-  "node_modules/@firebase/auth/dist/rn/internal.js"
-);
+// npm peut hoister @firebase/auth à la racine (node_modules/@firebase/auth)
+// ou le nicher sous firebase (node_modules/firebase/node_modules/@firebase/auth)
+// selon la version et le mode d'installation. On résout dynamiquement pour
+// éviter les chemins en dur qui cassent silencieusement.
+const fs = require("fs");
+
+function resolveFirebaseAuthRnFile(file) {
+  const candidates = [
+    path.resolve(__dirname, `node_modules/@firebase/auth/dist/rn/${file}`),
+    path.resolve(__dirname, `node_modules/firebase/node_modules/@firebase/auth/dist/rn/${file}`),
+  ];
+  const found = candidates.find((p) => fs.existsSync(p));
+  if (!found) {
+    throw new Error(
+      `[metro.config] Impossible de localiser @firebase/auth/dist/rn/${file}. ` +
+      `Chemins testés:\n  - ${candidates.join("\n  - ")}`
+    );
+  }
+  return found;
+}
+
+const firebaseAuthRnIndex = resolveFirebaseAuthRnFile("index.js");
+const firebaseAuthRnInternal = resolveFirebaseAuthRnFile("internal.js");
 
 const origResolve = merged.resolver.resolveRequest;
 merged.resolver.resolveRequest = (context, moduleName, platform) => {

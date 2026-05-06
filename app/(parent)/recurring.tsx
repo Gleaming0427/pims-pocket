@@ -66,7 +66,7 @@ export default function RecurringScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title="Versements récurrents" showBack />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <Card style={{ marginBottom: 20, backgroundColor: colors.info + '15' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Ionicons name="information-circle" size={22} color={colors.info} />

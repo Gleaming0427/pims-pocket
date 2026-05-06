@@ -8,11 +8,14 @@ import { useMissions } from '@/hooks/useMissions';
 import { useNotifications } from '@/hooks/useNotifications';
 import PiggyBank from '@/components/child/PiggyBank';
 import ChildMissionCard from '@/components/child/MissionCard';
+import Avatar from '@/components/ui/Avatar';
 import Card from '@/components/ui/Card';
 import NotificationBell from '@/components/shared/NotificationBell';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import { getGoals } from '@/lib/firestore';
 import { getEarnedBadges } from '@/lib/firestore';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { Goal, EarnedBadge } from '@/types';
 import { formatCurrencyShort } from '@/utils/formatters';
 import ProgressBar from '@/components/ui/ProgressBar';
@@ -27,12 +30,32 @@ export default function ChildDashboard() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
   const [balance, setBalance] = useState(0);
+  const [avatarId, setAvatarId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     getGoals(user.id).then(setGoals).catch(() => {});
     getEarnedBadges(user.id).then(setEarnedBadges).catch(() => {});
   }, [user?.id]);
+
+  // Souscription en temps réel au solde de l'enfant.
+  // Le solde est stocké dans users/{parentId}/children/{childDocId}, écrit
+  // par les transactions/missions côté parent. L'enfant n'a accès en lecture
+  // que parce que la règle Firestore vérifie linkedUserId == auth.uid.
+  useEffect(() => {
+    if (!user?.parentId || !user?.childDocId) return;
+    const ref = doc(db, 'users', user.parentId, 'children', user.childDocId);
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        const data = snap.data();
+        setBalance(typeof data?.balance === 'number' ? data.balance : 0);
+        setAvatarId(typeof data?.avatarId === 'string' ? data.avatarId : null);
+      },
+      (err) => console.warn('[ChildDashboard] balance snapshot error', err.message)
+    );
+    return unsub;
+  }, [user?.parentId, user?.childDocId]);
 
   const availableMissions = missions
     .filter((m) => m.status === 'available' || m.status === 'in_progress')
@@ -53,22 +76,29 @@ export default function ChildDashboard() {
           alignItems: 'center',
           paddingHorizontal: 20,
           paddingTop: 8,
+          width: '100%',
+          maxWidth: 720,
+          alignSelf: 'center',
         }}
       >
         <TouchableOpacity
           onPress={() => router.push('/(child)/profile')}
           style={{ flexDirection: 'row', alignItems: 'center' }}
         >
-          <Text style={{ fontSize: 28 }}>👋</Text>
+          {avatarId ? (
+            <Avatar avatarId={avatarId} size={40} />
+          ) : (
+            <Text style={{ fontSize: 28 }}>👋</Text>
+          )}
           <Text
             style={{
               fontSize: 20,
               fontWeight: '800',
               color: colors.textPrimary,
-              marginLeft: 8,
+              marginLeft: 10,
             }}
           >
-            Salut !
+            {user.displayName ? `Salut ${user.displayName} !` : 'Salut !'}
           </Text>
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -79,7 +109,7 @@ export default function ChildDashboard() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <PiggyBank balance={balance} />
 
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>

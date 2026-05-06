@@ -18,26 +18,7 @@
       "bundleIdentifier": "com.pocketkids.app",
       "infoPlist": {
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": false,
-          "NSAllowsLocalNetworking": true,
-          "NSExceptionDomains": {
-            "googleapis.com": {
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSIncludesSubdomains": true
-            },
-            "firebaseapp.com": {
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSIncludesSubdomains": true
-            },
-            "firebaseio.com": {
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSIncludesSubdomains": true
-            },
-            "google.com": {
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSIncludesSubdomains": true
-            }
-          }
+          "NSAllowsArbitraryLoads": true
         }
       }
     },

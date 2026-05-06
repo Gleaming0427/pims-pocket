@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,6 +10,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { formatCurrencyShort } from '@/utils/formatters';
+import { useResponsive } from '@/hooks/useResponsive';
 import colors from '@/constants/colors';
 
 interface PiggyBankProps {
@@ -18,6 +19,12 @@ interface PiggyBankProps {
 }
 
 export default function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProps) {
+  const { isTablet } = useResponsive();
+  const SIZE = isTablet ? 240 : 160;
+  const RADIUS = SIZE / 2;
+  const PRICE_FONT = isTablet ? 52 : 36;
+  const LABEL_FONT = isTablet ? 18 : 15;
+
   const fillLevel = useSharedValue(0);
   const scale = useSharedValue(1);
   const bounce = useSharedValue(0);
@@ -64,9 +71,9 @@ export default function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProp
       <Animated.View style={piggyStyle}>
         <View
           style={{
-            width: 160,
-            height: 160,
-            borderRadius: 80,
+            width: SIZE,
+            height: SIZE,
+            borderRadius: RADIUS,
             backgroundColor: colors.piggyPink + '20',
             alignItems: 'center',
             justifyContent: 'center',
@@ -81,18 +88,22 @@ export default function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProp
                 left: 0,
                 right: 0,
                 backgroundColor: colors.piggyPink + '40',
-                borderRadius: 80,
+                borderRadius: RADIUS,
               },
               fillStyle,
             ]}
           />
-          <Text style={{ fontSize: 72 }}>🐷</Text>
+          <Image
+            source={require('@/assets/icon.png')}
+            style={{ width: SIZE, height: SIZE, borderRadius: RADIUS }}
+            resizeMode="cover"
+          />
         </View>
       </Animated.View>
 
       <Text
         style={{
-          fontSize: 36,
+          fontSize: PRICE_FONT,
           fontWeight: '900',
           color: colors.primary,
           marginTop: 16,
@@ -102,7 +113,7 @@ export default function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProp
       </Text>
       <Text
         style={{
-          fontSize: 15,
+          fontSize: LABEL_FONT,
           color: colors.textSecondary,
           marginTop: 4,
         }}

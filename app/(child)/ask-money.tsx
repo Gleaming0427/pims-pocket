@@ -8,8 +8,7 @@ import Header from '@/components/shared/Header';
 import { useAuthStore } from '@/stores/authStore';
 import { createMoneyRequest } from '@/lib/firestore';
 import { validateAmount, parseAmountToCents } from '@/utils/validators';
-import { firebase } from '@/lib/firebase';
-const Timestamp = firebase.firestore.Timestamp;
+import { Timestamp } from 'firebase/firestore';
 import colors from '@/constants/colors';
 
 export default function AskMoneyScreen() {
@@ -35,6 +34,7 @@ export default function AskMoneyScreen() {
     try {
       await createMoneyRequest({
         childId: user.id,
+        childDocId: user.childDocId,
         parentId: user.parentId,
         amount: parseAmountToCents(amount),
         reason: reason.trim(),
@@ -56,7 +56,7 @@ export default function AskMoneyScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
       <Header title="Demander de l'argent" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24 }}
+        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ alignItems: 'center', marginBottom: 24 }}>

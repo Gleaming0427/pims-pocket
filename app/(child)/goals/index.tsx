@@ -40,7 +40,7 @@ export default function GoalsScreen() {
           </TouchableOpacity>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         {goals.length === 0 ? (
           <EmptyState
             emoji="🎯"
