@@ -44,3 +44,7 @@ functions/node_modules/
 # generated native folders
 /ios
 /android
+
+# scripts de diagnostic / debug admin (ne jamais commiter)
+test-*.js
+scripts/dev/
