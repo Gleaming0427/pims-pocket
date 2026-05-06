@@ -1,67 +1,126 @@
 /**
- * Firebase – API compat (firebase v10, React Native).
+ * Firebase – Initialisation pour React Native (Expo).
  *
- * Le polyfill react-native-url-polyfill/auto est chargé dans index.ts AVANT ce module.
- * La persistance Auth utilise securePersistence (expo-secure-store → AsyncStorage fallback).
+ * Configuration : variables EXPO_PUBLIC_FIREBASE_* dans .env (Firebase prod).
+ *
+ * Auth : initializeAuth + getReactNativePersistence(AsyncStorage) — c'est la
+ * méthode officielle Firebase pour React Native (persistance entre redémarrages
+ * de l'app). Sans ça, l'utilisateur est déconnecté à chaque relance.
+ *
+ * Émulateurs locaux : si EXPO_PUBLIC_USE_EMULATORS=true, redirige tous les
+ * appels vers les émulateurs locaux (firebase emulators:start). Sinon, prod.
+ *
+ * Prérequis : `react-native-url-polyfill/auto` importé dans index.ts AVANT
+ * ce module (indispensable au SDK Firebase JS en React Native).
  */
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
-import 'firebase/compat/functions';
+
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import {
+  initializeAuth,
+  getAuth,
+  connectAuthEmulator,
+  type Auth,
+  type Persistence,
+} from 'firebase/auth';
+// getReactNativePersistence est exporté par le bundle RN de @firebase/auth
+// mais absent du fichier de types public (index.d.ts cible le web). On
+// l'importe via un require typé manuellement — Metro résout vers le bundle RN
+// grâce au resolver custom de metro.config.js.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { getReactNativePersistence } = require('firebase/auth') as {
+  getReactNativePersistence: (storage: unknown) => Persistence;
+};
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  type Firestore,
+} from 'firebase/firestore';
+import {
+  getFunctions,
+  connectFunctionsEmulator,
+  type Functions,
+} from 'firebase/functions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ---------------------------------------------------------------------------
 // Config
 // ---------------------------------------------------------------------------
 
-function trimEnv(v: string | undefined): string {
-  return (v ?? '').trim().replace(/^\uFEFF/, '');
-}
-
 const firebaseConfig = {
-  apiKey: trimEnv(process.env.EXPO_PUBLIC_FIREBASE_API_KEY) || 'MISSING_API_KEY',
-  authDomain:
-    trimEnv(process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN) || 'MISSING_AUTH_DOMAIN',
-  projectId:
-    trimEnv(process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID) || 'MISSING_PROJECT_ID',
-  storageBucket:
-    trimEnv(process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET) ||
-    'MISSING_STORAGE_BUCKET',
-  messagingSenderId:
-    trimEnv(process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID) ||
-    'MISSING_SENDER_ID',
-  appId: trimEnv(process.env.EXPO_PUBLIC_FIREBASE_APP_ID) || 'MISSING_APP_ID',
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? '',
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
 };
 
+const USE_EMULATORS = process.env.EXPO_PUBLIC_USE_EMULATORS === 'true';
+
 if (__DEV__) {
-  const hasMissing =
-    firebaseConfig.apiKey === 'MISSING_API_KEY' ||
-    firebaseConfig.projectId === 'MISSING_PROJECT_ID' ||
-    firebaseConfig.authDomain === 'MISSING_AUTH_DOMAIN';
-  if (hasMissing) {
+  const missing = Object.entries(firebaseConfig).filter(([, v]) => !v).map(([k]) => k);
+  if (missing.length > 0) {
     console.error(
-      '[Firebase] Variables EXPO_PUBLIC_FIREBASE_* manquantes. ' +
-        'Crée un .env à la racine avec les clés Firebase puis relance Metro : npx expo start -c'
+      `[Firebase] ⚠️  Variables manquantes : ${missing.join(', ')}. ` +
+      `Vérifie ton .env puis relance Metro avec : npx expo start -c`
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Initialisation
+// App
 // ---------------------------------------------------------------------------
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
+const app: FirebaseApp =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+// ---------------------------------------------------------------------------
+// Auth (avec persistance AsyncStorage)
+//
+// initializeAuth ne peut être appelé qu'une fois. Au hot-reload, on retombe
+// sur getAuth() pour récupérer l'instance existante.
+// ---------------------------------------------------------------------------
+
+let auth: Auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (e: unknown) {
+  if ((e as { code?: string }).code === 'auth/already-initialized') {
+    auth = getAuth(app);
+  } else {
+    throw e;
+  }
 }
 
-const app = firebase.app();
-
 // ---------------------------------------------------------------------------
-// Exports
+// Firestore & Functions
 // ---------------------------------------------------------------------------
 
-export const auth = app.auth();
-export const db = app.firestore();
-export const functions = app.functions('europe-west1');
+const db: Firestore = getFirestore(app);
+const functions: Functions = getFunctions(app, 'europe-west1');
 
-export { firebase };
-export default firebase;
+// ---------------------------------------------------------------------------
+// Émulateurs (dev local uniquement)
+// ---------------------------------------------------------------------------
+
+if (USE_EMULATORS) {
+  const host = process.env.EXPO_PUBLIC_EMULATOR_HOST ?? 'localhost';
+  connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+  connectFirestoreEmulator(db, host, 8080);
+  connectFunctionsEmulator(functions, host, 5001);
+  if (__DEV__) {
+    console.log(`[Firebase] 🔶 Émulateurs connectés (host: ${host})`);
+  }
+}
+
+if (__DEV__) {
+  console.log(
+    `[Firebase] ✅ Initialisé — Projet: ${firebaseConfig.projectId} | ` +
+    `Émulateurs: ${USE_EMULATORS ? 'ON' : 'OFF'}`
+  );
+}
+
+export { app, auth, db, functions };
+export default app;

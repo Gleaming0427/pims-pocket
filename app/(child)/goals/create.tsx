@@ -8,8 +8,7 @@ import Header from '@/components/shared/Header';
 import { useAuthStore } from '@/stores/authStore';
 import { createGoal } from '@/lib/firestore';
 import { validateName, validateAmount, parseAmountToCents } from '@/utils/validators';
-import { firebase } from '@/lib/firebase';
-const Timestamp = firebase.firestore.Timestamp;
+import { Timestamp } from 'firebase/firestore';
 import colors from '@/constants/colors';
 
 export default function CreateGoalScreen() {
@@ -54,7 +53,7 @@ export default function CreateGoalScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
       <Header title="Nouvel objectif" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24 }}
+        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <Text

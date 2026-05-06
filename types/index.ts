@@ -9,6 +9,9 @@ export interface User {
   displayName: string;
   role: 'parent' | 'child';
   parentId?: string;
+  // ID du sous-doc enfant chez le parent (users/{parentId}/children/{childDocId}).
+  // Renseigné par la Cloud Function createChildAccount uniquement pour role='child'.
+  childDocId?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   fcmToken?: string;
@@ -37,12 +40,16 @@ export type TransactionType =
   | 'gift'
   | 'saving'
   | 'spending'
-  | 'request';
+  | 'request'
+  | 'penalty';
 
 export interface Transaction {
   id: string;
   parentId: string;
+  // childId = linkedUserId (Auth UID de l'enfant) — pour queries + rules.
   childId: string;
+  // childDocId = ID du sous-doc enfant — pour mutations balance.
+  childDocId?: string;
   type: TransactionType;
   amount: number;
   description: string;
@@ -62,7 +69,12 @@ export type MissionStatus =
 export interface Mission {
   id: string;
   parentId: string;
+  // childId = linkedUserId (Auth UID de l'enfant). Sert aux queries côté
+  // enfant et aux Firestore Rules (resource.data.childId == request.auth.uid).
   childId: string;
+  // childDocId = ID du sous-doc enfant (users/{parentId}/children/{childDocId}).
+  // Sert aux mutations sur le doc enfant (incrément balance, etc.).
+  childDocId?: string;
   title: string;
   description: string;
   reward: number;
@@ -122,7 +134,10 @@ export type MoneyRequestStatus = 'pending' | 'approved' | 'rejected';
 
 export interface MoneyRequest {
   id: string;
+  // childId = linkedUserId (Auth UID) — pour queries + rules.
   childId: string;
+  // childDocId = ID du sous-doc enfant — pour incrément balance à l'approbation.
+  childDocId?: string;
   parentId: string;
   amount: number;
   reason: string;

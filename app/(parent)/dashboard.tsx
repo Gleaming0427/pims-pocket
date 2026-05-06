@@ -40,7 +40,7 @@ export default function ParentDashboard() {
           />
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
           <Card style={{ flex: 1, alignItems: 'center' }}>
             <Text style={{ fontSize: 28, fontWeight: '800', color: colors.primary }}>

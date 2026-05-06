@@ -61,10 +61,23 @@ export default function CreateMissionScreen() {
     if (titleError || rewardError) return;
     if (!user) return;
 
+    // Convention: childId stocké sur les missions/transactions = linkedUserId
+    // (Auth UID de l'enfant). C'est ce que l'enfant utilisera pour requêter
+    // ses missions, et ce que les Firestore Rules vérifient.
+    const selectedChild = children.find((c) => c.id === selectedChildId);
+    if (!selectedChild?.linkedUserId) {
+      Alert.alert(
+        'Compte enfant non activé',
+        `${selectedChild?.firstName ?? 'Cet enfant'} doit d'abord activer son compte (créer son code et PIN) pour recevoir des missions.`
+      );
+      return;
+    }
+
     try {
       await createMission({
         parentId: user.id,
-        childId: selectedChildId,
+        childId: selectedChild.linkedUserId,
+        childDocId: selectedChild.id,
         title: title.trim(),
         description: description.trim(),
         reward: parseAmountToCents(reward),
@@ -86,7 +99,7 @@ export default function CreateMissionScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title="Créer une mission" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24 }}
+        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <Text

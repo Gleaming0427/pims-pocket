@@ -28,7 +28,7 @@ export default function ChildHistoryScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
       <Header title="Mon historique" showBack />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         {transactions.length === 0 ? (
           <EmptyState
             emoji="📜"

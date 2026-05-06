@@ -1,4 +1,23 @@
-import { firebase, db } from './firebase';
+import { db } from './firebase';
+import {
+  collection,
+  doc,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  getDoc,
+  setDoc,
+  updateDoc,
+  addDoc,
+  runTransaction,
+  onSnapshot,
+  Timestamp,
+  type Query,
+  type DocumentReference,
+  type DocumentData,
+} from 'firebase/firestore';
 import {
   Child,
   Transaction,
@@ -10,19 +29,33 @@ import {
 } from '@/types';
 import { generateInviteCode } from '@/utils/validators';
 
-const FieldValue = firebase.firestore.FieldValue;
-const Timestamp = firebase.firestore.Timestamp;
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-// --- Children ---
+function childrenCollection(parentId: string) {
+  return collection(db, 'users', parentId, 'children');
+}
 
-export async function addChild(parentId: string, data: {
-  firstName: string;
-  avatarId: string;
-  birthDate: Date;
-  weeklyAllowance: number;
-  allowanceDay: number;
-}): Promise<Child> {
-  const ref = db.collection('users').doc(parentId).collection('children').doc();
+function childDoc(parentId: string, childId: string) {
+  return doc(db, 'users', parentId, 'children', childId);
+}
+
+// ---------------------------------------------------------------------------
+// Children
+// ---------------------------------------------------------------------------
+
+export async function addChild(
+  parentId: string,
+  data: {
+    firstName: string;
+    avatarId: string;
+    birthDate: Date;
+    weeklyAllowance: number;
+    allowanceDay: number;
+  }
+): Promise<Child> {
+  const ref = doc(childrenCollection(parentId));
   const child: Omit<Child, 'id'> = {
     firstName: data.firstName,
     avatarId: data.avatarId,
@@ -35,18 +68,21 @@ export async function addChild(parentId: string, data: {
     inviteCode: generateInviteCode(),
     createdAt: Timestamp.now(),
   };
-  await ref.set(child);
+  await setDoc(ref, child);
   return { id: ref.id, ...child } as Child;
 }
 
 export async function getChildren(parentId: string): Promise<Child[]> {
-  const snap = await db.collection('users').doc(parentId).collection('children').get();
+  const snap = await getDocs(childrenCollection(parentId));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Child);
 }
 
-export async function getChild(parentId: string, childId: string): Promise<Child | null> {
-  const snap = await db.collection('users').doc(parentId).collection('children').doc(childId).get();
-  if (!snap.exists) return null;
+export async function getChild(
+  parentId: string,
+  childId: string
+): Promise<Child | null> {
+  const snap = await getDoc(childDoc(parentId, childId));
+  if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data() } as Child;
 }
 
@@ -55,41 +91,89 @@ export async function updateChild(
   childId: string,
   data: Partial<Child>
 ): Promise<void> {
-  await db.collection('users').doc(parentId).collection('children').doc(childId).update(data as Record<string, unknown>);
+  await updateDoc(childDoc(parentId, childId), data as DocumentData);
 }
 
 export function onChildrenSnapshot(
   parentId: string,
   callback: (children: Child[]) => void
 ) {
-  return db.collection('users').doc(parentId).collection('children')
-    .onSnapshot((snap) => {
-      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Child));
-    });
+  return onSnapshot(childrenCollection(parentId), (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Child));
+  });
 }
 
-// --- Transactions ---
+// ---------------------------------------------------------------------------
+// Transactions
+// ---------------------------------------------------------------------------
 
-export async function createTransaction(data: Omit<Transaction, 'id'>): Promise<string> {
-  const ref = await db.collection('transactions').add({
+export async function createTransaction(
+  data: Omit<Transaction, 'id'>
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'transactions'), {
     ...data,
     createdAt: Timestamp.now(),
   });
   return ref.id;
 }
 
+/**
+ * Retire de l'argent au solde de l'enfant (sanction, bêtise, etc.).
+ * Ne décrémente pas totalEarned (qui est cumulatif sur la vie du compte).
+ * Le solde ne peut pas devenir négatif : on plafonne à 0.
+ */
+export async function removeMoney(
+  parentId: string,
+  childDocId: string,
+  childAuthUid: string,
+  amount: number,
+  description: string
+): Promise<void> {
+  await runTransaction(db, async (tx) => {
+    const childRef = childDoc(parentId, childDocId);
+    const childSnap = await tx.get(childRef);
+
+    if (!childSnap.exists()) throw new Error('Enfant non trouvé');
+
+    const childData = childSnap.data()!;
+    const currentBalance = childData.balance as number;
+    const effective = Math.min(amount, currentBalance);
+
+    if (effective <= 0) {
+      throw new Error('Solde déjà à zéro, rien à retirer.');
+    }
+
+    tx.update(childRef, {
+      balance: currentBalance - effective,
+    });
+
+    const txRef = doc(collection(db, 'transactions'));
+    tx.set(txRef, {
+      parentId,
+      childId: childAuthUid,
+      childDocId,
+      type: 'penalty',
+      amount: effective,
+      description,
+      status: 'completed',
+      createdAt: Timestamp.now(),
+    });
+  });
+}
+
 export async function sendMoney(
   parentId: string,
-  childId: string,
+  childDocId: string,
+  childAuthUid: string,
   amount: number,
   type: Transaction['type'],
   description: string
 ): Promise<void> {
-  await db.runTransaction(async (tx) => {
-    const childRef = db.collection('users').doc(parentId).collection('children').doc(childId);
+  await runTransaction(db, async (tx) => {
+    const childRef = childDoc(parentId, childDocId);
     const childSnap = await tx.get(childRef);
 
-    if (!childSnap.exists) throw new Error('Enfant non trouvé');
+    if (!childSnap.exists()) throw new Error('Enfant non trouvé');
 
     const childData = childSnap.data()!;
 
@@ -98,10 +182,11 @@ export async function sendMoney(
       totalEarned: (childData.totalEarned as number) + amount,
     });
 
-    const txRef = db.collection('transactions').doc();
+    const txRef = doc(collection(db, 'transactions'));
     tx.set(txRef, {
       parentId,
-      childId,
+      childId: childAuthUid,
+      childDocId,
       type,
       amount,
       description,
@@ -117,25 +202,41 @@ export async function getTransactions(
   childId?: string,
   maxResults = 50
 ): Promise<Transaction[]> {
-  let q: firebase.firestore.Query = db.collection('transactions');
+  let q: Query = query(
+    collection(db, 'transactions'),
+    orderBy('createdAt', 'desc'),
+    limit(maxResults)
+  );
 
   if (role === 'parent') {
-    q = q.where('parentId', '==', userId);
-    if (childId) q = q.where('childId', '==', childId);
+    q = query(
+      collection(db, 'transactions'),
+      where('parentId', '==', userId),
+      ...(childId ? [where('childId', '==', childId)] : []),
+      orderBy('createdAt', 'desc'),
+      limit(maxResults)
+    );
   } else {
-    q = q.where('childId', '==', userId);
+    q = query(
+      collection(db, 'transactions'),
+      where('childId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(maxResults)
+    );
   }
 
-  q = q.orderBy('createdAt', 'desc').limit(maxResults);
-
-  const snap = await q.get();
+  const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction);
 }
 
-// --- Missions ---
+// ---------------------------------------------------------------------------
+// Missions
+// ---------------------------------------------------------------------------
 
-export async function createMission(data: Omit<Mission, 'id'>): Promise<string> {
-  const ref = await db.collection('missions').add({
+export async function createMission(
+  data: Omit<Mission, 'id'>
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'missions'), {
     ...data,
     createdAt: Timestamp.now(),
   });
@@ -147,18 +248,16 @@ export async function getMissions(
   role: 'parent' | 'child',
   childId?: string
 ): Promise<Mission[]> {
-  let q: firebase.firestore.Query = db.collection('missions');
+  const constraints: any[] = [orderBy('createdAt', 'desc')];
 
   if (role === 'parent') {
-    q = q.where('parentId', '==', userId);
-    if (childId) q = q.where('childId', '==', childId);
+    constraints.unshift(where('parentId', '==', userId));
+    if (childId) constraints.push(where('childId', '==', childId));
   } else {
-    q = q.where('childId', '==', userId);
+    constraints.unshift(where('childId', '==', userId));
   }
 
-  q = q.orderBy('createdAt', 'desc');
-
-  const snap = await q.get();
+  const snap = await getDocs(query(collection(db, 'missions'), ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Mission);
 }
 
@@ -166,7 +265,7 @@ export async function updateMission(
   missionId: string,
   data: Partial<Mission>
 ): Promise<void> {
-  await db.collection('missions').doc(missionId).update(data as Record<string, unknown>);
+  await updateDoc(doc(db, 'missions', missionId), data as DocumentData);
 }
 
 export async function completeMission(
@@ -174,15 +273,19 @@ export async function completeMission(
   mission: Mission,
   parentId: string
 ): Promise<void> {
-  await db.runTransaction(async (tx) => {
-    const childRef = db.collection('users').doc(parentId).collection('children').doc(mission.childId);
+  // Le sous-doc enfant est repéré par childDocId. Pour les missions créées
+  // avant l'introduction de childDocId, on tombe sur childId par compat
+  // (legacy, peut ne pas correspondre).
+  const childKey = mission.childDocId ?? mission.childId;
+  await runTransaction(db, async (tx) => {
+    const childRef = childDoc(parentId, childKey);
     const childSnap = await tx.get(childRef);
 
-    if (!childSnap.exists) throw new Error('Enfant non trouvé');
+    if (!childSnap.exists()) throw new Error('Enfant non trouvé');
 
     const childData = childSnap.data()!;
 
-    tx.update(db.collection('missions').doc(missionId), {
+    tx.update(doc(db, 'missions', missionId), {
       status: 'completed',
       completedAt: Timestamp.now(),
     });
@@ -192,10 +295,11 @@ export async function completeMission(
       totalEarned: (childData.totalEarned as number) + mission.reward,
     });
 
-    const txRef = db.collection('transactions').doc();
+    const txRef = doc(collection(db, 'transactions'));
     tx.set(txRef, {
       parentId,
       childId: mission.childId,
+      childDocId: childKey,
       type: 'mission_reward',
       amount: mission.reward,
       description: `Mission : ${mission.title}`,
@@ -206,10 +310,12 @@ export async function completeMission(
   });
 }
 
-// --- Goals ---
+// ---------------------------------------------------------------------------
+// Goals
+// ---------------------------------------------------------------------------
 
 export async function createGoal(data: Omit<Goal, 'id'>): Promise<string> {
-  const ref = await db.collection('goals').add({
+  const ref = await addDoc(collection(db, 'goals'), {
     ...data,
     createdAt: Timestamp.now(),
   });
@@ -217,10 +323,13 @@ export async function createGoal(data: Omit<Goal, 'id'>): Promise<string> {
 }
 
 export async function getGoals(childId: string): Promise<Goal[]> {
-  const snap = await db.collection('goals')
-    .where('childId', '==', childId)
-    .orderBy('createdAt', 'desc')
-    .get();
+  const snap = await getDocs(
+    query(
+      collection(db, 'goals'),
+      where('childId', '==', childId),
+      orderBy('createdAt', 'desc')
+    )
+  );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Goal);
 }
 
@@ -230,15 +339,15 @@ export async function saveToGoal(
   childId: string,
   amount: number
 ): Promise<void> {
-  await db.runTransaction(async (tx) => {
-    const childRef = db.collection('users').doc(parentId).collection('children').doc(childId);
-    const goalRef = db.collection('goals').doc(goalId);
+  await runTransaction(db, async (tx) => {
+    const childRef = childDoc(parentId, childId);
+    const goalRef = doc(db, 'goals', goalId);
 
     const childSnap = await tx.get(childRef);
     const goalSnap = await tx.get(goalRef);
 
-    if (!childSnap.exists) throw new Error('Enfant non trouvé');
-    if (!goalSnap.exists) throw new Error('Objectif non trouvé');
+    if (!childSnap.exists()) throw new Error('Enfant non trouvé');
+    if (!goalSnap.exists()) throw new Error('Objectif non trouvé');
 
     const childData = childSnap.data()!;
     const goalData = goalSnap.data()!;
@@ -257,10 +366,12 @@ export async function saveToGoal(
 
     tx.update(goalRef, {
       currentAmount: newGoalAmount,
-      ...(isCompleted ? { status: 'completed', completedAt: Timestamp.now() } : {}),
+      ...(isCompleted
+        ? { status: 'completed', completedAt: Timestamp.now() }
+        : {}),
     });
 
-    const txRef = db.collection('transactions').doc();
+    const txRef = doc(collection(db, 'transactions'));
     tx.set(txRef, {
       parentId,
       childId,
@@ -274,10 +385,14 @@ export async function saveToGoal(
   });
 }
 
-// --- Money Requests ---
+// ---------------------------------------------------------------------------
+// Money Requests
+// ---------------------------------------------------------------------------
 
-export async function createMoneyRequest(data: Omit<MoneyRequest, 'id'>): Promise<string> {
-  const ref = await db.collection('moneyRequests').add({
+export async function createMoneyRequest(
+  data: Omit<MoneyRequest, 'id'>
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'moneyRequests'), {
     ...data,
     createdAt: Timestamp.now(),
   });
@@ -289,10 +404,13 @@ export async function getMoneyRequests(
   role: 'parent' | 'child'
 ): Promise<MoneyRequest[]> {
   const field = role === 'parent' ? 'parentId' : 'childId';
-  const snap = await db.collection('moneyRequests')
-    .where(field, '==', userId)
-    .orderBy('createdAt', 'desc')
-    .get();
+  const snap = await getDocs(
+    query(
+      collection(db, 'moneyRequests'),
+      where(field, '==', userId),
+      orderBy('createdAt', 'desc')
+    )
+  );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as MoneyRequest);
 }
 
@@ -303,15 +421,19 @@ export async function resolveMoneyRequest(
   comment?: string
 ): Promise<void> {
   if (approved) {
-    await db.runTransaction(async (tx) => {
-      const childRef = db.collection('users').doc(request.parentId).collection('children').doc(request.childId);
+    // Pour mettre à jour le solde, on a besoin du childDocId (clé du sous-doc).
+    // Fallback sur childId pour les anciennes demandes créées avant l'ajout
+    // du champ childDocId.
+    const childKey = request.childDocId ?? request.childId;
+    await runTransaction(db, async (tx) => {
+      const childRef = childDoc(request.parentId, childKey);
       const childSnap = await tx.get(childRef);
 
-      if (!childSnap.exists) throw new Error('Enfant non trouvé');
+      if (!childSnap.exists()) throw new Error('Enfant non trouvé');
 
       const childData = childSnap.data()!;
 
-      tx.update(db.collection('moneyRequests').doc(requestId), {
+      tx.update(doc(db, 'moneyRequests', requestId), {
         status: 'approved',
         parentComment: comment || null,
         resolvedAt: Timestamp.now(),
@@ -322,10 +444,11 @@ export async function resolveMoneyRequest(
         totalEarned: (childData.totalEarned as number) + request.amount,
       });
 
-      const txRef = db.collection('transactions').doc();
+      const txRef = doc(collection(db, 'transactions'));
       tx.set(txRef, {
         parentId: request.parentId,
         childId: request.childId,
+        childDocId: childKey,
         type: 'request',
         amount: request.amount,
         description: `Demande : ${request.reason}`,
@@ -334,7 +457,7 @@ export async function resolveMoneyRequest(
       });
     });
   } else {
-    await db.collection('moneyRequests').doc(requestId).update({
+    await updateDoc(doc(db, 'moneyRequests', requestId), {
       status: 'rejected',
       parentComment: comment || null,
       resolvedAt: Timestamp.now(),
@@ -342,34 +465,48 @@ export async function resolveMoneyRequest(
   }
 }
 
-// --- Notifications ---
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
 
-export async function getNotifications(userId: string): Promise<AppNotification[]> {
-  const snap = await db.collection('notifications')
-    .where('userId', '==', userId)
-    .orderBy('createdAt', 'desc')
-    .limit(50)
-    .get();
+export async function getNotifications(
+  userId: string
+): Promise<AppNotification[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, 'notifications'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    )
+  );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AppNotification);
 }
 
 export async function markNotificationRead(notifId: string): Promise<void> {
-  await db.collection('notifications').doc(notifId).update({ read: true });
+  await updateDoc(doc(db, 'notifications', notifId), { read: true });
 }
 
-export async function createNotification(data: Omit<AppNotification, 'id'>): Promise<void> {
-  await db.collection('notifications').add({
+export async function createNotification(
+  data: Omit<AppNotification, 'id'>
+): Promise<void> {
+  await addDoc(collection(db, 'notifications'), {
     ...data,
     createdAt: Timestamp.now(),
   });
 }
 
-// --- Badges ---
+// ---------------------------------------------------------------------------
+// Badges
+// ---------------------------------------------------------------------------
 
 export async function getEarnedBadges(childId: string): Promise<EarnedBadge[]> {
-  const snap = await db.collection('badges')
-    .where('childId', '==', childId)
-    .orderBy('earnedAt', 'desc')
-    .get();
+  const snap = await getDocs(
+    query(
+      collection(db, 'badges'),
+      where('childId', '==', childId),
+      orderBy('earnedAt', 'desc')
+    )
+  );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as EarnedBadge);
 }

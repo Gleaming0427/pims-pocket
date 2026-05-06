@@ -85,7 +85,7 @@ export default function ChildDetailScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title={child.firstName} showBack />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <Card style={{ alignItems: 'center', paddingVertical: 24, marginBottom: 16 }}>
           <Avatar avatarId={child.avatarId} size={80} />
           <Text

@@ -32,7 +32,7 @@ export default function BadgesScreen() {
         title="Mes badges"
         subtitle={`${earnedBadges.length}/${badgesDef.length} débloqués`}
       />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <View
           style={{
             alignItems: 'center',

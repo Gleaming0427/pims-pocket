@@ -43,7 +43,7 @@ export default function ChildMissionsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
       <Header title="Mes missions" />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         {missions.length === 0 ? (
           <EmptyState
             emoji="🎮"

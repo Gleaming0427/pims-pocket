@@ -36,7 +36,7 @@ export default function MissionsScreen() {
           </TouchableOpacity>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         {missions.length === 0 ? (
           <EmptyState
             emoji="⚡"

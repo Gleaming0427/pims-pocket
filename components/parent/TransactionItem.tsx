@@ -21,14 +21,27 @@ const typeConfig: Record<
   saving: { icon: 'wallet', label: 'Épargne', color: colors.info },
   spending: { icon: 'cart', label: 'Dépense', color: colors.error },
   request: { icon: 'hand-left', label: 'Demande', color: colors.secondary },
+  penalty: { icon: 'remove-circle', label: 'Retrait', color: colors.error },
 };
+
+const FALLBACK_CONFIG = {
+  icon: 'help-circle' as keyof typeof Ionicons.glyphMap,
+  label: 'Transaction',
+  color: colors.textSecondary,
+};
+
+// Les transactions de retrait (penalty) sont stockées avec amount > 0
+// (contrainte Firestore Rules) mais doivent s'afficher comme un débit.
+const isDebitType = (type: Transaction['type']) =>
+  type === 'penalty' || type === 'saving' || type === 'spending';
 
 export default function TransactionItem({
   transaction,
   childName,
 }: TransactionItemProps) {
-  const config = typeConfig[transaction.type];
-  const isPositive = transaction.amount > 0;
+  const config = typeConfig[transaction.type] ?? FALLBACK_CONFIG;
+  const isDebit = isDebitType(transaction.type) || transaction.amount < 0;
+  const displayAmount = Math.abs(transaction.amount);
 
   return (
     <View
@@ -68,11 +81,11 @@ export default function TransactionItem({
         style={{
           fontSize: 16,
           fontWeight: '700',
-          color: isPositive ? colors.success : colors.error,
+          color: isDebit ? colors.error : colors.success,
         }}
       >
-        {isPositive ? '+' : ''}
-        {formatCurrencyShort(transaction.amount)}
+        {isDebit ? '−' : '+'}
+        {formatCurrencyShort(displayAmount)}
       </Text>
     </View>
   );

@@ -39,7 +39,7 @@ export default function ChildLayout() {
         }}
       />
       <Tabs.Screen
-        name="goals"
+        name="goals/index"
         options={{
           title: 'Objectifs',
           tabBarIcon: ({ color, size }) => (
@@ -56,6 +56,7 @@ export default function ChildLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="goals/create" options={{ href: null }} />
       <Tabs.Screen name="ask-money" options={{ href: null }} />
       <Tabs.Screen name="history" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />

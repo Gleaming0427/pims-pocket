@@ -13,14 +13,18 @@ export function useGoogleAuth() {
   const router = useRouter();
   const { signInWithGoogle, isLoading } = useAuthStore();
 
-  // Lazy-import to avoid crash when clientId is undefined
-  const Google = require('expo-auth-session/providers/google');
+  // Lazy-import Google auth provider - only when clientId is configured
+  const Google = clientId
+    ? require('expo-auth-session/providers/google')
+    : null;
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId,
-    iosClientId: clientId,
-    androidClientId: clientId,
-  });
+  const [request, response, promptAsync] = Google
+    ? Google.useIdTokenAuthRequest({
+        clientId,
+        iosClientId: clientId,
+        androidClientId: clientId,
+      })
+    : [null, null, async () => {}];
 
   const handleGoogleSignIn = useCallback(async (idToken: string) => {
     try {
