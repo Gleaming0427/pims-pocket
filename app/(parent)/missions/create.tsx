@@ -18,7 +18,7 @@ const suggestedMissions = [
   { title: 'Mettre la table', icon: 'restaurant', reward: '1' },
   { title: 'Faire ses devoirs', icon: 'book', reward: '2' },
   { title: 'Promener le chien', icon: 'paw', reward: '3' },
-  { title: 'Passer l\'aspirateur', icon: 'sparkles', reward: '3' },
+  { title: "Passer l'aspirateur", icon: 'sparkles', reward: '3' },
   { title: 'Aider en cuisine', icon: 'pizza', reward: '2' },
 ];
 
@@ -30,11 +30,12 @@ const icons = [
 export default function CreateMissionScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const family = useAuthStore((s) => s.family);
   const { children } = useChildren();
   const { createMission, isLoading } = useMissionStore();
 
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(
-    children.length === 1 ? children[0].id : null
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    children.length === 1 ? [children[0].id] : []
   );
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -42,7 +43,14 @@ export default function CreateMissionScreen() {
   const [icon, setIcon] = useState('flash');
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [autoValidate, setAutoValidate] = useState(family?.autoValidateMissions ?? false);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
+
+  const toggleChild = (childId: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(childId) ? prev.filter((id) => id !== childId) : [...prev, childId]
+    );
+  };
 
   const handleSuggestion = (s: (typeof suggestedMissions)[0]) => {
     setTitle(s.title);
@@ -51,8 +59,8 @@ export default function CreateMissionScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedChildId) {
-      Alert.alert('Erreur', 'Sélectionnez un enfant');
+    if (selectedIds.length === 0) {
+      Alert.alert('Erreur', 'Sélectionnez au moins un enfant');
       return;
     }
     const titleError = validateName(title);
@@ -61,36 +69,54 @@ export default function CreateMissionScreen() {
     if (titleError || rewardError) return;
     if (!user) return;
 
-    // Convention: childId stocké sur les missions/transactions = linkedUserId
-    // (Auth UID de l'enfant). C'est ce que l'enfant utilisera pour requêter
-    // ses missions, et ce que les Firestore Rules vérifient.
-    const selectedChild = children.find((c) => c.id === selectedChildId);
-    if (!selectedChild?.linkedUserId) {
+    const selectedChildren = children.filter((c) => selectedIds.includes(c.id));
+    const inactiveChild = selectedChildren.find((c) => !c.linkedUserId);
+    if (inactiveChild) {
       Alert.alert(
         'Compte enfant non activé',
-        `${selectedChild?.firstName ?? 'Cet enfant'} doit d'abord activer son compte (créer son code et PIN) pour recevoir des missions.`
+        `${inactiveChild.firstName ?? 'Cet enfant'} doit d'abord activer son compte (créer son code et PIN) pour recevoir des missions.`
       );
       return;
     }
 
-    try {
-      await createMission({
-        parentId: user.id,
-        childId: selectedChild.linkedUserId,
-        childDocId: selectedChild.id,
-        title: title.trim(),
-        description: description.trim(),
-        reward: parseAmountToCents(reward),
-        icon,
-        status: 'available',
-        isRecurring,
-        ...(isRecurring ? { recurringFrequency: frequency } : {}),
-        createdAt: null as never,
-      });
-      Alert.alert('Mission créée !', `"${title}" a été assignée.`, [
+    let failures = 0;
+    for (const child of selectedChildren) {
+      try {
+        await createMission({
+          familyId: user.familyId!,
+          parentId: user.id,
+          childId: child.linkedUserId!,
+          childDocId: child.id,
+          title: title.trim(),
+          description: description.trim(),
+          reward: parseAmountToCents(reward),
+          icon,
+          status: 'available',
+          isRecurring,
+          autoValidate,
+          autoApproveAt:
+            !autoValidate && (family?.validationDelayHours ?? 0) > 0
+              ? (Date.now() + (family!.validationDelayHours! * 3600000)) as never
+              : null as never,
+          ...(isRecurring ? { recurringFrequency: frequency } : {}),
+          createdAt: null as never,
+        });
+      } catch {
+        failures++;
+      }
+    }
+
+    if (failures === 0) {
+      Alert.alert('Mission créée !', `"${title}" a été assignée à ${selectedChildren.length} enfant(s).`, [
         { text: 'OK', onPress: () => router.back() },
       ]);
-    } catch {
+    } else if (failures < selectedChildren.length) {
+      Alert.alert(
+        'Partiellement créé',
+        `Mission créée pour ${selectedChildren.length - failures} enfant(s), ${failures} échec(s).`,
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+    } else {
       Alert.alert('Erreur', 'Impossible de créer la mission.');
     }
   };
@@ -99,34 +125,69 @@ export default function CreateMissionScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title="Créer une mission" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text
-          style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary, marginBottom: 10 }}
-        >
-          Assigner à
-        </Text>
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-          {children.map((child) => (
-            <TouchableOpacity
-              key={child.id}
-              onPress={() => setSelectedChildId(child.id)}
-              style={{
-                alignItems: 'center',
-                padding: 10,
-                borderRadius: 14,
-                backgroundColor: selectedChildId === child.id ? colors.primary + '15' : colors.surface,
-                borderWidth: 2,
-                borderColor: selectedChildId === child.id ? colors.primary : colors.border,
-              }}
-            >
-              <Avatar avatarId={child.avatarId} size={40} />
-              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textPrimary, marginTop: 4 }}>
-                {child.firstName}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.textSecondary }}>
+            Assigner à
+          </Text>
+          {selectedIds.length > 0 && (
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+              {selectedIds.length} sélectionné{selectedIds.length > 1 ? 's' : ''}
+            </Text>
+          )}
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+          {children.map((child) => {
+            const isSelected = selectedIds.includes(child.id);
+            const isActivated = !!child.linkedUserId;
+            return (
+              <TouchableOpacity
+                key={child.id}
+                onPress={() => toggleChild(child.id)}
+                style={{
+                  alignItems: 'center',
+                  padding: 12,
+                  paddingHorizontal: 16,
+                  borderRadius: 14,
+                  backgroundColor: isSelected ? colors.primary + '15' : colors.surface,
+                  borderWidth: 2,
+                  borderColor: isSelected ? colors.primary : colors.border,
+                  opacity: isActivated ? 1 : 0.6,
+                }}
+              >
+                <View style={{ position: 'relative' }}>
+                  <Avatar avatarId={child.avatarId} size={44} />
+                  {isSelected && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -4,
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: colors.primary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons name="checkmark" size={14} color="#FFF" />
+                    </View>
+                  )}
+                </View>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textPrimary, marginTop: 6 }}>
+                  {child.firstName}
+                </Text>
+                {!isActivated && (
+                  <Text style={{ fontSize: 10, color: colors.textLight, marginTop: 2 }}>
+                    Non activé
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <Text
@@ -161,6 +222,7 @@ export default function CreateMissionScreen() {
           icon="flash-outline"
           value={title}
           onChangeText={setTitle}
+          maxLength={100}
           error={errors.title}
         />
 
@@ -171,6 +233,7 @@ export default function CreateMissionScreen() {
           value={description}
           onChangeText={setDescription}
           multiline
+          maxLength={200}
         />
 
         <Input
@@ -262,7 +325,36 @@ export default function CreateMissionScreen() {
           </View>
         )}
 
-        <Button title="Créer la mission" onPress={handleSubmit} loading={isLoading} />
+        {/* Auto-validation */}
+        <TouchableOpacity
+          onPress={() => setAutoValidate(!autoValidate)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 12,
+            marginBottom: 20,
+          }}
+        >
+          <Ionicons
+            name={autoValidate ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={colors.primary}
+          />
+          <View style={{ marginLeft: 10, flex: 1 }}>
+            <Text style={{ fontSize: 15, color: colors.textPrimary, fontWeight: '500' }}>
+              Auto-valider cette mission
+            </Text>
+            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+              Validée automatiquement quand l'enfant la termine
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        <Button
+          title={`Créer la mission${selectedIds.length > 1 ? ` (×${selectedIds.length})` : ''}`}
+          onPress={handleSubmit}
+          loading={isLoading}
+        />
       </ScrollView>
     </SafeAreaView>
   );

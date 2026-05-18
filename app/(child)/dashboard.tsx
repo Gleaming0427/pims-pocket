@@ -9,16 +9,17 @@ import { useNotifications } from '@/hooks/useNotifications';
 import PiggyBank from '@/components/child/PiggyBank';
 import ChildMissionCard from '@/components/child/MissionCard';
 import Avatar from '@/components/ui/Avatar';
-import Card from '@/components/ui/Card';
 import NotificationBell from '@/components/shared/NotificationBell';
+import NotificationsModal from '@/components/shared/NotificationsModal';
 import LoadingScreen from '@/components/shared/LoadingScreen';
-import { getGoals } from '@/lib/firestore';
+import { onGoalsSnapshot } from '@/lib/firestore';
 import { getEarnedBadges } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { Goal, EarnedBadge } from '@/types';
 import { formatCurrencyShort } from '@/utils/formatters';
 import ProgressBar from '@/components/ui/ProgressBar';
+import Card from '@/components/ui/Card';
 import badgesDef from '@/constants/badges';
 import colors from '@/constants/colors';
 
@@ -26,7 +27,8 @@ export default function ChildDashboard() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { missions } = useMissions();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, notifications, markAsRead, isLoading: notifLoading } = useNotifications();
+  const [notifModalVisible, setNotifModalVisible] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
   const [balance, setBalance] = useState(0);
@@ -34,34 +36,52 @@ export default function ChildDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    getGoals(user.id).then(setGoals).catch(() => {});
+    const familyId = user.familyId ?? user.id;
+    const unsub = onGoalsSnapshot(familyId, user.id, setGoals);
     getEarnedBadges(user.id).then(setEarnedBadges).catch(() => {});
-  }, [user?.id]);
+    return unsub;
+  }, [user?.id, user?.familyId]);
 
   // Souscription en temps réel au solde de l'enfant.
-  // Le solde est stocké dans users/{parentId}/children/{childDocId}, écrit
-  // par les transactions/missions côté parent. L'enfant n'a accès en lecture
-  // que parce que la règle Firestore vérifie linkedUserId == auth.uid.
+  // Le solde est stocké dans families/{familyId}/children/{childDocId}.
+  // L'enfant a accès en lecture car la règle Firestore vérifie linkedUserId == auth.uid.
+  //
+  // familyId et childDocId sont toujours présents :
+  // - Nouveaux comptes : écrits par createChildAccount
+  // - Anciens comptes : résolus par signInChild (via la Cloud Function getChildLoginToken)
+  //   et persistés dans le user doc à la première connexion post-migration.
   useEffect(() => {
-    if (!user?.parentId || !user?.childDocId) return;
-    const ref = doc(db, 'users', user.parentId, 'children', user.childDocId);
+    if (!user?.familyId || !user?.childDocId) {
+      console.warn(
+        '[ChildDashboard] snapshot annulée – familyId=',
+        user?.familyId,
+        'childDocId=',
+        user?.childDocId
+      );
+      return;
+    }
+    const ref = doc(db, 'families', user.familyId, 'children', user.childDocId);
     const unsub = onSnapshot(
       ref,
       (snap) => {
+        if (!snap.exists()) {
+          console.warn('[ChildDashboard] document introuvable:', ref.path);
+          return;
+        }
         const data = snap.data();
         setBalance(typeof data?.balance === 'number' ? data.balance : 0);
         setAvatarId(typeof data?.avatarId === 'string' ? data.avatarId : null);
       },
-      (err) => console.warn('[ChildDashboard] balance snapshot error', err.message)
+      (err) => console.warn('[ChildDashboard] ERREUR snapshot:', err.code, err.message)
     );
     return unsub;
-  }, [user?.parentId, user?.childDocId]);
+  }, [user?.familyId, user?.childDocId]);
 
   const availableMissions = missions
     .filter((m) => m.status === 'available' || m.status === 'in_progress')
     .slice(0, 3);
 
-  const mainGoal = goals.find((g) => g.status === 'active');
+  const latestGoal = goals.find((g) => g.status === 'active');
 
   const recentBadges = earnedBadges.slice(0, 3);
 
@@ -105,7 +125,7 @@ export default function ChildDashboard() {
           <TouchableOpacity onPress={() => router.push('/(child)/history')}>
             <Ionicons name="time-outline" size={26} color={colors.textPrimary} />
           </TouchableOpacity>
-          <NotificationBell count={unreadCount} onPress={() => {}} />
+          <NotificationBell count={unreadCount} onPress={() => setNotifModalVisible(true)} />
         </View>
       </View>
 
@@ -151,6 +171,34 @@ export default function ChildDashboard() {
           </TouchableOpacity>
         </View>
 
+        {latestGoal && (
+          <Card variant="child" style={{ marginBottom: 16 }} onPress={() => router.push('/(child)/goals')}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '700',
+                color: colors.textPrimary,
+                marginBottom: 8,
+              }}
+            >
+              🎯 {latestGoal.title}
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 10 }}>
+              {formatCurrencyShort(latestGoal.currentAmount)} / {formatCurrencyShort(latestGoal.targetAmount)}
+            </Text>
+            <ProgressBar
+              progress={(() => {
+                const cur = Number(latestGoal.currentAmount);
+                const tgt = Number(latestGoal.targetAmount);
+                if (!Number.isFinite(cur) || !Number.isFinite(tgt) || tgt <= 0) return 0;
+                return cur / tgt;
+              })()}
+              color={colors.starGold}
+              showPercentage
+            />
+          </Card>
+        )}
+
         {availableMissions.length > 0 && (
           <>
             <Text
@@ -169,34 +217,6 @@ export default function ChildDashboard() {
           </>
         )}
 
-        {mainGoal && (
-          <Card variant="child" style={{ marginTop: 8, marginBottom: 16 }}>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginBottom: 8,
-              }}
-            >
-              🎯 {mainGoal.title}
-            </Text>
-            <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 10 }}>
-              {formatCurrencyShort(mainGoal.currentAmount)} / {formatCurrencyShort(mainGoal.targetAmount)}
-            </Text>
-            <ProgressBar
-              progress={(() => {
-                const cur = Number(mainGoal.currentAmount);
-                const tgt = Number(mainGoal.targetAmount);
-                if (!Number.isFinite(cur) || !Number.isFinite(tgt) || tgt <= 0) return 0;
-                return cur / tgt;
-              })()}
-              color={colors.starGold}
-              showPercentage
-            />
-          </Card>
-        )}
-
         {recentBadges.length > 0 && (
           <>
             <Text
@@ -204,7 +224,7 @@ export default function ChildDashboard() {
                 fontSize: 18,
                 fontWeight: '700',
                 color: colors.textPrimary,
-                marginTop: 8,
+                marginTop: 16,
                 marginBottom: 12,
               }}
             >
@@ -241,6 +261,13 @@ export default function ChildDashboard() {
           </>
         )}
       </ScrollView>
+      <NotificationsModal
+        visible={notifModalVisible}
+        onClose={() => setNotifModalVisible(false)}
+        notifications={notifications}
+        loading={notifLoading}
+        onMarkAsRead={markAsRead}
+      />
     </SafeAreaView>
   );
 }

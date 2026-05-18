@@ -1,9 +1,13 @@
-import React from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/stores/authStore';
+import { db, auth, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { deleteUser } from 'firebase/auth';
+import { doc, onSnapshot } from 'firebase/firestore';
 import Avatar from '@/components/ui/Avatar';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -13,6 +17,48 @@ import colors from '@/constants/colors';
 export default function ChildProfileScreen() {
   const router = useRouter();
   const { user, signOut } = useAuthStore();
+  const [avatarId, setAvatarId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.familyId || !user?.childDocId) return;
+    const ref = doc(db, 'families', user.familyId, 'children', user.childDocId);
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        setAvatarId(typeof data?.avatarId === 'string' ? data.avatarId : null);
+      },
+      () => {}
+    );
+    return unsub;
+  }, [user?.familyId, user?.childDocId]);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Supprimer mon compte',
+      'Cette action est irréversible. Toutes tes données seront perdues. Demande à ton parent avant de continuer.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const callFn = httpsCallable(functions, 'deleteUserData');
+              await callFn({});
+              if (auth.currentUser) await deleteUser(auth.currentUser);
+              await signOut();
+              router.replace('/');
+            } catch (e: unknown) {
+              const msg = e instanceof Error ? e.message : 'Erreur';
+              Alert.alert('Erreur', msg);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleSignOut = () => {
     Alert.alert('Déconnexion', 'Tu veux vraiment te déconnecter ?', [
@@ -32,18 +78,22 @@ export default function ChildProfileScreen() {
       <Header title="Mon profil" showBack />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <Card variant="child" style={{ alignItems: 'center', paddingVertical: 32, marginBottom: 20 }}>
-          <View
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: colors.piggyPink + '30',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 56 }}>🧒</Text>
-          </View>
+          {avatarId ? (
+            <Avatar avatarId={avatarId} size={100} />
+          ) : (
+            <View
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+                backgroundColor: colors.piggyPink + '30',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 56 }}>🧒</Text>
+            </View>
+          )}
           <Text
             style={{
               fontSize: 24,
@@ -60,7 +110,8 @@ export default function ChildProfileScreen() {
         </Card>
 
         <Card variant="child">
-          <View
+          <TouchableOpacity
+            onPress={() => router.push('/(child)/history')}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -81,14 +132,14 @@ export default function ChildProfileScreen() {
             >
               Mon historique
             </Text>
-          </View>
-          <View
+            <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/(child)/badges')}
             style={{
               flexDirection: 'row',
               alignItems: 'center',
               paddingVertical: 14,
-              borderBottomWidth: 1,
-              borderBottomColor: colors.border,
             }}
           >
             <Ionicons name="ribbon-outline" size={22} color={colors.starGold} />
@@ -103,7 +154,8 @@ export default function ChildProfileScreen() {
             >
               Mes badges
             </Text>
-          </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+          </TouchableOpacity>
         </Card>
 
         <Button
@@ -112,6 +164,12 @@ export default function ChildProfileScreen() {
           variant="danger"
           style={{ marginTop: 32 }}
           icon={<Ionicons name="log-out-outline" size={20} color="#FFF" />}
+        />
+        <Button
+          title="Supprimer mon compte"
+          onPress={handleDeleteAccount}
+          variant="ghost"
+          style={{ marginTop: 12 }}
         />
       </ScrollView>
     </SafeAreaView>

@@ -23,7 +23,7 @@ const statusConfig: Record<
   expired: { label: 'Expirée', color: colors.textLight, bg: colors.textLight + '20' },
 };
 
-export default function MissionCard({
+const MissionCard = React.memo(function MissionCard({
   mission,
   onPress,
   childName,
@@ -104,4 +104,5 @@ export default function MissionCard({
       </View>
     </Card>
   );
-}
+});
+export default MissionCard;

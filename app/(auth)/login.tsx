@@ -4,11 +4,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import GoogleButton from '@/components/ui/GoogleButton';
-import Divider from '@/components/ui/Divider';
 import Header from '@/components/shared/Header';
 import { useAuthStore } from '@/stores/authStore';
-import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import { validateEmail, validatePassword, validateInviteCode, validatePinCode } from '@/utils/validators';
 import colors from '@/constants/colors';
 import { getFirebaseAuthUserMessage } from '@/utils/firebaseAuthErrors';
@@ -16,7 +13,6 @@ import { getFirebaseAuthUserMessage } from '@/utils/firebaseAuthErrors';
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn, signInChild, isLoading } = useAuthStore();
-  const { promptAsync, isReady: googleReady, isLoading: googleLoading } = useGoogleAuth();
 
   const [mode, setMode] = useState<'parent' | 'child'>('parent');
   const [email, setEmail] = useState('');
@@ -133,14 +129,15 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
-            <Divider />
+            <TouchableOpacity
+              onPress={() => router.push('/(parent)/privacy')}
+              style={{ alignSelf: 'center', marginTop: 20 }}
+            >
+              <Text style={{ color: colors.textLight, fontSize: 12 }}>
+                Politique de confidentialité
+              </Text>
+            </TouchableOpacity>
 
-            <GoogleButton
-              onPress={() => promptAsync()}
-              loading={googleLoading}
-              disabled={!googleReady}
-              title="Se connecter avec Google"
-            />
           </>
         ) : (
           <>

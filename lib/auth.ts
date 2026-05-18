@@ -6,6 +6,7 @@ import {
   signInWithCredential,
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   onAuthStateChanged,
   updateProfile,
   GoogleAuthProvider,
@@ -52,6 +53,8 @@ export async function signUp(
     email,
     displayName,
     role: 'parent',
+    hasCompletedOnboarding: false,
+    consentGivenAt: Timestamp.now(),
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   };
@@ -81,7 +84,15 @@ export async function signUp(
     );
   }
 
-  return user;
+  // Envoi de l'email de vérification — les écritures Firestore sont bloquées
+  // tant que l'email n'est pas vérifié (règle hasVerifiedEmail).
+  try {
+    await sendEmailVerification(cred.user);
+  } catch {
+    // Non bloquant : l'utilisateur pourra renvoyer l'email depuis l'app
+  }
+
+  return { ...user, emailVerified: cred.user.emailVerified };
 }
 
 export async function signIn(email: string, password: string): Promise<AppUser> {
@@ -106,13 +117,20 @@ export async function signIn(email: string, password: string): Promise<AppUser> 
     );
   }
 
-  return { id: snap.id, ...snap.data() } as AppUser;
+  return {
+    id: snap.id,
+    ...snap.data(),
+    emailVerified: cred.user.emailVerified,
+  } as AppUser;
 }
 
 export async function signInChild(inviteCode: string, pin: string): Promise<AppUser> {
-  let data: { token?: string };
+  let data: { token?: string; familyId?: string; childDocId?: string };
   try {
-    const getToken = httpsCallable<{ inviteCode: string; pin: string }, { token?: string }>(functions, 'getChildLoginToken');
+    const getToken = httpsCallable<
+      { inviteCode: string; pin: string },
+      { token?: string; familyId?: string; childDocId?: string }
+    >(functions, 'getChildLoginToken');
     const result = await getToken({ inviteCode, pin });
     data = result.data;
   } catch (e: unknown) {
@@ -139,16 +157,72 @@ export async function signInChild(inviteCode: string, pin: string): Promise<AppU
     throw new Error('Compte enfant non trouvé dans la base de données');
   }
 
-  return { id: snap.id, ...snap.data() } as AppUser;
+  const userData = { id: snap.id, ...snap.data() } as AppUser;
+
+  // Rétrocompatibilité : les comptes enfants créés avant la migration "families"
+  // n'ont ni familyId ni childDocId dans leur user doc. La Cloud Function
+  // getChildLoginToken les renvoie maintenant (extraite du path Firestore).
+  // On les utilise pour combler les champs manquants.
+  if (userData.role === 'child' && (!userData.familyId || !userData.childDocId)) {
+    // Toujours écraser avec les valeurs de la Cloud Function (source de vérité)
+    if (data.familyId) userData.familyId = data.familyId;
+    if (data.childDocId) userData.childDocId = data.childDocId;
+
+    // Si familyId est toujours manquant, le récupérer côté client en
+    // parcourant les familles (l'enfant a le droit de lister /families).
+    if (!userData.familyId && userData.childDocId) {
+      try {
+        const { getDocs: getDocsFn, collectionGroup: collectionGroupFn, query, where } = await import('firebase/firestore');
+        const childrenSnap = await getDocsFn(query(
+          collectionGroupFn(db, 'children'),
+          where('linkedUserId', '==', cred.user.uid)
+        ));
+        if (!childrenSnap.empty) {
+          const segments = childrenSnap.docs[0].ref.path.split('/');
+          if (segments.length >= 2 && segments[0] === 'families') {
+            userData.familyId = segments[1];
+          }
+        }
+      } catch (e: unknown) {
+        console.warn('[signInChild] Échec récupération familyId:', e instanceof Error ? e.message : String(e));
+      }
+    }
+
+    // Persister dans Firestore pour les prochaines connexions
+    if (userData.familyId || userData.childDocId) {
+      const { updateDoc: updateUserDoc } = await import('firebase/firestore');
+      const updatePayload: Record<string, string> = {};
+      const existing = snap.data() || {};
+      if (!existing.familyId && userData.familyId) updatePayload.familyId = userData.familyId;
+      if (!existing.childDocId && userData.childDocId) updatePayload.childDocId = userData.childDocId;
+      if (Object.keys(updatePayload).length > 0) {
+        updateUserDoc(doc(db, 'users', cred.user.uid), updatePayload).catch(() => {});
+      }
+    }
+
+    // Mettre à jour le authStore immédiatement avec les bons IDs.
+    try {
+      const { useAuthStore } = await import('@/stores/authStore');
+      useAuthStore.getState().setUser(userData);
+    } catch {
+      // Non bloquant
+    }
+  }
+
+  return userData;
 }
 
 export async function createChildAuthAccount(
+  familyId: string,
   childDocId: string,
   inviteCode: string,
   pin: string
 ): Promise<{ uid: string }> {
-  const createAccount = httpsCallable<{ childDocId: string; inviteCode: string; pin: string }, { success?: boolean; uid: string }>(functions, 'createChildAccount');
-  const result = await createAccount({ childDocId, inviteCode, pin });
+  const createAccount = httpsCallable<
+    { familyId: string; childDocId: string; inviteCode: string; pin: string },
+    { success?: boolean; uid: string }
+  >(functions, 'createChildAccount');
+  const result = await createAccount({ familyId, childDocId, inviteCode, pin });
   const data = result.data;
   return { uid: data.uid };
 }
@@ -160,7 +234,7 @@ export async function signInWithGoogle(idToken: string): Promise<AppUser> {
   const snap = await getDoc(doc(db, 'users', result.user.uid));
 
   if (snap.exists()) {
-    return { id: snap.id, ...snap.data() } as AppUser;
+    return { id: snap.id, ...snap.data(), emailVerified: true } as AppUser;
   }
 
   const user: AppUser = {
@@ -168,8 +242,10 @@ export async function signInWithGoogle(idToken: string): Promise<AppUser> {
     email: result.user.email ?? '',
     displayName: result.user.displayName ?? '',
     role: 'parent',
+    hasCompletedOnboarding: false,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
+    emailVerified: true, // Google = vérifié par construction
   };
 
   await setDoc(doc(db, 'users', result.user.uid), user);
@@ -182,6 +258,12 @@ export async function signOut(): Promise<void> {
   // supprimer les tokens persistés et éviter que l'utilisateur
   // reste connecté automatiquement lors du prochain lancement.
   await clearAllStorage();
+}
+
+export async function sendParentEmailVerification(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Aucun utilisateur connecté.');
+  await sendEmailVerification(user);
 }
 
 export async function resetPassword(email: string): Promise<void> {

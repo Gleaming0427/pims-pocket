@@ -77,6 +77,9 @@ export default function ParentLayout() {
       <Tabs.Screen name="missions/create" options={{ href: null }} />
       <Tabs.Screen name="notification-settings" options={{ href: null }} />
       <Tabs.Screen name="security" options={{ href: null }} />
+      <Tabs.Screen name="privacy" options={{ href: null }} />
+      <Tabs.Screen name="terms" options={{ href: null }} />
+      <Tabs.Screen name="remove-money" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -35,7 +35,7 @@ const FALLBACK_CONFIG = {
 const isDebitType = (type: Transaction['type']) =>
   type === 'penalty' || type === 'saving' || type === 'spending';
 
-export default function TransactionItem({
+const TransactionItem = React.memo(function TransactionItem({
   transaction,
   childName,
 }: TransactionItemProps) {
@@ -89,4 +89,5 @@ export default function TransactionItem({
       </Text>
     </View>
   );
-}
+});
+export default TransactionItem;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMissions } from '@/hooks/useMissions';
 import { useMissionStore } from '@/stores/missionStore';
@@ -31,6 +32,7 @@ export default function ChildMissionsScreen() {
           onPress: async () => {
             setLoadingId(missionId);
             await updateMissionStatus(missionId, 'pending_validation');
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             setLoadingId(null);
           },
         },
@@ -56,7 +58,7 @@ export default function ChildMissionsScreen() {
               <>
                 <Text
                   style={{
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: '700',
                     color: colors.textPrimary,
                     marginBottom: 12,
@@ -79,7 +81,7 @@ export default function ChildMissionsScreen() {
               <>
                 <Text
                   style={{
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: '700',
                     color: colors.accentOrange,
                     marginTop: 16,
@@ -98,7 +100,7 @@ export default function ChildMissionsScreen() {
               <>
                 <Text
                   style={{
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: '700',
                     color: colors.success,
                     marginTop: 16,

@@ -10,7 +10,7 @@ interface AvatarProps {
   style?: ViewStyle;
 }
 
-export default function Avatar({
+const Avatar = React.memo(function Avatar({
   avatarId,
   size = 48,
   onPress,
@@ -49,4 +49,5 @@ export default function Avatar({
   }
 
   return content;
-}
+});
+export default Avatar;

@@ -1,12 +1,21 @@
 {
   "cli": {
     "version": ">= 16.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCz1gZ5gJV2q8gVeNYnkjM5kTKJHzSsohg",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "wallet-jr.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "wallet-jr",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "wallet-jr.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "433560362929",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:433560362929:web:8da3817efebc89b8c57a90",
+        "EXPO_PUBLIC_USE_EMULATORS": "false"
+      },
       "ios": {
         "simulator": true
       },
@@ -15,9 +24,40 @@
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCz1gZ5gJV2q8gVeNYnkjM5kTKJHzSsohg",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "wallet-jr.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "wallet-jr",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "wallet-jr.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "433560362929",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:433560362929:web:8da3817efebc89b8c57a90",
+        "EXPO_PUBLIC_USE_EMULATORS": "false"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk"
+      }
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCz1gZ5gJV2q8gVeNYnkjM5kTKJHzSsohg",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "wallet-jr.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "wallet-jr",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "wallet-jr.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "433560362929",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:433560362929:web:8da3817efebc89b8c57a90",
+        "EXPO_PUBLIC_USE_EMULATORS": "false"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
   },
   "submit": {
     "production": {}

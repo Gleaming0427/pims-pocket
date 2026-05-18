@@ -10,9 +10,6 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';
-import GoogleButton from '@/components/ui/GoogleButton';
-import Divider from '@/components/ui/Divider';
-import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import colors from '@/constants/colors';
 
 const { width } = Dimensions.get('window');
@@ -42,7 +39,6 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const { promptAsync, isReady: googleReady, isLoading: googleLoading } = useGoogleAuth();
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const w = width > 0 ? width : 1;
@@ -122,13 +118,6 @@ export default function WelcomeScreen() {
           variant="outline"
         />
 
-        <Divider />
-
-        <GoogleButton
-          onPress={() => promptAsync()}
-          loading={googleLoading}
-          disabled={!googleReady}
-        />
       </View>
     </SafeAreaView>
   );

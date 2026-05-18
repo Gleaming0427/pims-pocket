@@ -1,15 +1,29 @@
 import { useEffect } from 'react';
 import { useMissionStore } from '@/stores/missionStore';
 import { useAuthStore } from '@/stores/authStore';
+import { onMissionsSnapshot } from '@/lib/firestore';
 
 export function useMissions(childId?: string) {
   const store = useMissionStore();
   const user = useAuthStore((s) => s.user);
 
+  // L'enfant doit toujours filtrer par son propre childId (Auth UID)
+  // pour que la query respecte les règles Firestore.
+  const effectiveChildId =
+    childId ?? (user?.role === 'child' ? user.id : undefined);
+
   useEffect(() => {
     if (!user) return;
-    store.fetchMissions(user.id, user.role, childId);
-  }, [user?.id, childId]);
+    store.fetchMissions(user.id, user.familyId, user.role, effectiveChildId);
+
+    const unsub = onMissionsSnapshot(user.id, user.familyId, user.role, effectiveChildId, (missions) => {
+      store.setMissions(missions);
+    });
+
+    return () => {
+      unsub();
+    };
+  }, [user?.id, user?.familyId, effectiveChildId]);
 
   return store;
 }

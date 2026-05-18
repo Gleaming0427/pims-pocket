@@ -8,8 +8,8 @@ export function useTransactions(childId?: string) {
 
   useEffect(() => {
     if (!user) return;
-    store.fetchTransactions(user.id, user.role, childId);
-  }, [user?.id, childId]);
+    store.fetchTransactions(user.id, user.familyId, user.role, childId);
+  }, [user?.id, user?.familyId, childId]);
 
   return store;
 }

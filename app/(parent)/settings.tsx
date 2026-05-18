@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Switch, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,7 +66,10 @@ function SettingItem({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, signOut } = useAuthStore();
+  const { user, family, signOut, updateFamilySettings } = useAuthStore();
+  const [autoValidate, setAutoValidate] = useState(family?.autoValidateMissions ?? false);
+  const [delayHours, setDelayHours] = useState(String(family?.validationDelayHours ?? 24));
+  const [saving, setSaving] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
@@ -114,6 +117,81 @@ export default function SettingsScreen() {
           </Text>
         </Card>
 
+        {/* Section validation */}
+        <Card style={{ marginBottom: 16 }}>
+          <View style={{ paddingVertical: 4 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 16 }}>
+              Validation des missions
+            </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
+                  Auto-valider les missions
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                  Les missions sont validées automatiquement quand l'enfant les termine
+                </Text>
+              </View>
+              <Switch
+                value={autoValidate}
+                onValueChange={async (v) => {
+                  setAutoValidate(v);
+                  setSaving(true);
+                  try {
+                    await updateFamilySettings({ autoValidateMissions: v });
+                  } catch { /* ignore */ }
+                  setSaving(false);
+                }}
+                trackColor={{ false: colors.border, true: colors.primary + '60' }}
+                thumbColor={autoValidate ? colors.primary : '#f4f3f4'}
+              />
+            </View>
+
+            {!autoValidate && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
+                    Délai d'auto-validation
+                  </Text>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                    En heures. 0 = désactivé. Passé ce délai, la mission est validée automatiquement.
+                  </Text>
+                </View>
+                <TextInput
+                  value={delayHours}
+                  onChangeText={async (t) => {
+                    setDelayHours(t);
+                    const n = parseInt(t, 10);
+                    if (!isNaN(n) && n >= 0 && n <= 720) {
+                      setSaving(true);
+                      try {
+                        await updateFamilySettings({ validationDelayHours: n });
+                      } catch { /* ignore */ }
+                      setSaving(false);
+                    }
+                  }}
+                  keyboardType="number-pad"
+                  placeholder="24"
+                  style={{
+                    backgroundColor: colors.background,
+                    borderRadius: 10,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    fontSize: 16,
+                    fontWeight: '700',
+                    color: colors.textPrimary,
+                    textAlign: 'center',
+                    minWidth: 56,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                />
+              </View>
+            )}
+          </View>
+        </Card>
+
         <Card>
           <SettingItem
             icon="repeat"
@@ -132,6 +210,12 @@ export default function SettingsScreen() {
             label="Sécurité"
             onPress={() => router.push('/(parent)/security')}
             color={colors.success}
+          />
+          <SettingItem
+            icon="document-text-outline"
+            label="Politique de confidentialité"
+            onPress={() => router.push('/(parent)/privacy')}
+            color={colors.info}
           />
           <SettingItem
             icon="help-circle-outline"

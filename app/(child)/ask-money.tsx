@@ -28,11 +28,15 @@ export default function AskMoneyScreen() {
       Alert.alert('Erreur', 'Dis à tes parents pourquoi tu as besoin de cet argent !');
       return;
     }
-    if (!user || !user.parentId) return;
+    if (!user?.familyId) {
+      Alert.alert('Erreur', 'Ton compte n\'est pas encore complètement configuré. Réessaie dans quelques instants.');
+      return;
+    }
 
     setIsLoading(true);
     try {
       await createMoneyRequest({
+        familyId: user.familyId,
         childId: user.id,
         childDocId: user.childDocId,
         parentId: user.parentId,
@@ -46,8 +50,9 @@ export default function AskMoneyScreen() {
         'Tes parents vont recevoir ta demande et pourront accepter ou refuser.',
         [{ text: 'OK', onPress: () => router.back() }]
       );
-    } catch {
-      Alert.alert('Erreur', "Impossible d'envoyer la demande.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Impossible d'envoyer la demande.";
+      Alert.alert('Erreur', msg);
     }
     setIsLoading(false);
   };
@@ -56,7 +61,7 @@ export default function AskMoneyScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
       <Header title="Demander de l'argent" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
@@ -92,6 +97,7 @@ export default function AskMoneyScreen() {
           value={reason}
           onChangeText={setReason}
           multiline
+          maxLength={500}
         />
 
         <Button

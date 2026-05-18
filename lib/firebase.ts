@@ -115,12 +115,6 @@ if (USE_EMULATORS) {
   }
 }
 
-if (__DEV__) {
-  console.log(
-    `[Firebase] ✅ Initialisé — Projet: ${firebaseConfig.projectId} | ` +
-    `Émulateurs: ${USE_EMULATORS ? 'ON' : 'OFF'}`
-  );
-}
 
 export { app, auth, db, functions };
 export default app;

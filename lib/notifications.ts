@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+import { doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { shouldRunExpoPushRegistration } from './pushDeviceSupport';
 
@@ -62,7 +63,7 @@ export async function registerForPushNotifications(userId: string): Promise<stri
       url: EXPO_GET_PUSH_TOKEN_URL,
     });
     const token = tokenData.data;
-    await db.collection('users').doc(userId).update({ fcmToken: token });
+    await updateDoc(doc(db, 'users', userId), { fcmToken: token } as Record<string, unknown>);
     return token;
   } catch {
     return null;

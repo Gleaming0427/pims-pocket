@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, Alert, View, Text, TouchableOpacity } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useMissions } from '@/hooks/useMissions';
@@ -12,9 +13,9 @@ import Avatar from '@/components/ui/Avatar';
 import Header from '@/components/shared/Header';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingScreen from '@/components/shared/LoadingScreen';
-import { getMoneyRequests, resolveMoneyRequest } from '@/lib/firestore';
+import { onMoneyRequestsSnapshot, resolveMoneyRequest } from '@/lib/firestore';
 import { formatCurrencyShort, formatRelativeDate } from '@/utils/formatters';
-import { MoneyRequest } from '@/types';
+import { MoneyRequest, Timestamp } from '@/types';
 import colors from '@/constants/colors';
 
 export default function ValidationsScreen() {
@@ -33,19 +34,12 @@ export default function ValidationsScreen() {
   const getChildAvatarByAuthUid = (authUid: string) =>
     children.find((c) => c.linkedUserId === authUid)?.avatarId ?? '';
 
-  const refreshRequests = useCallback(async () => {
-    if (!user) return;
-    try {
-      const reqs = await getMoneyRequests(user.id, 'parent');
-      setMoneyRequests(reqs);
-    } catch {
-      // silencieux : si la lecture échoue (offline), on garde l'état précédent
-    }
-  }, [user?.id]);
-
+  // Souscription temps réel aux demandes d'argent
   useEffect(() => {
-    refreshRequests();
-  }, [refreshRequests]);
+    if (!user) return;
+    const unsub = onMoneyRequestsSnapshot(user.id, user.familyId!, user.role, setMoneyRequests);
+    return () => unsub();
+  }, [user?.id]);
 
   const handleApproveMission = async (missionId: string) => {
     const mission = missions.find((m) => m.id === missionId);
@@ -53,7 +47,8 @@ export default function ValidationsScreen() {
 
     setLoadingId(missionId);
     try {
-      await completeMission(missionId, mission, user.id);
+      await completeMission(missionId, mission, user.familyId!);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Mission validée !', `La récompense a été créditée.`);
     } catch {
       Alert.alert('Erreur', 'Impossible de valider la mission.');
@@ -88,8 +83,9 @@ export default function ValidationsScreen() {
           onPress: async () => {
             setLoadingId(req.id);
             try {
-              await resolveMoneyRequest(req.id, req, true);
-              await refreshRequests();
+              if (!user) return;
+              await resolveMoneyRequest(req.id, req, true, user.familyId!);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               Alert.alert('Demande acceptée', `${childName} a été crédité·e.`);
             } catch (e: unknown) {
               const msg = e instanceof Error ? e.message : 'Erreur inconnue';
@@ -111,8 +107,8 @@ export default function ValidationsScreen() {
         onPress: async () => {
           setLoadingId(req.id);
           try {
-            await resolveMoneyRequest(req.id, req, false);
-            await refreshRequests();
+            if (!user) return;
+            await resolveMoneyRequest(req.id, req, false, user.familyId!);
           } catch {
             Alert.alert('Erreur', 'Impossible de refuser la demande.');
           }
