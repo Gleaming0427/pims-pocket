@@ -77,7 +77,7 @@ export async function migrateLegacyParentData(
       return result;
     }
 
-    console.log('[migration] Début de la migration legacy…', { flags });
+    // La migration ne logue que les erreurs — silence en cas de succès.
 
     // ── 1. Migration des enfants ──
     // Mapping oldChildDocId → newChildDocId pour les étapes suivantes
@@ -90,9 +90,7 @@ export async function migrateLegacyParentData(
         console.error('[migration] Erreur migration enfants :', e);
         return result; // Bloquant : sans enfants le reste ne sert à rien
       }
-    } else {
-      console.log('[migration] Étape enfants déjà faite, passage à la suite.');
-    }
+    } else {}
 
     // ── 2. Mise à jour des transactions ──
     if (!flags.transactions) {
@@ -102,9 +100,7 @@ export async function migrateLegacyParentData(
       } catch (e) {
         console.error('[migration] Erreur migration transactions :', e);
       }
-    } else {
-      console.log('[migration] Étape transactions déjà faite, passage.');
-    }
+    } else {}
 
     // ── 3. Mise à jour des missions ──
     if (!flags.missions) {
@@ -114,9 +110,7 @@ export async function migrateLegacyParentData(
       } catch (e) {
         console.error('[migration] Erreur migration missions :', e);
       }
-    } else {
-      console.log('[migration] Étape missions déjà faite, passage.');
-    }
+    } else {}
 
     // ── 4. Mise à jour des objectifs ──
     if (!flags.goals) {
@@ -126,9 +120,7 @@ export async function migrateLegacyParentData(
       } catch (e) {
         console.error('[migration] Erreur migration goals :', e);
       }
-    } else {
-      console.log('[migration] Étape goals déjà faite, passage.');
-    }
+    } else {}
 
     // ── 5. Mise à jour des demandes d'argent ──
     if (!flags.requests) {
@@ -138,11 +130,7 @@ export async function migrateLegacyParentData(
       } catch (e) {
         console.error('[migration] Erreur migration moneyRequests :', e);
       }
-    } else {
-      console.log('[migration] Étape moneyRequests déjà faite, passage.');
-    }
-
-    console.log('[migration] Migration terminée.', result);
+    } else {}
 
     return result;
   } catch (e) {
@@ -164,10 +152,7 @@ async function migrateChildren(
   const legacyChildrenCol = collection(db, 'users', parentUid, 'children');
   const snap = await getDocs(legacyChildrenCol);
 
-  if (snap.empty) {
-    console.log('[migration] Aucun enfant legacy à migrer.');
-    return;
-  }
+  if (snap.empty) return;
 
   const newChildrenCol = collection(db, 'families', familyId, 'children');
   const batchSize = 500;
@@ -195,10 +180,6 @@ async function migrateChildren(
 
     await batch.commit();
   }
-
-  console.log(
-    `[migration] ${result.migratedChildren} enfant(s) migré(s) vers families/${familyId}/children/.`
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -222,10 +203,7 @@ async function migrateTransactions(
   // Filtrer celles qui n'ont pas déjà un familyId
   const legacyTxs = txSnap.docs.filter((d) => !d.data().familyId);
 
-  if (legacyTxs.length === 0) {
-    console.log('[migration] Aucune transaction legacy à migrer.');
-    return;
-  }
+  if (legacyTxs.length === 0) return;
 
   const batchSize = 500;
 
@@ -248,10 +226,6 @@ async function migrateTransactions(
 
     await batch.commit();
   }
-
-  console.log(
-    `[migration] ${result.migratedTxs} transaction(s) mises à jour avec familyId.`
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -270,10 +244,7 @@ async function migrateMissions(
 
   const legacyDocs = snap.docs.filter((d) => !d.data().familyId);
 
-  if (legacyDocs.length === 0) {
-    console.log('[migration] Aucune mission legacy à migrer.');
-    return;
-  }
+  if (legacyDocs.length === 0) return;
 
   const batchSize = 500;
 
@@ -295,10 +266,6 @@ async function migrateMissions(
 
     await batch.commit();
   }
-
-  console.log(
-    `[migration] ${result.migratedMissions} mission(s) mises à jour avec familyId.`
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -317,10 +284,7 @@ async function migrateGoals(
 
   const legacyDocs = snap.docs.filter((d) => !d.data().familyId);
 
-  if (legacyDocs.length === 0) {
-    console.log('[migration] Aucun objectif legacy à migrer.');
-    return;
-  }
+  if (legacyDocs.length === 0) return;
 
   const batchSize = 500;
 
@@ -342,10 +306,6 @@ async function migrateGoals(
 
     await batch.commit();
   }
-
-  console.log(
-    `[migration] ${result.migratedGoals} objectif(s) mis à jour avec familyId.`
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -364,10 +324,7 @@ async function migrateMoneyRequests(
 
   const legacyDocs = snap.docs.filter((d) => !d.data().familyId);
 
-  if (legacyDocs.length === 0) {
-    console.log('[migration] Aucune demande d\'argent legacy à migrer.');
-    return;
-  }
+  if (legacyDocs.length === 0) return;
 
   const batchSize = 500;
 
@@ -389,8 +346,4 @@ async function migrateMoneyRequests(
 
     await batch.commit();
   }
-
-  console.log(
-    `[migration] ${result.migratedRequests} demande(s) d'argent mises à jour avec familyId.`
-  );
 }

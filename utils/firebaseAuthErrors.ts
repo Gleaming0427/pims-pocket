@@ -9,6 +9,12 @@ export function getFirebaseAuthUserMessage(error: unknown): string {
   const e = error as ErrorWithCode;
   const code = typeof e?.code === 'string' ? e.code : '';
 
+  // Les erreurs de permissions Firestore ne sont pas actionnables par
+  // l'utilisateur et ne doivent pas apparaître dans une popup.
+  if (typeof e?.message === 'string' && /permission.insufficient|Missing or insufficient permissions/i.test(e.message)) {
+    return 'Veuillez vérifier votre email pour débloquer toutes les fonctionnalités.';
+  }
+
   switch (code) {
     case 'auth/network-request-failed':
       return (

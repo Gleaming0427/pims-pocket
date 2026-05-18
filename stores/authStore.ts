@@ -77,12 +77,10 @@ export const useAuthStore = create<AuthState>()(
     set({ isLoading: true, error: null });
     try {
       const user = await authLib.signUp(email, password, displayName);
-      // Créer automatiquement une famille pour le nouveau parent
-      const family = await firestoreLib.createFamily(displayName, user.id);
-      // Persister le familyId dans le document user Firestore
-      await firestoreLib.updateUserFamilyId(user.id, family.id);
-      const userWithFamily = { ...user, familyId: family.id };
-      set({ user: userWithFamily, family, isAuthenticated: true, isLoading: false });
+      // La famille est créée dans authLib.signUp, avec le familyId déjà
+      // renseigné sur le doc utilisateur. Il ne reste qu'à la fetcher.
+      const family = user.familyId ? await firestoreLib.getFamily(user.familyId) : null;
+      set({ user, family, isAuthenticated: true, isLoading: false });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Erreur lors de l\'inscription';
       captureError(e, 'signUp');

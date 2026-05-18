@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,6 +45,32 @@ export default function ParentDashboard() {
       setVerifSent(true);
     } catch {
       // Erreur déjà gérée dans le store
+    } finally {
+      setVerifLoading(false);
+    }
+  };
+
+  const handleRefreshVerification = async () => {
+    setVerifLoading(true);
+    try {
+      const { auth } = await import('@/lib/firebase');
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        await auth.currentUser.getIdToken(true);
+        if (auth.currentUser.emailVerified) {
+          useAuthStore.getState().setUser({
+            ...useAuthStore.getState().user!,
+            emailVerified: true,
+          });
+        } else {
+          Alert.alert(
+            'Pas encore vérifié',
+            "Ton email n'est pas encore vérifié. Ouvre le mail que nous t'avons envoyé et clique sur le lien de confirmation."
+          );
+        }
+      }
+    } catch {
+      // Silencieux
     } finally {
       setVerifLoading(false);
     }
@@ -96,15 +122,15 @@ export default function ParentDashboard() {
                 </Text>
               </View>
             </View>
-            {!verifSent && (
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
               <TouchableOpacity
                 onPress={handleResendVerification}
                 disabled={verifLoading}
                 style={{
+                  flex: 1,
                   backgroundColor: colors.warning,
                   borderRadius: 12,
                   paddingVertical: 10,
-                  marginTop: 12,
                   alignItems: 'center',
                   opacity: verifLoading ? 0.6 : 1,
                 }}
@@ -113,7 +139,23 @@ export default function ParentDashboard() {
                   {verifLoading ? 'Envoi...' : 'Renvoyer l\'email'}
                 </Text>
               </TouchableOpacity>
-            )}
+              <TouchableOpacity
+                onPress={handleRefreshVerification}
+                disabled={verifLoading}
+                style={{
+                  flex: 1,
+                  backgroundColor: colors.success,
+                  borderRadius: 12,
+                  paddingVertical: 10,
+                  alignItems: 'center',
+                  opacity: verifLoading ? 0.6 : 1,
+                }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>
+                  J'ai vérifié
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 

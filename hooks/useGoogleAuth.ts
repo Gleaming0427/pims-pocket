@@ -31,7 +31,10 @@ export function useGoogleAuth() {
       await signInWithGoogle(idToken);
       router.replace('/');
     } catch (e: unknown) {
-      Alert.alert('Erreur', getFirebaseAuthUserMessage(e));
+      const gaErr = getFirebaseAuthUserMessage(e);
+      if (!/permission|Missing or insufficient/i.test(gaErr)) {
+        Alert.alert('Erreur', gaErr);
+      }
     }
   }, [signInWithGoogle, router]);
 

@@ -67,8 +67,10 @@ export default function TutorialScreen() {
 
       router.replace('/(onboarding)/celebration');
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Erreur inconnue';
-      Alert.alert('Erreur', msg);
+      // L'enfant démo n'a pas pu être créé (email non vérifié, etc.).
+      // On marque quand même l'onboarding comme fait pour éviter une boucle.
+      await updateUserOnboardingStatus(user.id, true).catch(() => {});
+      useAuthStore.getState().setUser({ ...user, hasCompletedOnboarding: true });
       router.replace('/(parent)/dashboard');
     } finally {
       setIsCompleting(false);

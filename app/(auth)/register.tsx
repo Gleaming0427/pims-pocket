@@ -52,7 +52,10 @@ export default function RegisterScreen() {
       await signUp(email.trim(), password, displayName.trim());
       router.replace('/');
     } catch (e: unknown) {
-      Alert.alert('Erreur', getFirebaseAuthUserMessage(e));
+      const msg = getFirebaseAuthUserMessage(e);
+      // Permission Firestore = erreur silencieuse (email pas encore vérifié)
+      if (/permission|Missing or insufficient/i.test(msg)) return;
+      Alert.alert('Erreur', msg);
     }
   };
 
