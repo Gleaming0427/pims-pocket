@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Pims Pocket",
-    "slug": "pims-pocket",
+    "slug": "PocketKids",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,7 +16,7 @@
     "ios": {
       "buildNumber": "2",
       "supportsTablet": true,
-      "bundleIdentifier": "com.pocketkids.app",
+      "bundleIdentifier": "com.pimspocket.app",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false,
@@ -51,7 +51,7 @@
         "foregroundImage": "./assets/splash-icon.png",
         "backgroundColor": "#6C5CE7"
       },
-      "package": "com.pocketkids.app",
+      "package": "com.pimspocket.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },

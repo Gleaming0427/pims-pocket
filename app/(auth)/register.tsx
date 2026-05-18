@@ -132,7 +132,7 @@ export default function RegisterScreen() {
               J'accepte la{' '}
               <Text
                 style={{ color: colors.primary, fontWeight: '600' }}
-                onPress={() => router.push('/(parent)/privacy')}
+                onPress={() => router.push('/(legal)/privacy')}
               >
                 politique de confidentialité
               </Text>
@@ -153,7 +153,7 @@ export default function RegisterScreen() {
               J'accepte les{' '}
               <Text
                 style={{ color: colors.primary, fontWeight: '600' }}
-                onPress={() => router.push('/(parent)/terms')}
+                onPress={() => router.push('/(legal)/terms')}
               >
                 conditions d'utilisation
               </Text>

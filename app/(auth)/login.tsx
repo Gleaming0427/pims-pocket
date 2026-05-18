@@ -130,7 +130,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push('/(parent)/privacy')}
+              onPress={() => router.push('/(legal)/privacy')}
               style={{ alignSelf: 'center', marginTop: 20 }}
             >
               <Text style={{ color: colors.textLight, fontSize: 12 }}>
