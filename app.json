@@ -14,7 +14,7 @@
       "backgroundColor": "#6C5CE7"
     },
     "ios": {
-      "buildNumber": "2",
+      "buildNumber": "3",
       "supportsTablet": true,
       "bundleIdentifier": "com.pimspocket.app",
       "infoPlist": {
