@@ -20,7 +20,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SLIDES = [
   {
     emoji: '👋',
-    title: 'Bienvenue dans\nPocketKids !',
+    title: 'Bienvenue dans\nPims Pocket !',
     description:
       "L'application qui rend l'argent de poche intelligent et amusant pour toute la famille.",
   },

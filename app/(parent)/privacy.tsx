@@ -40,7 +40,7 @@ export default function PrivacyScreen() {
 
           <Section title="1. Introduction">
             <Para>
-              PocketKids ("l'Application") s'engage a proteger la vie privee de ses utilisateurs.
+              Pims Pocket ("l'Application")s'engage a proteger la vie privee de ses utilisateurs.
               Cette politique de confidentialite explique comment nous collectons, utilisons et
               protegeons vos donnees personnelles lorsque vous utilisez notre application de gestion
               d'argent de poche familial.
@@ -77,7 +77,7 @@ export default function PrivacyScreen() {
 
           <Section title="4. Services tiers">
             <Para>
-              PocketKids utilise les services Firebase de Google pour l'authentification, le
+              Pims Pocketutilise les services Firebase de Google pour l'authentification, le
               stockage des donnees et les notifications push. Les donnees sont stockees sur des
               serveurs Firebase situes dans l'Union Europeenne. Pour plus d'informations, consultez
               la{' '}
@@ -92,7 +92,7 @@ export default function PrivacyScreen() {
               .
             </Para>
             <Para>
-              PocketKids utilise egalement Sentry pour la detection et le suivi des erreurs
+              Pims Pocketutilise egalement Sentry pour la detection et le suivi des erreurs
               techniques. Sentry collecte uniquement des donnees de diagnostic (messages d'erreur,
               traces d'execution, informations sur l'appareil). Les donnees des enfants ne sont pas
               transmises a Sentry. Pour plus d'informations, consultez la{' '}
@@ -119,7 +119,7 @@ export default function PrivacyScreen() {
 
           <Section title="6. Donnees des enfants">
             <Para>
-              PocketKids est concu pour une utilisation familiale. Les comptes enfants sont crees et
+              Pims Pocketest concu pour une utilisation familiale. Les comptes enfants sont crees et
               geres par les parents. Aucune donnee personnelle d'enfant n'est collectee sans le
               consentement parental explicite. Les parents disposent d'un controle total sur le
               compte de leur enfant et peuvent en demander la suppression a tout moment.
@@ -159,7 +159,7 @@ export default function PrivacyScreen() {
             <Para>
               Pour toute question concernant cette politique de confidentialite ou pour exercer vos
               droits :{'\n'}
-              {'\n'}Email : privacy@pocketkids.app{'\n'}
+              {'\n'}Email : privacy@pimspocket.app{'\n'}
               {'\n'}Nous nous engageons a repondre dans un delai maximum de 30 jours.
             </Para>
           </Section>

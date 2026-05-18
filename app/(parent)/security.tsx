@@ -93,7 +93,7 @@ export default function SecurityScreen() {
       // Affiche les données dans une alerte simple (limité mais fonctionnel)
       Alert.alert(
         'Export réussi',
-        'Vos données sont prêtes. Contactez privacy@pocketkids.app pour les recevoir par email.',
+        'Vos données sont prêtes. Contactez privacy@pimspocket.app pour les recevoir par email.',
         [{ text: 'OK' }]
       );
       console.log('[exportUserData]', json);
