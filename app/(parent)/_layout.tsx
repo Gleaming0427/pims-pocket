@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import colors from '@/constants/colors';
 import { useMissions } from '@/hooks/useMissions';
 import Badge from '@/components/ui/Badge';
@@ -9,6 +10,9 @@ import { View } from 'react-native';
 export default function ParentLayout() {
   const { getPendingValidations } = useMissions();
   const pendingCount = getPendingValidations().length;
+  const insets = useSafeAreaInsets();
+
+  const tabBarHeight = 56 + insets.bottom;
 
   return (
     <Tabs
@@ -19,8 +23,8 @@ export default function ParentLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 88,
-          paddingBottom: 30,
+          height: tabBarHeight,
+          paddingBottom: insets.bottom,
           paddingTop: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
@@ -77,8 +81,6 @@ export default function ParentLayout() {
       <Tabs.Screen name="missions/create" options={{ href: null }} />
       <Tabs.Screen name="notification-settings" options={{ href: null }} />
       <Tabs.Screen name="security" options={{ href: null }} />
-      <Tabs.Screen name="privacy" options={{ href: null }} />
-      <Tabs.Screen name="terms" options={{ href: null }} />
       <Tabs.Screen name="remove-money" options={{ href: null }} />
     </Tabs>
   );

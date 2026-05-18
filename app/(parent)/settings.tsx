@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Switch, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Switch, TextInput, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -214,13 +214,13 @@ export default function SettingsScreen() {
           <SettingItem
             icon="document-text-outline"
             label="Politique de confidentialité"
-            onPress={() => router.push('/(parent)/privacy')}
+            onPress={() => router.push('/(legal)/privacy')}
             color={colors.info}
           />
           <SettingItem
             icon="help-circle-outline"
             label="Aide et support"
-            onPress={() => {}}
+            onPress={() => Linking.openURL('mailto:privacy@pimspocket.app')}
             color={colors.secondary}
           />
           <SettingItem

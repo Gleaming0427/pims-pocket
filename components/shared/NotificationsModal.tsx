@@ -6,7 +6,9 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppNotification } from '@/types';
 import { formatRelativeDate } from '@/utils/formatters';
@@ -44,8 +46,9 @@ export default function NotificationsModal({
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={onClose}
+      statusBarTranslucent={Platform.OS === 'android'}
     >
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name="close" size={24} color={colors.textPrimary} />
@@ -100,7 +103,7 @@ export default function NotificationsModal({
             );
           }}
         />
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
