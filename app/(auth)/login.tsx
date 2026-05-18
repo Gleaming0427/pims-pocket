@@ -32,7 +32,10 @@ export default function LoginScreen() {
       await signIn(email.trim(), password);
       router.replace('/');
     } catch (e: unknown) {
-      Alert.alert('Erreur', getFirebaseAuthUserMessage(e));
+      const loginErr = getFirebaseAuthUserMessage(e);
+      if (!/permission|Missing or insufficient/i.test(loginErr)) {
+        Alert.alert('Erreur', loginErr);
+      }
     }
   };
 
@@ -48,7 +51,9 @@ export default function LoginScreen() {
       router.replace('/');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      Alert.alert('Erreur', msg || "Code d'invitation ou PIN invalide");
+      if (!/permission|Missing or insufficient/i.test(msg)) {
+        Alert.alert('Erreur', msg || "Code d'invitation ou PIN invalide");
+      }
     }
   };
 

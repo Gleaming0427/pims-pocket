@@ -16,6 +16,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  collection,
   Timestamp,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -48,18 +49,58 @@ export async function signUp(
     // Non bloquant : on continue même si le profil n'est pas mis à jour
   }
 
+  // Créer la famille d'abord pour avoir le familyId, puis créer le doc
+  // utilisateur avec familyId déjà renseigné. Évite un updateDoc ultérieur
+  // qui échouerait car l'email n'est pas encore vérifié.
+  const familyRef = doc(collection(db, 'families'));
+  const family = {
+    name: displayName,
+    parentIds: [cred.user.uid],
+    createdBy: cred.user.uid,
+    createdAt: Timestamp.now(),
+  };
+
+  let firestoreOk = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await setDoc(familyRef, family);
+      firestoreOk = true;
+      break;
+    } catch {
+      if (attempt < 3) {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    }
+  }
+
+  if (!firestoreOk) {
+    try { await cred.user.delete(); } catch {}
+    throw new Error(
+      'Votre compte a bien été créé mais nous n\'avons pas pu enregistrer vos données. ' +
+      'Veuillez vérifier votre connexion internet et réessayer.'
+    );
+  }
+
   const user: AppUser = {
     id: cred.user.uid,
     email,
     displayName,
     role: 'parent',
+    familyId: familyRef.id,
     hasCompletedOnboarding: false,
     consentGivenAt: Timestamp.now(),
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
+    _mig: {
+      children: true,
+      transactions: true,
+      missions: true,
+      goals: true,
+      requests: true,
+    },
   };
 
-  let firestoreOk = false;
+  firestoreOk = false;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       await setDoc(doc(db, 'users', cred.user.uid), user);
@@ -73,24 +114,16 @@ export async function signUp(
   }
 
   if (!firestoreOk) {
-    try {
-      await cred.user.delete();
-    } catch {
-      // Rollback best-effort
-    }
+    try { await cred.user.delete(); } catch {}
     throw new Error(
       'Votre compte a bien été créé mais nous n\'avons pas pu enregistrer vos données. ' +
       'Veuillez vérifier votre connexion internet et réessayer.'
     );
   }
 
-  // Envoi de l'email de vérification — les écritures Firestore sont bloquées
-  // tant que l'email n'est pas vérifié (règle hasVerifiedEmail).
   try {
     await sendEmailVerification(cred.user);
-  } catch {
-    // Non bloquant : l'utilisateur pourra renvoyer l'email depuis l'app
-  }
+  } catch {}
 
   return { ...user, emailVerified: cred.user.emailVerified };
 }
@@ -111,10 +144,21 @@ export async function signIn(email: string, password: string): Promise<AppUser> 
   }
 
   if (!snap || !snap.exists()) {
-    throw new Error(
-      'Votre compte est bien créé mais les données mettent quelques secondes à se synchroniser. ' +
-      'Veuillez réessayer dans 5 secondes.'
-    );
+    // Compte Auth créé sans doc Firestore (= création via console ou API).
+    // On initialise un document utilisateur minimal ; le store créera la famille.
+    const minimalUser = {
+      role: 'parent' as const,
+      email: cred.user.email,
+      displayName: cred.user.email?.split('@')[0] ?? 'Parent',
+      createdAt: Timestamp.now(),
+      _mig: { children: true, transactions: true, missions: true, goals: true, requests: true },
+    };
+    await setDoc(doc(db, 'users', cred.user.uid), minimalUser);
+    return {
+      id: cred.user.uid,
+      ...minimalUser,
+      emailVerified: cred.user.emailVerified,
+    };
   }
 
   return {

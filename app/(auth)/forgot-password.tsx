@@ -27,7 +27,10 @@ export default function ForgotPasswordScreen() {
       await resetPassword(email.trim());
       setSent(true);
     } catch (e: unknown) {
-      Alert.alert('Erreur', getFirebaseAuthUserMessage(e));
+      const fpErr = getFirebaseAuthUserMessage(e);
+      if (!/permission|Missing or insufficient/i.test(fpErr)) {
+        Alert.alert('Erreur', fpErr);
+      }
     }
   };
 

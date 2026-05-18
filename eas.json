@@ -43,6 +43,7 @@
     },
     "production": {
       "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCz1gZ5gJV2q8gVeNYnkjM5kTKJHzSsohg",
         "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "wallet-jr.firebaseapp.com",
         "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "wallet-jr",
