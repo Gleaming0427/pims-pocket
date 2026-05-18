@@ -49,7 +49,7 @@ export async function registerForPushNotifications(userId: string): Promise<stri
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
-      name: 'PocketKids',
+      name: 'Pims Pocket',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#6C5CE7',

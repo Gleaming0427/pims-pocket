@@ -1,4 +1,4 @@
-# PocketKids
+# Pims Pocket
 
 Application mobile d'argent de poche pour enfants. Les parents gèrent l'argent de poche, les missions et les versements. Les enfants visualisent leur tirelire, accomplissent des missions et épargnent pour des objectifs.
 

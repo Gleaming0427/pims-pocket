@@ -16,7 +16,7 @@ import * as SecureStore from 'expo-secure-store';
 export async function clearAllStorage(): Promise<void> {
   await AsyncStorage.clear();
   try {
-    await SecureStore.deleteItemAsync('pocketkids-auth');
+    await SecureStore.deleteItemAsync('pimspocket-auth');
   } catch {
     // Non bloquant : si la clé n'existe pas, on ignore
   }

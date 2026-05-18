@@ -1,5 +1,6 @@
 # GitLab Pages — déploie le dossier /legal automatiquement
-# URL : https://<username>.gitlab.io/<repo>/privacy.html
+# URLs : https://<username>.gitlab.io/<repo>/privacy.html
+#         https://<username>.gitlab.io/<repo>/terms.html
 
 pages:
   stage: deploy

@@ -25,7 +25,7 @@ export default function TermsScreen() {
           1. Présentation
         </Text>
         <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginBottom: 20 }}>
-          PocketKids est une application mobile de gestion d'argent de poche familial. L'application permet aux parents de gérer l'argent de poche de leurs enfants via des missions, des versements et un suivi des dépenses.
+          Pims Pocketest une application mobile de gestion d'argent de poche familial. L'application permet aux parents de gérer l'argent de poche de leurs enfants via des missions, des versements et un suivi des dépenses.
         </Text>
 
         <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 }}>
@@ -46,7 +46,7 @@ export default function TermsScreen() {
           4. Responsabilité
         </Text>
         <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginBottom: 20 }}>
-          PocketKids est un outil de gestion. Les montants affichés sont indicatifs. L'application ne remplace pas un compte bancaire réel. PocketKids ne peut être tenue responsable des décisions financières prises via l'application.
+          Pims Pocketest un outil de gestion. Les montants affichés sont indicatifs. L'application ne remplace pas un compte bancaire réel. Pims Pocketne peut être tenue responsable des décisions financières prises via l'application.
         </Text>
 
         <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 }}>
@@ -60,7 +60,7 @@ export default function TermsScreen() {
           6. Contact
         </Text>
         <Text style={{ fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginBottom: 20 }}>
-          Pour toute question, contactez-nous à privacy@pocketkids.app.
+          Pour toute question, contactez-nous à privacy@pimspocket.app.
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -98,7 +98,7 @@ export default function ChildDetailScreen() {
     if (!child.inviteCode) return;
     try {
       await Share.share({
-        message: `Rejoins PocketKids avec ton code d'invitation : ${child.inviteCode}`,
+        message: `Rejoins Pims Pocket avec ton code d'invitation : ${child.inviteCode}`,
       });
     } catch {
       // silent

@@ -240,7 +240,7 @@ export default function SettingsScreen() {
             marginTop: 24,
           }}
         >
-          PocketKids v1.0.0
+          Pims Pocket v1.0.0
         </Text>
       </ScrollView>
     </SafeAreaView>

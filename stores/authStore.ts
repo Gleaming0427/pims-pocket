@@ -207,7 +207,7 @@ export const useAuthStore = create<AuthState>()(
   clearError: () => set({ error: null }),
     }),
     {
-      name: 'pocketkids-auth',
+      name: 'pimspocket-auth',
       storage: createJSONStorage(() => secureStoreAdapter),
       partialize: (state) => ({
         user: state.user,
