@@ -12,7 +12,7 @@ interface ChildCardProps {
   lastActivity?: string;
 }
 
-export default function ChildCard({ child, onPress, lastActivity }: ChildCardProps) {
+const ChildCard = React.memo(function ChildCard({ child, onPress, lastActivity }: ChildCardProps) {
   return (
     <Card onPress={onPress} style={{ marginBottom: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -62,4 +62,5 @@ export default function ChildCard({ child, onPress, lastActivity }: ChildCardPro
       </View>
     </Card>
   );
-}
+});
+export default ChildCard;

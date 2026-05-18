@@ -1,38 +1,37 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, Alert, ScrollView, TouchableOpacity } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
 import Header from '@/components/shared/Header';
-import MoneyAnimation from '@/components/child/MoneyAnimation';
 import { useAuthStore } from '@/stores/authStore';
 import { useChildren } from '@/hooks/useChildren';
 import { useTransactionStore } from '@/stores/transactionStore';
 import { validateAmount, parseAmountToCents } from '@/utils/validators';
-import { TransactionType, Child } from '@/types';
 import colors from '@/constants/colors';
 
-const motifs: { type: TransactionType; label: string; emoji: string }[] = [
-  { type: 'bonus', label: 'Bonus', emoji: '⭐' },
-  { type: 'gift', label: 'Cadeau', emoji: '🎁' },
-  { type: 'allowance', label: 'Argent de poche', emoji: '💰' },
+const motifs = [
+  { label: 'Bêtise', emoji: '😤' },
+  { label: 'Devoirs non faits', emoji: '📚' },
+  { label: 'Autre', emoji: '⚠️' },
 ];
 
-export default function SendMoneyScreen() {
+export default function RemoveMoneyScreen() {
   const router = useRouter();
+  const { childId: preselectedChildId } = useLocalSearchParams<{ childId?: string }>();
   const user = useAuthStore((s) => s.user);
   const { children } = useChildren();
-  const { sendMoney, isLoading } = useTransactionStore();
+  const { removeMoney, isLoading } = useTransactionStore();
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    preselectedChildId ? [preselectedChildId] : []
+  );
   const [amount, setAmount] = useState('');
-  const [type, setType] = useState<TransactionType>('bonus');
+  const [motifLabel, setMotifLabel] = useState(motifs[0].label);
   const [description, setDescription] = useState('');
-  const [showAnimation, setShowAnimation] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const activatedChildren = useMemo(
@@ -46,7 +45,7 @@ export default function SendMoneyScreen() {
     );
   };
 
-  const handleSend = async () => {
+  const handleRemove = async () => {
     if (selectedIds.length === 0) {
       Alert.alert('Erreur', 'Sélectionnez au moins un enfant');
       return;
@@ -67,51 +66,55 @@ export default function SendMoneyScreen() {
     }
 
     const cents = parseAmountToCents(amount);
-    const motif = motifs.find((m) => m.type === type);
-    const finalDescription = description.trim() || motif?.label || 'Versement';
+    const finalDescription = description.trim() || motifLabel;
+    const names = selectedChildren.map((c) => c.firstName).join(', ');
 
-    let failures = 0;
-    for (const child of selectedChildren) {
-      try {
-        await sendMoney(
-          user.familyId!,
-          child.id,
-          child.linkedUserId!,
-          cents,
-          type,
-          finalDescription
-        );
-      } catch {
-        failures++;
-      }
-    }
+    Alert.alert(
+      'Confirmer le retrait',
+      `Retirer ${amount} € à ${names} ?\nMotif : ${finalDescription}`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Retirer',
+          style: 'destructive',
+          onPress: async () => {
+            let failures = 0;
+            for (const child of selectedChildren) {
+              try {
+                await removeMoney(
+                  user.familyId!,
+                  child.id,
+                  child.linkedUserId!,
+                  cents,
+                  finalDescription
+                );
+              } catch {
+                failures++;
+              }
+            }
 
-    if (failures === 0) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setShowAnimation(true);
-    } else if (failures < selectedChildren.length) {
-      Alert.alert(
-        'Partiellement envoyé',
-        `L'argent a été envoyé à ${selectedChildren.length - failures} enfant(s), ${failures} échec(s).`,
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
-    } else {
-      Alert.alert('Erreur', "Impossible d'envoyer l'argent.");
-    }
+            if (failures === 0) {
+              Alert.alert('Retrait effectué', `${amount} € retirés de la tirelire de ${names}.`, [
+                { text: 'OK', onPress: () => router.back() },
+              ]);
+            } else if (failures < selectedChildren.length) {
+              Alert.alert(
+                'Partiellement effectué',
+                `Retrait effectué pour ${selectedChildren.length - failures} enfant(s), ${failures} échec(s).`,
+                [{ text: 'OK', onPress: () => router.back() }]
+              );
+            } else {
+              Alert.alert('Erreur', "Impossible de retirer l'argent.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Header title="Envoyer de l'argent" showBack />
-      <MoneyAnimation
-        visible={showAnimation}
-        onFinish={() => {
-          setShowAnimation(false);
-          Alert.alert('Envoyé !', "L'argent a bien été crédité.", [
-            { text: 'OK', onPress: () => router.back() },
-          ]);
-        }}
-      />
+      <Header title="Retirer de l'argent" showBack />
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
@@ -121,7 +124,7 @@ export default function SendMoneyScreen() {
             Choisir un ou plusieurs enfants
           </Text>
           {selectedIds.length > 0 && (
-            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.error }}>
               {selectedIds.length} sélectionné{selectedIds.length > 1 ? 's' : ''}
             </Text>
           )}
@@ -139,9 +142,9 @@ export default function SendMoneyScreen() {
                   padding: 12,
                   paddingHorizontal: 16,
                   borderRadius: 16,
-                  backgroundColor: isSelected ? colors.primary + '15' : colors.surface,
+                  backgroundColor: isSelected ? colors.error + '15' : colors.surface,
                   borderWidth: 2,
-                  borderColor: isSelected ? colors.primary : colors.border,
+                  borderColor: isSelected ? colors.error : colors.border,
                   opacity: isActivated ? 1 : 0.6,
                 }}
               >
@@ -156,7 +159,7 @@ export default function SendMoneyScreen() {
                         width: 20,
                         height: 20,
                         borderRadius: 10,
-                        backgroundColor: colors.primary,
+                        backgroundColor: colors.error,
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
@@ -208,16 +211,16 @@ export default function SendMoneyScreen() {
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
           {motifs.map((m) => (
             <TouchableOpacity
-              key={m.type}
-              onPress={() => setType(m.type)}
+              key={m.label}
+              onPress={() => setMotifLabel(m.label)}
               style={{
                 flex: 1,
                 padding: 14,
                 borderRadius: 14,
                 alignItems: 'center',
-                backgroundColor: type === m.type ? colors.primary + '15' : colors.surface,
+                backgroundColor: motifLabel === m.label ? colors.error + '15' : colors.surface,
                 borderWidth: 2,
-                borderColor: type === m.type ? colors.primary : colors.border,
+                borderColor: motifLabel === m.label ? colors.error : colors.border,
               }}
             >
               <Text style={{ fontSize: 24 }}>{m.emoji}</Text>
@@ -225,8 +228,9 @@ export default function SendMoneyScreen() {
                 style={{
                   fontSize: 12,
                   fontWeight: '600',
-                  color: type === m.type ? colors.primary : colors.textSecondary,
+                  color: motifLabel === m.label ? colors.error : colors.textSecondary,
                   marginTop: 4,
+                  textAlign: 'center',
                 }}
               >
                 {m.label}
@@ -236,8 +240,8 @@ export default function SendMoneyScreen() {
         </View>
 
         <Input
-          label="Description (optionnel)"
-          placeholder="Un petit mot..."
+          label="Précision (optionnel)"
+          placeholder="Pourquoi ce retrait..."
           icon="chatbubble-outline"
           value={description}
           onChangeText={setDescription}
@@ -245,10 +249,10 @@ export default function SendMoneyScreen() {
         />
 
         <Button
-          title={`Envoyer${selectedIds.length > 1 ? ` à ${selectedIds.length} enfants` : ''}`}
-          onPress={handleSend}
+          title={`Retirer${selectedIds.length > 1 ? ` de ${selectedIds.length} enfants` : ''}`}
+          onPress={handleRemove}
           loading={isLoading}
-          style={{ marginTop: 8, backgroundColor: colors.primary }}
+          style={{ marginTop: 8, backgroundColor: colors.error }}
         />
       </ScrollView>
     </SafeAreaView>

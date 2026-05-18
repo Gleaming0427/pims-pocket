@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 import { Mission } from '@/types';
 import * as firestoreLib from '@/lib/firestore';
+import { captureError } from '@/lib/sentry';
 import { Timestamp } from 'firebase/firestore';
 
 interface MissionState {
   missions: Mission[];
   isLoading: boolean;
   error: string | null;
-  fetchMissions: (userId: string, role: 'parent' | 'child', childId?: string) => Promise<void>;
+  fetchMissions: (userId: string, familyId: string | undefined, role: 'parent' | 'child', childId?: string) => Promise<void>;
+  setMissions: (missions: Mission[]) => void;
   createMission: (data: Omit<Mission, 'id'>) => Promise<string>;
   updateMissionStatus: (missionId: string, status: Mission['status']) => Promise<void>;
-  completeMission: (missionId: string, mission: Mission, parentId: string) => Promise<void>;
+  completeMission: (missionId: string, mission: Mission, familyId: string) => Promise<void>;
   getPendingValidations: () => Mission[];
 }
 
@@ -19,10 +21,10 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchMissions: async (userId, role, childId) => {
+  fetchMissions: async (userId, familyId, role, childId) => {
     set({ isLoading: true, error: null });
     try {
-      const missions = await firestoreLib.getMissions(userId, role, childId);
+      const missions = await firestoreLib.getMissions(userId, familyId, role, childId);
       set({ missions, isLoading: false });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Erreur de chargement';
@@ -30,15 +32,25 @@ export const useMissionStore = create<MissionState>((set, get) => ({
     }
   },
 
+  setMissions: (missions: Mission[]) => {
+    set({ missions, isLoading: false });
+  },
+
   createMission: async (data) => {
     set({ isLoading: true, error: null });
     try {
       const id = await firestoreLib.createMission(data);
       const newMission: Mission = { ...data, id, createdAt: Timestamp.now() };
-      set((state) => ({
-        missions: [newMission, ...state.missions],
-        isLoading: false,
-      }));
+      set((state) => {
+        // Le snapshot onMissionsSnapshot peut avoir déjà inséré la mission
+        if (state.missions.some((m) => m.id === id)) {
+          return { isLoading: false };
+        }
+        return {
+          missions: [newMission, ...state.missions],
+          isLoading: false,
+        };
+      });
       return id;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Erreur';
@@ -61,10 +73,10 @@ export const useMissionStore = create<MissionState>((set, get) => ({
     }
   },
 
-  completeMission: async (missionId, mission, parentId) => {
+  completeMission: async (missionId, mission, familyId) => {
     set({ isLoading: true });
     try {
-      await firestoreLib.completeMission(missionId, mission, parentId);
+      await firestoreLib.completeMission(missionId, mission, familyId);
       set((state) => ({
         missions: state.missions.map((m) =>
           m.id === missionId
@@ -75,6 +87,7 @@ export const useMissionStore = create<MissionState>((set, get) => ({
       }));
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Erreur';
+      captureError(e, 'completeMission');
       set({ error: message, isLoading: false });
       throw e;
     }

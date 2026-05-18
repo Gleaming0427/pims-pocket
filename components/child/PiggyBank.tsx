@@ -18,7 +18,7 @@ interface PiggyBankProps {
   maxBalance?: number;
 }
 
-export default function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProps) {
+const PiggyBank = React.memo(function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProps) {
   const { isTablet } = useResponsive();
   const SIZE = isTablet ? 240 : 160;
   const RADIUS = SIZE / 2;
@@ -122,4 +122,5 @@ export default function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProp
       </Text>
     </View>
   );
-}
+});
+export default PiggyBank;

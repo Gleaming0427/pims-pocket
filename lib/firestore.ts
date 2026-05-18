@@ -1,4 +1,5 @@
 import { db } from './firebase';
+import { Sentry } from './sentry';
 import {
   collection,
   doc,
@@ -10,15 +11,16 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   addDoc,
   runTransaction,
   onSnapshot,
   Timestamp,
   type Query,
-  type DocumentReference,
   type DocumentData,
 } from 'firebase/firestore';
 import {
+  Family,
   Child,
   Transaction,
   Mission,
@@ -33,12 +35,116 @@ import { generateInviteCode } from '@/utils/validators';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function childrenCollection(parentId: string) {
-  return collection(db, 'users', parentId, 'children');
+function logFirestoreError(context: string, err: unknown): void {
+  const e = err as { code?: string; message?: string };
+  const code = e.code ?? 'unknown';
+  const msg = e.message ?? String(err);
+  console.warn(`[Firestore] onSnapshot error (${context}):`, code, msg);
+
+  // On remonte les erreurs critiques à Sentry : auth, quota, indisponibilité.
+  if (
+    code === 'permission-denied' ||
+    code === 'unauthenticated' ||
+    code === 'unavailable' ||
+    code === 'resource-exhausted' ||
+    code === 'deadline-exceeded'
+  ) {
+    Sentry.captureException(err instanceof Error ? err : new Error(msg), {
+      level: 'warning',
+      tags: { firestore_context: context, firestore_code: code },
+    });
+  }
 }
 
-function childDoc(parentId: string, childId: string) {
-  return doc(db, 'users', parentId, 'children', childId);
+function childrenCollection(familyId: string) {
+  return collection(db, 'families', familyId, 'children');
+}
+
+function childDoc(familyId: string, childDocId: string) {
+  return doc(db, 'families', familyId, 'children', childDocId);
+}
+
+// ---------------------------------------------------------------------------
+// Users
+// ---------------------------------------------------------------------------
+
+export async function updateUserFamilyId(
+  userId: string,
+  familyId: string
+): Promise<void> {
+  await updateDoc(doc(db, 'users', userId), { familyId });
+}
+
+// ---------------------------------------------------------------------------
+// Family
+// ---------------------------------------------------------------------------
+
+export async function updateUserOnboardingStatus(
+  userId: string,
+  hasCompleted: boolean
+): Promise<void> {
+  await updateDoc(doc(db, 'users', userId), { hasCompletedOnboarding: hasCompleted });
+}
+
+export async function createFamily(
+  name: string,
+  createdBy: string
+): Promise<Family> {
+  const ref = doc(collection(db, 'families'));
+  const family: Omit<Family, 'id'> = {
+    name,
+    parentIds: [createdBy],
+    createdBy,
+    createdAt: Timestamp.now(),
+  };
+  await setDoc(ref, family);
+  return { id: ref.id, ...family };
+}
+
+export async function getFamily(familyId: string): Promise<Family | null> {
+  const snap = await getDoc(doc(db, 'families', familyId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Family;
+}
+
+export async function updateFamily(
+  familyId: string,
+  data: Partial<Family>
+): Promise<void> {
+  await updateDoc(doc(db, 'families', familyId), data as DocumentData);
+}
+
+export async function addParentToFamily(
+  familyId: string,
+  parentUid: string
+): Promise<void> {
+  const familyRef = doc(db, 'families', familyId);
+  const snap = await getDoc(familyRef);
+  if (!snap.exists()) throw new Error('Famille non trouvée');
+  const family = snap.data()!;
+  const parentIds: string[] = family.parentIds ?? [];
+  if (!parentIds.includes(parentUid)) {
+    await updateDoc(familyRef, { parentIds: [...parentIds, parentUid] });
+  }
+}
+
+export function onFamilySnapshot(
+  familyId: string,
+  callback: (family: Family | null) => void
+) {
+  return onSnapshot(
+    doc(db, 'families', familyId),
+    (snap) => {
+      if (!snap.exists()) {
+        callback(null);
+        return;
+      }
+      callback({ id: snap.id, ...snap.data() } as Family);
+    },
+    (err) => {
+    logFirestoreError('snapshot', err);
+    }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -46,7 +152,7 @@ function childDoc(parentId: string, childId: string) {
 // ---------------------------------------------------------------------------
 
 export async function addChild(
-  parentId: string,
+  familyId: string,
   data: {
     firstName: string;
     avatarId: string;
@@ -55,8 +161,9 @@ export async function addChild(
     allowanceDay: number;
   }
 ): Promise<Child> {
-  const ref = doc(childrenCollection(parentId));
+  const ref = doc(childrenCollection(familyId));
   const child: Omit<Child, 'id'> = {
+    familyId,
     firstName: data.firstName,
     avatarId: data.avatarId,
     birthDate: Timestamp.fromDate(data.birthDate),
@@ -72,35 +179,48 @@ export async function addChild(
   return { id: ref.id, ...child } as Child;
 }
 
-export async function getChildren(parentId: string): Promise<Child[]> {
-  const snap = await getDocs(childrenCollection(parentId));
+export async function deleteChild(
+  familyId: string,
+  childDocId: string
+): Promise<void> {
+  await deleteDoc(childDoc(familyId, childDocId));
+}
+
+export async function getChildren(familyId: string): Promise<Child[]> {
+  const snap = await getDocs(childrenCollection(familyId));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Child);
 }
 
 export async function getChild(
-  parentId: string,
-  childId: string
+  familyId: string,
+  childDocId: string
 ): Promise<Child | null> {
-  const snap = await getDoc(childDoc(parentId, childId));
+  const snap = await getDoc(childDoc(familyId, childDocId));
   if (!snap.exists()) return null;
   return { id: snap.id, ...snap.data() } as Child;
 }
 
 export async function updateChild(
-  parentId: string,
-  childId: string,
+  familyId: string,
+  childDocId: string,
   data: Partial<Child>
 ): Promise<void> {
-  await updateDoc(childDoc(parentId, childId), data as DocumentData);
+  await updateDoc(childDoc(familyId, childDocId), data as DocumentData);
 }
 
 export function onChildrenSnapshot(
-  parentId: string,
+  familyId: string,
   callback: (children: Child[]) => void
 ) {
-  return onSnapshot(childrenCollection(parentId), (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Child));
-  });
+  return onSnapshot(
+    childrenCollection(familyId),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Child));
+    },
+    (err) => {
+    logFirestoreError('snapshot', err);
+    }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -117,20 +237,15 @@ export async function createTransaction(
   return ref.id;
 }
 
-/**
- * Retire de l'argent au solde de l'enfant (sanction, bêtise, etc.).
- * Ne décrémente pas totalEarned (qui est cumulatif sur la vie du compte).
- * Le solde ne peut pas devenir négatif : on plafonne à 0.
- */
 export async function removeMoney(
-  parentId: string,
+  familyId: string,
   childDocId: string,
   childAuthUid: string,
   amount: number,
   description: string
 ): Promise<void> {
   await runTransaction(db, async (tx) => {
-    const childRef = childDoc(parentId, childDocId);
+    const childRef = childDoc(familyId, childDocId);
     const childSnap = await tx.get(childRef);
 
     if (!childSnap.exists()) throw new Error('Enfant non trouvé');
@@ -149,7 +264,7 @@ export async function removeMoney(
 
     const txRef = doc(collection(db, 'transactions'));
     tx.set(txRef, {
-      parentId,
+      familyId,
       childId: childAuthUid,
       childDocId,
       type: 'penalty',
@@ -162,7 +277,7 @@ export async function removeMoney(
 }
 
 export async function sendMoney(
-  parentId: string,
+  familyId: string,
   childDocId: string,
   childAuthUid: string,
   amount: number,
@@ -170,7 +285,7 @@ export async function sendMoney(
   description: string
 ): Promise<void> {
   await runTransaction(db, async (tx) => {
-    const childRef = childDoc(parentId, childDocId);
+    const childRef = childDoc(familyId, childDocId);
     const childSnap = await tx.get(childRef);
 
     if (!childSnap.exists()) throw new Error('Enfant non trouvé');
@@ -184,7 +299,7 @@ export async function sendMoney(
 
     const txRef = doc(collection(db, 'transactions'));
     tx.set(txRef, {
-      parentId,
+      familyId,
       childId: childAuthUid,
       childDocId,
       type,
@@ -198,35 +313,59 @@ export async function sendMoney(
 
 export async function getTransactions(
   userId: string,
+  familyId: string | undefined,
   role: 'parent' | 'child',
   childId?: string,
   maxResults = 50
 ): Promise<Transaction[]> {
-  let q: Query = query(
-    collection(db, 'transactions'),
-    orderBy('createdAt', 'desc'),
-    limit(maxResults)
-  );
+  const constraints: any[] = [orderBy('createdAt', 'desc'), limit(maxResults)];
 
-  if (role === 'parent') {
-    q = query(
-      collection(db, 'transactions'),
-      where('parentId', '==', userId),
-      ...(childId ? [where('childId', '==', childId)] : []),
-      orderBy('createdAt', 'desc'),
-      limit(maxResults)
-    );
+  if (familyId) {
+    constraints.unshift(where('familyId', '==', familyId));
+    if (childId) constraints.push(where('childId', '==', childId));
+  } else if (role === 'parent') {
+    // Rétrocompatibilité sans familyId
+    constraints.unshift(where('parentId', '==', userId));
+    if (childId) constraints.push(where('childId', '==', childId));
   } else {
-    q = query(
-      collection(db, 'transactions'),
-      where('childId', '==', userId),
-      orderBy('createdAt', 'desc'),
-      limit(maxResults)
-    );
+    constraints.unshift(where('childId', '==', userId));
   }
 
-  const snap = await getDocs(q);
+  const snap = await getDocs(
+    query(collection(db, 'transactions'), ...constraints)
+  );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction);
+}
+
+export function onTransactionsSnapshot(
+  userId: string,
+  familyId: string | undefined,
+  role: 'parent' | 'child',
+  childId: string | undefined,
+  callback: (transactions: Transaction[]) => void
+) {
+  const constraints: any[] = [orderBy('createdAt', 'desc'), limit(50)];
+
+  if (familyId) {
+    constraints.unshift(where('familyId', '==', familyId));
+    if (childId) constraints.push(where('childId', '==', childId));
+  } else if (role === 'parent') {
+    // Rétrocompatibilité
+    constraints.unshift(where('parentId', '==', userId));
+    if (childId) constraints.push(where('childId', '==', childId));
+  } else {
+    constraints.unshift(where('childId', '==', userId));
+  }
+
+  return onSnapshot(
+    query(collection(db, 'transactions'), ...constraints),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Transaction));
+    },
+    (err) => {
+    logFirestoreError('snapshot', err);
+    }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -238,6 +377,10 @@ export async function createMission(
 ): Promise<string> {
   const ref = await addDoc(collection(db, 'missions'), {
     ...data,
+    autoApproveAt:
+      typeof data.autoApproveAt === 'number'
+        ? Timestamp.fromMillis(data.autoApproveAt as unknown as number)
+        : data.autoApproveAt || null,
     createdAt: Timestamp.now(),
   });
   return ref.id;
@@ -245,12 +388,17 @@ export async function createMission(
 
 export async function getMissions(
   userId: string,
+  familyId: string | undefined,
   role: 'parent' | 'child',
   childId?: string
 ): Promise<Mission[]> {
   const constraints: any[] = [orderBy('createdAt', 'desc')];
 
-  if (role === 'parent') {
+  if (familyId) {
+    constraints.unshift(where('familyId', '==', familyId));
+    if (childId) constraints.push(where('childId', '==', childId));
+  } else if (role === 'parent') {
+    // Rétrocompatibilité
     constraints.unshift(where('parentId', '==', userId));
     if (childId) constraints.push(where('childId', '==', childId));
   } else {
@@ -259,6 +407,36 @@ export async function getMissions(
 
   const snap = await getDocs(query(collection(db, 'missions'), ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Mission);
+}
+
+export function onMissionsSnapshot(
+  userId: string,
+  familyId: string | undefined,
+  role: 'parent' | 'child',
+  childId: string | undefined,
+  callback: (missions: Mission[]) => void
+) {
+  const constraints: any[] = [orderBy('createdAt', 'desc')];
+
+  if (familyId) {
+    constraints.unshift(where('familyId', '==', familyId));
+    if (childId) constraints.push(where('childId', '==', childId));
+  } else if (role === 'parent') {
+    constraints.unshift(where('parentId', '==', userId));
+    if (childId) constraints.push(where('childId', '==', childId));
+  } else {
+    constraints.unshift(where('childId', '==', userId));
+  }
+
+  return onSnapshot(
+    query(collection(db, 'missions'), ...constraints),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Mission));
+    },
+    (err) => {
+    logFirestoreError('snapshot', err);
+    }
+  );
 }
 
 export async function updateMission(
@@ -271,14 +449,11 @@ export async function updateMission(
 export async function completeMission(
   missionId: string,
   mission: Mission,
-  parentId: string
+  familyId: string
 ): Promise<void> {
-  // Le sous-doc enfant est repéré par childDocId. Pour les missions créées
-  // avant l'introduction de childDocId, on tombe sur childId par compat
-  // (legacy, peut ne pas correspondre).
   const childKey = mission.childDocId ?? mission.childId;
   await runTransaction(db, async (tx) => {
-    const childRef = childDoc(parentId, childKey);
+    const childRef = childDoc(familyId, childKey);
     const childSnap = await tx.get(childRef);
 
     if (!childSnap.exists()) throw new Error('Enfant non trouvé');
@@ -297,7 +472,7 @@ export async function completeMission(
 
     const txRef = doc(collection(db, 'transactions'));
     tx.set(txRef, {
-      parentId,
+      familyId,
       childId: mission.childId,
       childDocId: childKey,
       type: 'mission_reward',
@@ -322,10 +497,11 @@ export async function createGoal(data: Omit<Goal, 'id'>): Promise<string> {
   return ref.id;
 }
 
-export async function getGoals(childId: string): Promise<Goal[]> {
+export async function getGoals(familyId: string, childId: string): Promise<Goal[]> {
   const snap = await getDocs(
     query(
       collection(db, 'goals'),
+      where('familyId', '==', familyId),
       where('childId', '==', childId),
       orderBy('createdAt', 'desc')
     )
@@ -333,14 +509,39 @@ export async function getGoals(childId: string): Promise<Goal[]> {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Goal);
 }
 
+export function onGoalsSnapshot(
+  familyId: string,
+  childId: string,
+  callback: (goals: Goal[]) => void
+) {
+  return onSnapshot(
+    query(
+      collection(db, 'goals'),
+      where('familyId', '==', familyId),
+      where('childId', '==', childId),
+      orderBy('createdAt', 'desc')
+    ),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Goal));
+    },
+    (err) => {
+    logFirestoreError('snapshot', err);
+    }
+  );
+}
+
+export async function deleteGoal(goalId: string): Promise<void> {
+  await deleteDoc(doc(db, 'goals', goalId));
+}
+
 export async function saveToGoal(
   goalId: string,
-  parentId: string,
-  childId: string,
+  familyId: string,
+  childDocId: string,
   amount: number
 ): Promise<void> {
   await runTransaction(db, async (tx) => {
-    const childRef = childDoc(parentId, childId);
+    const childRef = childDoc(familyId, childDocId);
     const goalRef = doc(db, 'goals', goalId);
 
     const childSnap = await tx.get(childRef);
@@ -373,8 +574,9 @@ export async function saveToGoal(
 
     const txRef = doc(collection(db, 'transactions'));
     tx.set(txRef, {
-      parentId,
-      childId,
+      familyId,
+      childId: goalData.childId,
+      childDocId,
       type: 'saving',
       amount: -amount,
       description: `Épargne : ${goalData.title}`,
@@ -401,32 +603,61 @@ export async function createMoneyRequest(
 
 export async function getMoneyRequests(
   userId: string,
+  familyId: string | undefined,
   role: 'parent' | 'child'
 ): Promise<MoneyRequest[]> {
-  const field = role === 'parent' ? 'parentId' : 'childId';
+  const constraints: any[] = [orderBy('createdAt', 'desc')];
+
+  if (familyId) {
+    constraints.unshift(where('familyId', '==', familyId));
+  } else {
+    const field = role === 'parent' ? 'parentId' : 'childId';
+    constraints.unshift(where(field, '==', userId));
+  }
+
   const snap = await getDocs(
-    query(
-      collection(db, 'moneyRequests'),
-      where(field, '==', userId),
-      orderBy('createdAt', 'desc')
-    )
+    query(collection(db, 'moneyRequests'), ...constraints)
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as MoneyRequest);
+}
+
+export function onMoneyRequestsSnapshot(
+  userId: string,
+  familyId: string | undefined,
+  role: 'parent' | 'child',
+  callback: (requests: MoneyRequest[]) => void
+) {
+  const constraints: any[] = [orderBy('createdAt', 'desc')];
+
+  if (familyId) {
+    constraints.unshift(where('familyId', '==', familyId));
+  } else {
+    const field = role === 'parent' ? 'parentId' : 'childId';
+    constraints.unshift(where(field, '==', userId));
+  }
+
+  return onSnapshot(
+    query(collection(db, 'moneyRequests'), ...constraints),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as MoneyRequest));
+    },
+    (err) => {
+    logFirestoreError('snapshot', err);
+    }
+  );
 }
 
 export async function resolveMoneyRequest(
   requestId: string,
   request: MoneyRequest,
   approved: boolean,
+  familyId: string,
   comment?: string
 ): Promise<void> {
   if (approved) {
-    // Pour mettre à jour le solde, on a besoin du childDocId (clé du sous-doc).
-    // Fallback sur childId pour les anciennes demandes créées avant l'ajout
-    // du champ childDocId.
     const childKey = request.childDocId ?? request.childId;
     await runTransaction(db, async (tx) => {
-      const childRef = childDoc(request.parentId, childKey);
+      const childRef = childDoc(familyId, childKey);
       const childSnap = await tx.get(childRef);
 
       if (!childSnap.exists()) throw new Error('Enfant non trouvé');
@@ -446,7 +677,7 @@ export async function resolveMoneyRequest(
 
       const txRef = doc(collection(db, 'transactions'));
       tx.set(txRef, {
-        parentId: request.parentId,
+        familyId,
         childId: request.childId,
         childDocId: childKey,
         type: 'request',

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
@@ -22,7 +23,8 @@ export default function AddChildScreen() {
   const [avatarId, setAvatarId] = useState('lion');
   const [birthYear, setBirthYear] = useState('');
   const [allowance, setAllowance] = useState('');
-  const [allowanceDay, setAllowanceDay] = useState(6); // samedi
+  const [allowanceDay, setAllowanceDay] = useState(6);
+  const [consentGiven, setConsentGiven] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
 
   const handleSubmit = async () => {
@@ -32,10 +34,14 @@ export default function AddChildScreen() {
     setErrors({ firstName: nameError, allowance: allowanceError });
     if (nameError || allowanceError) return;
     if (!user) return;
+    if (!consentGiven) {
+      Alert.alert('Consentement requis', 'Vous devez confirmer que vous êtes le parent ou tuteur légal de cet enfant.');
+      return;
+    }
 
     try {
       const birthDate = new Date(parseInt(birthYear) || 2015, 0, 1);
-      await addChild(user.id, {
+      await addChild(user.familyId!, {
         firstName: firstName.trim(),
         avatarId,
         birthDate,
@@ -55,7 +61,7 @@ export default function AddChildScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title="Ajouter un enfant" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <Input
@@ -157,6 +163,25 @@ export default function AddChildScreen() {
             ))}
           </View>
         </ScrollView>
+
+        <TouchableOpacity
+          onPress={() => setConsentGiven(!consentGiven)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            marginBottom: 20,
+          }}
+        >
+          <Ionicons
+            name={consentGiven ? 'checkbox' : 'square-outline'}
+            size={22}
+            color={consentGiven ? colors.primary : colors.textLight}
+            style={{ marginTop: 1 }}
+          />
+          <Text style={{ flex: 1, marginLeft: 10, fontSize: 13, color: colors.textSecondary, lineHeight: 19 }}>
+            Je confirme être le parent ou le tuteur légal de cet enfant et j'autorise le traitement de ses données conformément à la politique de confidentialité.
+          </Text>
+        </TouchableOpacity>
 
         <Button
           title="Ajouter l'enfant"

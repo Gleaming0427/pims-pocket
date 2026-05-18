@@ -13,7 +13,7 @@ interface ChildMissionCardProps {
   loading?: boolean;
 }
 
-export default function ChildMissionCard({
+const ChildMissionCard = React.memo(function ChildMissionCard({
   mission,
   onComplete,
   loading = false,
@@ -148,4 +148,5 @@ export default function ChildMissionCard({
       )}
     </Card>
   );
-}
+});
+export default ChildMissionCard;

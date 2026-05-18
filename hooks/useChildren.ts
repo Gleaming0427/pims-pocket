@@ -8,14 +8,14 @@ export function useChildren() {
   const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
-    if (!user || user.role !== 'parent') return;
+    if (!user || user.role !== 'parent' || !user.familyId) return;
 
-    const unsubscribe = onChildrenSnapshot(user.id, (children) => {
+    const unsubscribe = onChildrenSnapshot(user.familyId, (children) => {
       store.setChildren(children);
     });
 
     return unsubscribe;
-  }, [user?.id]);
+  }, [user?.id, user?.familyId]);
 
   return store;
 }

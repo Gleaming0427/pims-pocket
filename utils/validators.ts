@@ -9,7 +9,9 @@ export function validateEmail(email: string): string | null {
 
 export function validatePassword(password: string): string | null {
   if (!password) return 'Le mot de passe est requis';
-  if (password.length < 6) return 'Le mot de passe doit faire au moins 6 caractères';
+  if (password.length < 8) return 'Le mot de passe doit faire au moins 8 caractères';
+  if (!/[A-Z]/.test(password)) return 'Le mot de passe doit contenir au moins une majuscule';
+  if (!/[0-9]/.test(password)) return 'Le mot de passe doit contenir au moins un chiffre';
   return null;
 }
 

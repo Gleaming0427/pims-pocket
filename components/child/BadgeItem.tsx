@@ -9,7 +9,7 @@ interface BadgeItemProps {
   size?: 'sm' | 'lg';
 }
 
-export default function BadgeItem({ badge, earned, size = 'sm' }: BadgeItemProps) {
+const BadgeItem = React.memo(function BadgeItem({ badge, earned, size = 'sm' }: BadgeItemProps) {
   const dim = size === 'sm' ? 64 : 88;
   const fontSize = size === 'sm' ? 28 : 40;
   const textSize = size === 'sm' ? 11 : 13;
@@ -50,4 +50,5 @@ export default function BadgeItem({ badge, earned, size = 'sm' }: BadgeItemProps
       </Text>
     </View>
   );
-}
+});
+export default BadgeItem;

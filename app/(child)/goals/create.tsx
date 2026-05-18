@@ -31,6 +31,7 @@ export default function CreateGoalScreen() {
     setIsLoading(true);
     try {
       await createGoal({
+        familyId: user.familyId ?? user.id,
         childId: user.id,
         parentId: user.parentId ?? '',
         title: title.trim(),
@@ -43,8 +44,10 @@ export default function CreateGoalScreen() {
       Alert.alert('Objectif créé !', `"${title}" a été ajouté à tes objectifs.`, [
         { text: 'Super !', onPress: () => router.back() },
       ]);
-    } catch {
-      Alert.alert('Erreur', "Impossible de créer l'objectif.");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      Alert.alert('Erreur', message || "Impossible de créer l'objectif.");
+      console.error('[CreateGoal]', e);
     }
     setIsLoading(false);
   };
@@ -53,7 +56,7 @@ export default function CreateGoalScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
       <Header title="Nouvel objectif" showBack />
       <ScrollView
-        contentContainerStyle={{ padding: 24, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
         <Text
@@ -74,6 +77,7 @@ export default function CreateGoalScreen() {
           icon="flag-outline"
           value={title}
           onChangeText={setTitle}
+          maxLength={100}
           error={errors.title}
         />
 
@@ -84,6 +88,7 @@ export default function CreateGoalScreen() {
           value={description}
           onChangeText={setDescription}
           multiline
+          maxLength={200}
         />
 
         <Input

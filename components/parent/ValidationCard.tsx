@@ -15,7 +15,7 @@ interface ValidationCardProps {
   loading?: boolean;
 }
 
-export default function ValidationCard({
+const ValidationCard = React.memo(function ValidationCard({
   mission,
   childName,
   onApprove,
@@ -81,4 +81,5 @@ export default function ValidationCard({
       </View>
     </Card>
   );
-}
+});
+export default ValidationCard;

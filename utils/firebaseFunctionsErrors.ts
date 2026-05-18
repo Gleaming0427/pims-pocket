@@ -61,6 +61,9 @@ export function getFirebaseCallableUserMessage(error: unknown): string {
   if (code === 'functions/already-exists' || bestCode === 'ALREADY_EXISTS') {
     return bestMsg || 'Ce compte enfant est déjà activé.';
   }
+  if (code === 'functions/resource-exhausted' || bestCode === 'RESOURCE_EXHAUSTED') {
+    return bestMsg || 'Trop de tentatives. Réessaie dans quelques minutes.';
+  }
 
   if (code === 'functions/internal' || baseMsg === 'internal') {
     if (bestMsg && bestMsg !== 'internal') {

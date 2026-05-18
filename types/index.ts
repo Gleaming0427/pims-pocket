@@ -3,11 +3,24 @@ import 'firebase/compat/firestore';
 
 export type Timestamp = firebase.firestore.Timestamp;
 
+export interface Family {
+  id: string;
+  name: string;
+  parentIds: string[];
+  createdBy: string;
+  createdAt: Timestamp;
+  autoValidateMissions?: boolean;
+  validationDelayHours?: number;
+}
+
 export interface User {
   id: string;
   email: string;
   displayName: string;
   role: 'parent' | 'child';
+  // Identifiant de la famille (pour parents et enfants). Sera obligatoire
+  // après migration, optionnel pour rétrocompatibilité.
+  familyId?: string;
   parentId?: string;
   // ID du sous-doc enfant chez le parent (users/{parentId}/children/{childDocId}).
   // Renseigné par la Cloud Function createChildAccount uniquement pour role='child'.
@@ -15,10 +28,14 @@ export interface User {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   fcmToken?: string;
+  emailVerified?: boolean;
+  hasCompletedOnboarding?: boolean;
+  consentGivenAt?: Timestamp;
 }
 
 export interface Child {
   id: string;
+  familyId?: string;
   firstName: string;
   avatarId: string;
   birthDate: Timestamp;
@@ -45,7 +62,8 @@ export type TransactionType =
 
 export interface Transaction {
   id: string;
-  parentId: string;
+  familyId?: string;
+  parentId?: string;
   // childId = linkedUserId (Auth UID de l'enfant) — pour queries + rules.
   childId: string;
   // childDocId = ID du sous-doc enfant — pour mutations balance.
@@ -68,12 +86,12 @@ export type MissionStatus =
 
 export interface Mission {
   id: string;
-  parentId: string;
+  familyId?: string;
+  parentId?: string;
   // childId = linkedUserId (Auth UID de l'enfant). Sert aux queries côté
   // enfant et aux Firestore Rules (resource.data.childId == request.auth.uid).
   childId: string;
-  // childDocId = ID du sous-doc enfant (users/{parentId}/children/{childDocId}).
-  // Sert aux mutations sur le doc enfant (incrément balance, etc.).
+  // childDocId = ID du sous-doc enfant — sert aux mutations balance.
   childDocId?: string;
   title: string;
   description: string;
@@ -84,6 +102,8 @@ export interface Mission {
   recurringFrequency?: 'daily' | 'weekly' | 'monthly';
   dueDate?: Timestamp;
   completedAt?: Timestamp;
+  autoValidate?: boolean;
+  autoApproveAt?: Timestamp;
   createdAt: Timestamp;
 }
 
@@ -91,8 +111,9 @@ export type GoalStatus = 'active' | 'completed' | 'abandoned';
 
 export interface Goal {
   id: string;
+  familyId?: string;
   childId: string;
-  parentId: string;
+  parentId?: string;
   title: string;
   description?: string;
   targetAmount: number;
@@ -117,7 +138,8 @@ export type NotificationType =
   | 'money_request'
   | 'validation_needed'
   | 'allowance_sent'
-  | 'badge_earned';
+  | 'badge_earned'
+  | 'welcome';
 
 export interface AppNotification {
   id: string;
@@ -134,11 +156,12 @@ export type MoneyRequestStatus = 'pending' | 'approved' | 'rejected';
 
 export interface MoneyRequest {
   id: string;
+  familyId?: string;
   // childId = linkedUserId (Auth UID) — pour queries + rules.
   childId: string;
   // childDocId = ID du sous-doc enfant — pour incrément balance à l'approbation.
   childDocId?: string;
-  parentId: string;
+  parentId?: string;
   amount: number;
   reason: string;
   status: MoneyRequestStatus;

@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, ScrollView } from 'react-native';
+import { View, Text, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import GoogleButton from '@/components/ui/GoogleButton';
-import Divider from '@/components/ui/Divider';
 import Header from '@/components/shared/Header';
 import { useAuthStore } from '@/stores/authStore';
-import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import { validateEmail, validatePassword, validateName } from '@/utils/validators';
 import colors from '@/constants/colors';
 import { getFirebaseAuthUserMessage } from '@/utils/firebaseAuthErrors';
@@ -16,12 +14,13 @@ import { getFirebaseAuthUserMessage } from '@/utils/firebaseAuthErrors';
 export default function RegisterScreen() {
   const router = useRouter();
   const { signUp, isLoading } = useAuthStore();
-  const { promptAsync, isReady: googleReady, isLoading: googleLoading } = useGoogleAuth();
 
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
 
   const handleRegister = async () => {
@@ -39,6 +38,15 @@ export default function RegisterScreen() {
     });
 
     if (nameError || emailError || passwordError || confirmError) return;
+
+    if (!acceptedPrivacy) {
+      Alert.alert('Consentement requis', 'Vous devez accepter la politique de confidentialité.');
+      return;
+    }
+    if (!acceptedTerms) {
+      Alert.alert('Consentement requis', 'Vous devez accepter les conditions d\'utilisation.');
+      return;
+    }
 
     try {
       await signUp(email.trim(), password, displayName.trim());
@@ -73,6 +81,7 @@ export default function RegisterScreen() {
           value={displayName}
           onChangeText={setDisplayName}
           autoCapitalize="words"
+          maxLength={50}
           error={errors.displayName}
         />
 
@@ -89,7 +98,7 @@ export default function RegisterScreen() {
 
         <Input
           label="Mot de passe"
-          placeholder="6 caractères minimum"
+          placeholder="8 caractères, 1 majuscule, 1 chiffre"
           icon="lock-closed-outline"
           isPassword
           value={password}
@@ -107,21 +116,58 @@ export default function RegisterScreen() {
           error={errors.confirmPassword}
         />
 
+        {/* Consentement */}
+        <View style={{ marginTop: 20, gap: 14 }}>
+          <TouchableOpacity
+            onPress={() => setAcceptedPrivacy(!acceptedPrivacy)}
+            style={{ flexDirection: 'row', alignItems: 'flex-start' }}
+          >
+            <Ionicons
+              name={acceptedPrivacy ? 'checkbox' : 'square-outline'}
+              size={22}
+              color={acceptedPrivacy ? colors.primary : colors.textLight}
+              style={{ marginTop: 1 }}
+            />
+            <Text style={{ flex: 1, marginLeft: 10, fontSize: 13, color: colors.textSecondary, lineHeight: 19 }}>
+              J'accepte la{' '}
+              <Text
+                style={{ color: colors.primary, fontWeight: '600' }}
+                onPress={() => router.push('/(parent)/privacy')}
+              >
+                politique de confidentialité
+              </Text>
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setAcceptedTerms(!acceptedTerms)}
+            style={{ flexDirection: 'row', alignItems: 'flex-start' }}
+          >
+            <Ionicons
+              name={acceptedTerms ? 'checkbox' : 'square-outline'}
+              size={22}
+              color={acceptedTerms ? colors.primary : colors.textLight}
+              style={{ marginTop: 1 }}
+            />
+            <Text style={{ flex: 1, marginLeft: 10, fontSize: 13, color: colors.textSecondary, lineHeight: 19 }}>
+              J'accepte les{' '}
+              <Text
+                style={{ color: colors.primary, fontWeight: '600' }}
+                onPress={() => router.push('/(parent)/terms')}
+              >
+                conditions d'utilisation
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <Button
           title="Créer mon compte"
           onPress={handleRegister}
           loading={isLoading}
-          style={{ marginTop: 8 }}
+          style={{ marginTop: 24 }}
         />
 
-        <Divider />
-
-        <GoogleButton
-          onPress={() => promptAsync()}
-          loading={googleLoading}
-          disabled={!googleReady}
-          title="S'inscrire avec Google"
-        />
       </ScrollView>
     </SafeAreaView>
   );

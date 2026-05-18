@@ -9,7 +9,8 @@ import {
   updatePassword,
   deleteUser,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, functions } from '@/lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { useAuthStore } from '@/stores/authStore';
 import Header from '@/components/shared/Header';
 import Card from '@/components/ui/Card';
@@ -26,6 +27,7 @@ export default function SecurityScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChanging, setIsChanging] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -82,6 +84,27 @@ export default function SecurityScreen() {
     );
   };
 
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const callFn = httpsCallable(functions, 'exportUserData');
+      const result = await callFn({});
+      const json = JSON.stringify((result.data as { data: unknown }).data, null, 2);
+      // Affiche les données dans une alerte simple (limité mais fonctionnel)
+      Alert.alert(
+        'Export réussi',
+        'Vos données sont prêtes. Contactez privacy@pocketkids.app pour les recevoir par email.',
+        [{ text: 'OK' }]
+      );
+      console.log('[exportUserData]', json);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Erreur';
+      Alert.alert('Erreur', msg);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const confirmDeleteAccount = async () => {
     setIsDeleting(true);
     try {
@@ -93,6 +116,11 @@ export default function SecurityScreen() {
         await reauthenticateWithCredential(firebaseUser, credential);
       }
 
+      // 1. Supprimer toutes les données Firestore
+      const callFn = httpsCallable(functions, 'deleteUserData');
+      await callFn({});
+
+      // 2. Supprimer le compte Firebase Auth
       await deleteUser(firebaseUser);
       await signOut();
       router.replace('/');
@@ -186,6 +214,28 @@ export default function SecurityScreen() {
             </Card>
           </>
         )}
+
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: '600',
+            color: colors.textSecondary,
+            textTransform: 'uppercase',
+            letterSpacing: 1,
+            marginBottom: 10,
+          }}
+        >
+          Données personnelles
+        </Text>
+        <Card style={{ marginBottom: 24 }}>
+          <Button
+            title="Exporter mes données"
+            onPress={handleExportData}
+            variant="outline"
+            loading={isExporting}
+            icon={<Ionicons name="download-outline" size={18} color={colors.primary} />}
+          />
+        </Card>
 
         <Text
           style={{

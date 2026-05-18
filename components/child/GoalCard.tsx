@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Card from '@/components/ui/Card';
 import ProgressBar from '@/components/ui/ProgressBar';
 import { Goal } from '@/types';
@@ -9,9 +10,10 @@ import colors from '@/constants/colors';
 interface GoalCardProps {
   goal: Goal;
   onPress?: () => void;
+  onDelete?: () => void;
 }
 
-export default function GoalCard({ goal, onPress }: GoalCardProps) {
+const GoalCard = React.memo(function GoalCard({ goal, onPress, onDelete }: GoalCardProps) {
   const current = Number(goal.currentAmount);
   const target = Number(goal.targetAmount);
   const safeCurrent = Number.isFinite(current) ? current : 0;
@@ -56,6 +58,15 @@ export default function GoalCard({ goal, onPress }: GoalCardProps) {
             </Text>
           </View>
         )}
+        {onDelete && (
+          <TouchableOpacity
+            onPress={onDelete}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={{ marginLeft: 8 }}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
       </View>
       <ProgressBar
         progress={progress}
@@ -65,4 +76,5 @@ export default function GoalCard({ goal, onPress }: GoalCardProps) {
       />
     </Card>
   );
-}
+});
+export default GoalCard;

@@ -24,7 +24,7 @@ export default function ChildDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const { children } = useChildStore();
+  const { children, deleteChild } = useChildStore();
   const { transactions } = useTransactions(id);
   const { missions } = useMissions(id);
 
@@ -55,7 +55,7 @@ export default function ChildDetailScreen() {
     setActivating(true);
     setPinError(null);
     try {
-      await createChildAuthAccount(id, child.inviteCode, pinValue);
+      await createChildAuthAccount(user?.familyId ?? '', id, child.inviteCode, pinValue);
       setShowPinModal(false);
       setPinValue('');
       setPinConfirm('');
@@ -71,6 +71,29 @@ export default function ChildDetailScreen() {
     }
   };
 
+  const handleDeleteChild = () => {
+    Alert.alert(
+      'Supprimer enfant',
+      `Veux-tu vraiment supprimer ${child.firstName} ? Cette action est irréversible.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteChild(user?.familyId ?? '', id);
+              router.back();
+            } catch (e: unknown) {
+              const msg = e instanceof Error ? e.message : 'Erreur';
+              Alert.alert('Erreur', msg);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const shareInviteCode = async () => {
     if (!child.inviteCode) return;
     try {
@@ -84,7 +107,15 @@ export default function ChildDetailScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Header title={child.firstName} showBack />
+      <Header
+        title={child.firstName}
+        showBack
+        rightAction={
+          <TouchableOpacity onPress={handleDeleteChild}>
+            <Ionicons name="trash-outline" size={22} color={colors.error} />
+          </TouchableOpacity>
+        }
+      />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         <Card style={{ alignItems: 'center', paddingVertical: 24, marginBottom: 16 }}>
           <Avatar avatarId={child.avatarId} size={80} />
@@ -164,6 +195,25 @@ export default function ChildDetailScreen() {
             </Text>
           </Card>
         </View>
+
+        <TouchableOpacity
+          onPress={() => router.push(`/(parent)/remove-money?childId=${id}`)}
+          style={{
+            backgroundColor: colors.error,
+            borderRadius: 16,
+            padding: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            marginBottom: 16,
+          }}
+        >
+          <Ionicons name="remove-circle-outline" size={20} color="#FFF" />
+          <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>
+            Retirer de l'argent
+          </Text>
+        </TouchableOpacity>
 
         {child.inviteCode && (
           <Card style={{ marginBottom: 16 }}>
