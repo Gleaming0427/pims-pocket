@@ -1,0 +1,13 @@
+# GitLab Pages — déploie le dossier /legal automatiquement
+# URL : https://<username>.gitlab.io/<repo>/privacy.html
+
+pages:
+  stage: deploy
+  script:
+    - mkdir public
+    - cp legal/*.html public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
