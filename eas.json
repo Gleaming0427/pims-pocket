@@ -41,7 +41,8 @@
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "env": {
@@ -61,7 +62,8 @@
       "android": {
         "buildType": "app-bundle",
         "gradleCommand": ":app:bundleRelease -Pandroid.enableMinifyInReleaseBuilds=true"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {
