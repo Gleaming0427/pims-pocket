@@ -128,13 +128,38 @@ export async function signUp(
   return { ...user, emailVerified: cred.user.emailVerified };
 }
 
+// Garde anti-brute-force (callable server-side) : check avant, fail après un
+// échec, clear après un succès. La vérification du mot de passe reste celle
+// de Firebase Auth — la garde ralentit et informe.
+export async function parentLoginGuard(
+  action: 'check' | 'fail' | 'clear',
+  email: string
+): Promise<void> {
+  const callFn = httpsCallable(functions, 'parentLoginGuard');
+  try {
+    await callFn({ action, email });
+  } catch (e: unknown) {
+    const err = e as { code?: string; message?: string };
+    if (err.code === 'functions/resource-exhausted') {
+      throw new Error(err.message || 'Trop de tentatives de connexion.');
+    }
+    // Autres erreurs : la garde ne bloque jamais la connexion
+  }
+}
+
 export async function signIn(email: string, password: string): Promise<AppUser> {
+  // Verrouillage éventuel (5 échecs → 15 min, etc.)
+  await parentLoginGuard('check', email);
+
   let cred: Awaited<ReturnType<typeof signInWithEmailAndPassword>>;
   try {
     cred = await signInWithEmailAndPassword(auth, email, password);
   } catch (e: unknown) {
+    await parentLoginGuard('fail', email).catch(() => {});
     throw e;
   }
+
+  await parentLoginGuard('clear', email).catch(() => {});
 
   let snap = await getDoc(doc(db, 'users', cred.user.uid)).catch(() => null);
 
@@ -269,6 +294,19 @@ export async function createChildAuthAccount(
   const result = await createAccount({ familyId, childDocId, inviteCode, pin });
   const data = result.data;
   return { uid: data.uid };
+}
+
+// Réinitialisation du PIN d'un enfant par son parent (rotation du secret)
+export async function resetChildPin(
+  familyId: string,
+  childDocId: string,
+  newPin: string
+): Promise<void> {
+  const callFn = httpsCallable<
+    { familyId: string; childDocId: string; newPin: string },
+    { success?: boolean }
+  >(functions, 'resetChildPin');
+  await callFn({ familyId, childDocId, newPin });
 }
 
 export async function signInWithGoogle(idToken: string): Promise<AppUser> {

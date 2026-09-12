@@ -9,6 +9,10 @@ interface HeaderProps {
   showBack?: boolean;
   rightAction?: React.ReactNode;
   subtitle?: string;
+  // Bouton "retour à l'accueil" (onglets racine côté parent / enfant)
+  homeButton?: boolean;
+  // Destination du bouton accueil (diffère parent / enfant)
+  homeTarget?: string;
 }
 
 export default function Header({
@@ -16,6 +20,8 @@ export default function Header({
   showBack = false,
   rightAction,
   subtitle,
+  homeButton = false,
+  homeTarget = '/(parent)/dashboard',
 }: HeaderProps) {
   const router = useRouter();
 
@@ -30,7 +36,17 @@ export default function Header({
         paddingBottom: 12,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+        {homeButton && (
+          <TouchableOpacity
+            onPress={() => router.navigate(homeTarget as never)}
+            style={{ marginRight: 12 }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel="Retour à l'accueil"
+          >
+            <Ionicons name="chevron-back" size={28} color={colors.textPrimary} />
+          </TouchableOpacity>
+        )}
         {showBack && (
           <TouchableOpacity
             onPress={() => router.back()}

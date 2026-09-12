@@ -8,6 +8,8 @@ import colors from '@/constants/colors';
 interface TransactionItemProps {
   transaction: Transaction;
   childName?: string;
+  // Séparateur bas (désactivé quand la ligne vit dans une Card)
+  showDivider?: boolean;
 }
 
 const typeConfig: Record<
@@ -17,7 +19,7 @@ const typeConfig: Record<
   allowance: { icon: 'calendar', label: 'Argent de poche', color: colors.primary },
   mission_reward: { icon: 'trophy', label: 'Mission', color: colors.accentOrange },
   bonus: { icon: 'star', label: 'Bonus', color: colors.accent },
-  gift: { icon: 'gift', label: 'Cadeau', color: colors.piggyPink },
+  gift: { icon: 'gift', label: 'Cadeau', color: colors.secondary },
   saving: { icon: 'wallet', label: 'Épargne', color: colors.info },
   spending: { icon: 'cart', label: 'Dépense', color: colors.error },
   request: { icon: 'hand-left', label: 'Demande', color: colors.secondary },
@@ -32,12 +34,14 @@ const FALLBACK_CONFIG = {
 
 // Les transactions de retrait (penalty) sont stockées avec amount > 0
 // (contrainte Firestore Rules) mais doivent s'afficher comme un débit.
+// 'saving' : débit quand amount < 0 (épargne), crédit quand > 0 (remboursement).
 const isDebitType = (type: Transaction['type']) =>
-  type === 'penalty' || type === 'saving' || type === 'spending';
+  type === 'penalty' || type === 'spending';
 
 const TransactionItem = React.memo(function TransactionItem({
   transaction,
   childName,
+  showDivider = true,
 }: TransactionItemProps) {
   const config = typeConfig[transaction.type] ?? FALLBACK_CONFIG;
   const isDebit = isDebitType(transaction.type) || transaction.amount < 0;
@@ -48,8 +52,8 @@ const TransactionItem = React.memo(function TransactionItem({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
+        paddingVertical: showDivider ? 12 : 8,
+        borderBottomWidth: showDivider ? 1 : 0,
         borderBottomColor: colors.border,
       }}
     >

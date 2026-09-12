@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,14 +12,22 @@ import Animated, {
 import { formatCurrencyShort } from '@/utils/formatters';
 import { useResponsive } from '@/hooks/useResponsive';
 import colors from '@/constants/colors';
+import { useChildThemeStore } from '@/stores/childThemeStore';
 
 interface PiggyBankProps {
   balance: number;
   maxBalance?: number;
+  // Affiché sur un fond rose plein (héro) → textes et cercles en blanc
+  onPink?: boolean;
 }
 
-const PiggyBank = React.memo(function PiggyBank({ balance, maxBalance = 10000 }: PiggyBankProps) {
-  const { isTablet } = useResponsive();
+const PiggyBank = React.memo(function PiggyBank({
+  balance,
+  maxBalance = 10000,
+  onPink = false,
+}: PiggyBankProps) {
+    const accent = useChildThemeStore((s) => s.accent);
+const { isTablet } = useResponsive();
   const SIZE = isTablet ? 240 : 160;
   const RADIUS = SIZE / 2;
   const PRICE_FONT = isTablet ? 52 : 36;
@@ -74,7 +82,7 @@ const PiggyBank = React.memo(function PiggyBank({ balance, maxBalance = 10000 }:
             width: SIZE,
             height: SIZE,
             borderRadius: RADIUS,
-            backgroundColor: colors.piggyPink + '20',
+            backgroundColor: onPink ? 'rgba(255,255,255,0.18)' : accent + '20',
             alignItems: 'center',
             justifyContent: 'center',
             overflow: 'hidden',
@@ -87,17 +95,13 @@ const PiggyBank = React.memo(function PiggyBank({ balance, maxBalance = 10000 }:
                 bottom: 0,
                 left: 0,
                 right: 0,
-                backgroundColor: colors.piggyPink + '40',
+                backgroundColor: onPink ? 'rgba(255,255,255,0.30)' : accent + '40',
                 borderRadius: RADIUS,
               },
               fillStyle,
             ]}
           />
-          <Image
-            source={require('@/assets/icon.png')}
-            style={{ width: SIZE, height: SIZE, borderRadius: RADIUS }}
-            resizeMode="cover"
-          />
+          <Text style={{ fontSize: SIZE * 0.45 }}>🐷</Text>
         </View>
       </Animated.View>
 
@@ -105,7 +109,7 @@ const PiggyBank = React.memo(function PiggyBank({ balance, maxBalance = 10000 }:
         style={{
           fontSize: PRICE_FONT,
           fontWeight: '900',
-          color: colors.primary,
+          color: onPink ? '#FFF' : colors.primary,
           marginTop: 16,
         }}
       >
@@ -114,7 +118,7 @@ const PiggyBank = React.memo(function PiggyBank({ balance, maxBalance = 10000 }:
       <Text
         style={{
           fontSize: LABEL_FONT,
-          color: colors.textSecondary,
+          color: onPink ? 'rgba(255,255,255,0.8)' : colors.textSecondary,
           marginTop: 4,
         }}
       >

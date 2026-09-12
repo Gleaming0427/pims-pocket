@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, Switch, TextInput, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/stores/authStore';
+import { useChildren } from '@/hooks/useChildren';
+import Constants from 'expo-constants';
+import { useSwipeToHome } from '@/hooks/useSwipeToHome';
 import Header from '@/components/shared/Header';
 import Card from '@/components/ui/Card';
 import colors from '@/constants/colors';
@@ -12,7 +16,9 @@ interface SettingItemProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
-  color?: string;
+  subtitle?: string;
+  // Seule exception : destructive = true pour la déconnexion (rouge)
+  destructive?: boolean;
   showChevron?: boolean;
 }
 
@@ -20,43 +26,49 @@ function SettingItem({
   icon,
   label,
   onPress,
-  color = colors.textPrimary,
+  subtitle,
+  destructive = false,
   showChevron = true,
 }: SettingItemProps) {
+  const accent = destructive ? colors.error : colors.primary;
   return (
     <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.7}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 14,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        paddingVertical: 12,
       }}
     >
       <View
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          backgroundColor: color + '15',
+          width: 38,
+          height: 38,
+          borderRadius: 12,
+          backgroundColor: accent + '15',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Ionicons name={icon} size={20} color={color} />
+        <Ionicons name={icon} size={19} color={accent} />
       </View>
-      <Text
-        style={{
-          flex: 1,
-          marginLeft: 12,
-          fontSize: 15,
-          fontWeight: '500',
-          color,
-        }}
-      >
-        {label}
-      </Text>
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: '600',
+            color: destructive ? colors.error : colors.textPrimary,
+          }}
+        >
+          {label}
+        </Text>
+        {subtitle && (
+          <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
       {showChevron && (
         <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
       )}
@@ -64,9 +76,15 @@ function SettingItem({
   );
 }
 
+function SettingDivider() {
+  return <View style={{ height: 1, backgroundColor: colors.border }} />;
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
+  const swipeToHome = useSwipeToHome();
   const { user, family, signOut, updateFamilySettings } = useAuthStore();
+  const { children } = useChildren();
   const [autoValidate, setAutoValidate] = useState(family?.autoValidateMissions ?? false);
   const [delayHours, setDelayHours] = useState(String(family?.validationDelayHours ?? 24));
   const [saving, setSaving] = useState(false);
@@ -87,75 +105,161 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Header title="Réglages" />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-        <Card style={{ marginBottom: 16, alignItems: 'center', paddingVertical: 24 }}>
+      <Header title="Réglages" homeButton />
+      <ScrollView
+        {...swipeToHome}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+      >
+        {/* Carte profil héro */}
+        <View
+          style={{
+            backgroundColor: colors.primary,
+            borderRadius: 24,
+            padding: 24,
+            marginBottom: 16,
+            overflow: 'hidden',
+            alignItems: 'center',
+          }}
+        >
+          {/* Cercles décoratifs */}
+          <View
+            style={{
+              position: 'absolute',
+              top: -45,
+              right: -35,
+              width: 170,
+              height: 170,
+              borderRadius: 85,
+              backgroundColor: colors.primaryLight + '30',
+            }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -55,
+              left: -25,
+              width: 130,
+              height: 130,
+              borderRadius: 65,
+              backgroundColor: colors.starGold + '1A',
+            }}
+          />
+
           <View
             style={{
               width: 64,
               height: 64,
               borderRadius: 32,
-              backgroundColor: colors.primary + '20',
+              backgroundColor: 'rgba(255,255,255,0.22)',
+              borderWidth: 3,
+              borderColor: 'rgba(255,255,255,0.25)',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Ionicons name="person" size={32} color={colors.primary} />
+            <Ionicons name="person" size={32} color="#FFF" />
           </View>
           <Text
             style={{
-              fontSize: 20,
-              fontWeight: '700',
-              color: colors.textPrimary,
+              fontSize: 22,
+              fontWeight: '800',
+              color: '#FFF',
               marginTop: 12,
             }}
           >
             {user?.displayName}
           </Text>
-          <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 4 }}>
-            {user?.email}
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: '600',
+              color: 'rgba(255,255,255,0.75)',
+              marginTop: 3,
+            }}
+          >
+            {children.length > 0
+              ? `${children.length} enfant${children.length > 1 ? 's' : ''} dans la famille`
+              : 'Bienvenue dans ta famille'}
           </Text>
-        </Card>
+        </View>
 
-        {/* Section validation */}
-        <Card style={{ marginBottom: 16 }}>
-          <View style={{ paddingVertical: 4 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 16 }}>
-              Validation des missions
-            </Text>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
-                  Auto-valider les missions
-                </Text>
-                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                  Les missions sont validées automatiquement quand l'enfant les termine
-                </Text>
-              </View>
-              <Switch
-                value={autoValidate}
-                onValueChange={async (v) => {
-                  setAutoValidate(v);
-                  setSaving(true);
-                  try {
-                    await updateFamilySettings({ autoValidateMissions: v });
-                  } catch { /* ignore */ }
-                  setSaving(false);
-                }}
-                trackColor={{ false: colors.border, true: colors.primary + '60' }}
-                thumbColor={autoValidate ? colors.primary : '#f4f3f4'}
-              />
+        {/* Une seule liste de réglages, un seul pattern */}
+        <Card>
+          {/* Auto-validation */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingVertical: 12,
+            }}
+          >
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: colors.primary + '15',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="flash" size={19} color={colors.primary} />
             </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
+                Auto-valider les missions
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                {autoValidate
+                  ? 'Activée — les missions se valident toutes seules'
+                  : 'Désactivée — c’est toi qui valides les missions'}
+              </Text>
+            </View>
+            <Switch
+              value={autoValidate}
+              onValueChange={async (v) => {
+                Haptics.selectionAsync().catch(() => {});
+                setAutoValidate(v);
+                setSaving(true);
+                try {
+                  await updateFamilySettings({ autoValidateMissions: v });
+                } catch { /* ignore */ }
+                setSaving(false);
+              }}
+              trackColor={{ false: colors.border, true: colors.primary + '60' }}
+              thumbColor={autoValidate ? colors.primary : '#f4f3f4'}
+            />
+          </View>
 
-            {!autoValidate && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flex: 1 }}>
+          {!autoValidate && (
+            <>
+              <SettingDivider />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 12,
+                    backgroundColor: colors.primary + '15',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="timer-outline" size={19} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
                     Délai d'auto-validation
                   </Text>
                   <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                    En heures. 0 = désactivé. Passé ce délai, la mission est validée automatiquement.
+                    En heures — 0 = désactivé
                   </Text>
                 </View>
                 <TextInput
@@ -188,60 +292,86 @@ export default function SettingsScreen() {
                   }}
                 />
               </View>
-            )}
-          </View>
+            </>
+          )}
+
         </Card>
 
-        <Card>
+        {/* Général */}
+        <Card style={{ marginTop: 16 }}>
           <SettingItem
             icon="repeat"
             label="Versements récurrents"
             onPress={() => router.push('/(parent)/recurring')}
-            color={colors.primary}
           />
+          <SettingDivider />
           <SettingItem
             icon="notifications-outline"
             label="Notifications"
             onPress={() => router.push('/(parent)/notification-settings')}
-            color={colors.info}
           />
+          <SettingDivider />
           <SettingItem
             icon="shield-checkmark-outline"
             label="Sécurité"
             onPress={() => router.push('/(parent)/security')}
-            color={colors.success}
           />
+        </Card>
+
+        {/* À propos */}
+        <Card style={{ marginTop: 16 }}>
           <SettingItem
             icon="document-text-outline"
             label="Politique de confidentialité"
             onPress={() => router.push('/(legal)/privacy')}
-            color={colors.info}
           />
+          <SettingDivider />
+          <SettingItem
+            icon="reader-outline"
+            label="Conditions d'utilisation"
+            onPress={() => router.push('/(parent)/terms')}
+          />
+          <SettingDivider />
           <SettingItem
             icon="help-circle-outline"
             label="Aide et support"
             onPress={() => Linking.openURL('mailto:privacy@pimspocket.app')}
-            color={colors.secondary}
           />
+        </Card>
+
+        {/* Compte */}
+        <Card style={{ marginTop: 16 }}>
           <SettingItem
             icon="log-out-outline"
             label="Se déconnecter"
             onPress={handleSignOut}
-            color={colors.error}
+            destructive
             showChevron={false}
           />
         </Card>
 
-        <Text
-          style={{
-            textAlign: 'center',
-            fontSize: 12,
-            color: colors.textLight,
-            marginTop: 24,
-          }}
-        >
-          Pims Pocket v1.0.0
-        </Text>
+        <View style={{ alignItems: 'center', marginTop: 24 }}>
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: '600',
+                color: colors.textSecondary,
+              }}
+            >
+              Pims Pocket · v{Constants.expoConfig?.version ?? '1.2.1'}
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

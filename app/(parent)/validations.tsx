@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useMissions } from '@/hooks/useMissions';
 import { useChildren } from '@/hooks/useChildren';
+import { useSwipeToHome } from '@/hooks/useSwipeToHome';
 import { useAuthStore } from '@/stores/authStore';
 import { useMissionStore } from '@/stores/missionStore';
 import ValidationCard from '@/components/parent/ValidationCard';
@@ -19,6 +20,7 @@ import { MoneyRequest, Timestamp } from '@/types';
 import colors from '@/constants/colors';
 
 export default function ValidationsScreen() {
+  const swipeToHome = useSwipeToHome();
   const user = useAuthStore((s) => s.user);
   const { missions, isLoading } = useMissions();
   const { children } = useChildren();
@@ -65,6 +67,7 @@ export default function ValidationsScreen() {
         onPress: async () => {
           setLoadingId(missionId);
           await updateMissionStatus(missionId, 'available');
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setLoadingId(null);
         },
       },
@@ -124,8 +127,44 @@ export default function ValidationsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Header title="Validations" subtitle={`${totalPending} en attente`} />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
+      <Header title="Validations" homeButton />
+      <ScrollView {...swipeToHome} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
+        {totalPending > 0 && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.accentOrange + '12',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.accentOrange + '30',
+              padding: 14,
+              marginBottom: 20,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: colors.accentOrange + '20',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="notifications" size={20} color={colors.accentOrange} />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                📣 {totalPending} élément{totalPending > 1 ? 's' : ''} en attente
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
+                Les enfants attendent ta réponse !
+              </Text>
+            </View>
+          </View>
+        )}
+
         {totalPending === 0 ? (
           <EmptyState
             emoji="✅"
@@ -136,59 +175,88 @@ export default function ValidationsScreen() {
           <>
             {pendingRequests.length > 0 && (
               <>
-                <Text
+                <View
                   style={{
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: colors.textPrimary,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
                     marginBottom: 12,
                   }}
                 >
-                  Demandes d'argent ({pendingRequests.length})
-                </Text>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                    💸 Demandes d'argent
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor: colors.primary + '12',
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
+                      {pendingRequests.length}
+                    </Text>
+                  </View>
+                </View>
                 {pendingRequests.map((req) => (
                   <Card key={req.id} style={{ marginBottom: 12 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                      <Avatar avatarId={getChildAvatarByAuthUid(req.childId)} size={40} />
+                      <Avatar avatarId={getChildAvatarByAuthUid(req.childId)} size={44} />
                       <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
+                        <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
                           {getChildNameByAuthUid(req.childId)}
                         </Text>
                         <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                           {formatRelativeDate(req.createdAt)}
                         </Text>
                       </View>
-                      <Text
-                        style={{
-                          fontSize: 18,
-                          fontWeight: '900',
-                          color: colors.primary,
-                        }}
-                      >
-                        {formatCurrencyShort(req.amount)}
-                      </Text>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text
+                          style={{
+                            fontSize: 18,
+                            fontWeight: '800',
+                            color: colors.primary,
+                          }}
+                        >
+                          {formatCurrencyShort(req.amount)}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: colors.textLight, marginTop: 2 }}>
+                          demande
+                        </Text>
+                      </View>
                     </View>
-                    <Text
+                    <View
                       style={{
-                        fontSize: 14,
-                        color: colors.textPrimary,
+                        backgroundColor: colors.background,
+                        borderRadius: 12,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
                         marginBottom: 12,
-                        fontStyle: 'italic',
                       }}
                     >
-                      « {req.reason} »
-                    </Text>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: colors.textPrimary,
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        « {req.reason} »
+                      </Text>
+                    </View>
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       <TouchableOpacity
                         onPress={() => handleRejectRequest(req)}
                         disabled={loadingId === req.id}
+                        activeOpacity={0.7}
                         style={{
                           flex: 1,
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 6,
-                          paddingVertical: 11,
+                          paddingVertical: 10,
                           borderRadius: 12,
                           borderWidth: 1.5,
                           borderColor: colors.error,
@@ -203,13 +271,14 @@ export default function ValidationsScreen() {
                       <TouchableOpacity
                         onPress={() => handleApproveRequest(req)}
                         disabled={loadingId === req.id}
+                        activeOpacity={0.7}
                         style={{
                           flex: 1,
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: 6,
-                          paddingVertical: 11,
+                          paddingVertical: 10,
                           borderRadius: 12,
                           backgroundColor: colors.success,
                           opacity: loadingId === req.id ? 0.5 : 1,
@@ -228,17 +297,31 @@ export default function ValidationsScreen() {
 
             {pendingMissions.length > 0 && (
               <>
-                <Text
+                <View
                   style={{
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: colors.textPrimary,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
                     marginTop: pendingRequests.length > 0 ? 20 : 0,
                     marginBottom: 12,
                   }}
                 >
-                  Missions à valider ({pendingMissions.length})
-                </Text>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                    🚀 Missions à valider
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor: colors.primary + '12',
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
+                      {pendingMissions.length}
+                    </Text>
+                  </View>
+                </View>
                 {pendingMissions.map((m) => (
                   <ValidationCard
                     key={m.id}

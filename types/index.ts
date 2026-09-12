@@ -47,6 +47,8 @@ export interface Child {
   spendingLimit?: number;
   linkedUserId?: string;
   inviteCode?: string;
+  // Gemme de couleur choisie par l'enfant (hex, ex. '#00CEC9')
+  themeColor?: string;
   createdAt: Timestamp;
 }
 
@@ -113,6 +115,8 @@ export interface Goal {
   id: string;
   familyId?: string;
   childId: string;
+  // ID du sous-doc enfant — nécessaire pour le remboursement à la suppression
+  childDocId?: string;
   parentId?: string;
   title: string;
   description?: string;
@@ -132,6 +136,7 @@ export interface EarnedBadge {
 }
 
 export type NotificationType =
+  | 'new_mission'
   | 'mission_completed'
   | 'money_received'
   | 'goal_reached'

@@ -27,7 +27,7 @@ const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }
   mission_completed: { icon: 'checkbox-outline', label: 'Mission validée', color: colors.success },
   money_received: { icon: 'cash-outline', label: 'Argent reçu', color: colors.primary },
   goal_reached: { icon: 'flag-outline', label: 'Objectif atteint', color: colors.starGold },
-  money_request: { icon: 'hand-left-outline', label: "Demande d'argent", color: colors.piggyPink },
+  money_request: { icon: 'hand-left-outline', label: "Demande d'argent", color: colors.secondary },
   validation_needed: { icon: 'checkmark-circle-outline', label: 'À valider', color: colors.warning },
   allowance_sent: { icon: 'calendar-outline', label: 'Argent de poche', color: colors.accentOrange },
   badge_earned: { icon: 'ribbon-outline', label: 'Badge obtenu', color: colors.starGold },

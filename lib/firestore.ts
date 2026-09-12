@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db, functions } from './firebase';
 import { Sentry } from './sentry';
 import {
   collection,
@@ -30,6 +30,7 @@ import {
   EarnedBadge,
 } from '@/types';
 import { generateInviteCode } from '@/utils/validators';
+import { httpsCallable } from 'firebase/functions';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -186,6 +187,19 @@ export async function deleteChild(
   await deleteDoc(childDoc(familyId, childDocId));
 }
 
+// Suppression COMPLÈTE d'un compte enfant (Auth + données), côté parent
+// uniquement — gérée par la Cloud Function deleteChildAccount.
+export async function deleteChildAccount(
+  familyId: string,
+  childDocId: string
+): Promise<void> {
+  const callFn = httpsCallable<
+    { familyId: string; childDocId: string },
+    { success?: boolean }
+  >(functions, 'deleteChildAccount');
+  await callFn({ familyId, childDocId });
+}
+
 export async function getChildren(familyId: string): Promise<Child[]> {
   const snap = await getDocs(childrenCollection(familyId));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Child);
@@ -206,6 +220,15 @@ export async function updateChild(
   data: Partial<Child>
 ): Promise<void> {
   await updateDoc(childDoc(familyId, childDocId), data as DocumentData);
+}
+
+// L'enfant choisit sa gemme de couleur (écrit sur SON document enfant)
+export async function updateChildThemeColor(
+  familyId: string,
+  childDocId: string,
+  themeColor: string
+): Promise<void> {
+  await updateDoc(childDoc(familyId, childDocId), { themeColor } as DocumentData);
 }
 
 export function onChildrenSnapshot(
@@ -308,6 +331,17 @@ export async function sendMoney(
       status: 'completed',
       createdAt: Timestamp.now(),
     });
+
+    // Notification dans la tirelire de l'enfant
+    const notifRef = doc(collection(db, 'notifications'));
+    tx.set(notifRef, {
+      userId: childAuthUid,
+      title: 'Argent reçu ! 🎉',
+      body: `Tu as reçu ${(amount / 100).toFixed(2)} €${description ? ` (${description})` : ''} !`,
+      type: 'money_received',
+      read: false,
+      createdAt: Timestamp.now(),
+    });
   });
 }
 
@@ -342,9 +376,10 @@ export function onTransactionsSnapshot(
   familyId: string | undefined,
   role: 'parent' | 'child',
   childId: string | undefined,
-  callback: (transactions: Transaction[]) => void
+  callback: (transactions: Transaction[]) => void,
+  maxResults = 50
 ) {
-  const constraints: any[] = [orderBy('createdAt', 'desc'), limit(50)];
+  const constraints: any[] = [orderBy('createdAt', 'desc'), limit(maxResults)];
 
   if (familyId) {
     constraints.unshift(where('familyId', '==', familyId));
@@ -390,7 +425,8 @@ export async function getMissions(
   userId: string,
   familyId: string | undefined,
   role: 'parent' | 'child',
-  childId?: string
+  childId?: string,
+  maxResults?: number
 ): Promise<Mission[]> {
   const constraints: any[] = [orderBy('createdAt', 'desc')];
 
@@ -405,6 +441,8 @@ export async function getMissions(
     constraints.unshift(where('childId', '==', userId));
   }
 
+  if (maxResults !== undefined) constraints.push(limit(maxResults));
+
   const snap = await getDocs(query(collection(db, 'missions'), ...constraints));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Mission);
 }
@@ -414,7 +452,8 @@ export function onMissionsSnapshot(
   familyId: string | undefined,
   role: 'parent' | 'child',
   childId: string | undefined,
-  callback: (missions: Mission[]) => void
+  callback: (missions: Mission[]) => void,
+  maxResults?: number
 ) {
   const constraints: any[] = [orderBy('createdAt', 'desc')];
 
@@ -427,6 +466,8 @@ export function onMissionsSnapshot(
   } else {
     constraints.unshift(where('childId', '==', userId));
   }
+
+  if (maxResults !== undefined) constraints.push(limit(maxResults));
 
   return onSnapshot(
     query(collection(db, 'missions'), ...constraints),
@@ -444,6 +485,10 @@ export async function updateMission(
   data: Partial<Mission>
 ): Promise<void> {
   await updateDoc(doc(db, 'missions', missionId), data as DocumentData);
+}
+
+export async function deleteMission(missionId: string): Promise<void> {
+  await deleteDoc(doc(db, 'missions', missionId));
 }
 
 export async function completeMission(
@@ -530,8 +575,57 @@ export function onGoalsSnapshot(
   );
 }
 
-export async function deleteGoal(goalId: string): Promise<void> {
-  await deleteDoc(doc(db, 'goals', goalId));
+export async function deleteGoal(
+  goalId: string,
+  // Fallback : les objectifs créés avant le fix ne portent pas childDocId.
+  // L'appelant (enfant) passe le sien depuis son profil.
+  childDocIdFallback?: string
+): Promise<void> {
+  await runTransaction(db, async (tx) => {
+    const goalRef = doc(db, 'goals', goalId);
+    const goalSnap = await tx.get(goalRef);
+    if (!goalSnap.exists()) return;
+
+    const goalData = goalSnap.data()!;
+    const refundAmount = goalData.currentAmount as number;
+    const childDocId = goalData.childDocId ?? childDocIdFallback;
+
+    // Rembourse l'épargne restante au solde de l'enfant — sans ça, l'argent
+    // épargné pour l'objectif serait perdu lors de la suppression.
+    if (refundAmount > 0 && goalData.familyId && childDocId) {
+      const childRef = childDoc(goalData.familyId, childDocId);
+      const childSnap = await tx.get(childRef);
+      if (childSnap.exists()) {
+        const childData = childSnap.data()!;
+        tx.update(childRef, {
+          balance: (childData.balance as number) + refundAmount,
+          totalSaved: Math.max(0, ((childData.totalSaved as number) || 0) - refundAmount),
+        });
+
+        const txRef = doc(collection(db, 'transactions'));
+        tx.set(txRef, {
+          familyId: goalData.familyId,
+          childId: goalData.childId,
+          childDocId,
+          type: 'saving',
+          amount: refundAmount, // positif = remboursement vers le solde
+          description: `Remboursement : ${goalData.title}`,
+          goalId,
+          status: 'completed',
+          createdAt: Timestamp.now(),
+        });
+      }
+    }
+
+    tx.delete(goalRef);
+  });
+}
+
+export async function updateGoal(
+  goalId: string,
+  data: Partial<Goal>
+): Promise<void> {
+  await updateDoc(doc(db, 'goals', goalId), data as DocumentData);
 }
 
 export async function saveToGoal(
@@ -629,7 +723,11 @@ export function onMoneyRequestsSnapshot(
 ) {
   const constraints: any[] = [orderBy('createdAt', 'desc')];
 
-  if (familyId) {
+  // L'enfant ne peut lire que ses propres demandes (règles Firestore) :
+  // on filtre par son UID, sans quoi la requête serait refusée.
+  if (role === 'child') {
+    constraints.unshift(where('childId', '==', userId));
+  } else if (familyId) {
     constraints.unshift(where('familyId', '==', familyId));
   } else {
     const field = role === 'parent' ? 'parentId' : 'childId';
@@ -714,6 +812,26 @@ export async function getNotifications(
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AppNotification);
 }
 
+export function onNotificationsSnapshot(
+  userId: string,
+  callback: (notifications: AppNotification[]) => void
+) {
+  return onSnapshot(
+    query(
+      collection(db, 'notifications'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    ),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AppNotification));
+    },
+    (err) => {
+      logFirestoreError('snapshot', err);
+    }
+  );
+}
+
 export async function markNotificationRead(notifId: string): Promise<void> {
   await updateDoc(doc(db, 'notifications', notifId), { read: true });
 }
@@ -740,4 +858,23 @@ export async function getEarnedBadges(childId: string): Promise<EarnedBadge[]> {
     )
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as EarnedBadge);
+}
+
+export function onBadgesSnapshot(
+  childId: string,
+  callback: (badges: EarnedBadge[]) => void
+) {
+  return onSnapshot(
+    query(
+      collection(db, 'badges'),
+      where('childId', '==', childId),
+      orderBy('earnedAt', 'desc')
+    ),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as EarnedBadge));
+    },
+    (err) => {
+      logFirestoreError('snapshot', err);
+    }
+  );
 }

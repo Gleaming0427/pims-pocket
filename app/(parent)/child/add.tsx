@@ -8,16 +8,23 @@ import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
 import Header from '@/components/shared/Header';
 import { useAuthStore } from '@/stores/authStore';
+import { createChildAuthAccount } from '@/lib/auth';
 import { useChildStore } from '@/stores/childStore';
-import { validateName, validateAmount, parseAmountToCents } from '@/utils/validators';
+import { useChildren } from '@/hooks/useChildren';
+import { validateName, validateAmount, parseAmountToCents, validatePinCode } from '@/utils/validators';
 import { getDayName } from '@/utils/formatters';
 import avatars from '@/constants/avatars';
 import colors from '@/constants/colors';
+
+// Limite de sécurité : maximum d'enfants par famille
+const MAX_CHILDREN = 10;
 
 export default function AddChildScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { addChild, isLoading } = useChildStore();
+  const { children } = useChildren();
+  const limitReached = children.length >= MAX_CHILDREN;
 
   const [firstName, setFirstName] = useState('');
   const [avatarId, setAvatarId] = useState('lion');
@@ -26,13 +33,31 @@ export default function AddChildScreen() {
   const [allowanceDay, setAllowanceDay] = useState(6);
   const [consentGiven, setConsentGiven] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
+  // PIN du compte enfant — défini dès la création (activation immédiate)
+  const [pinValue, setPinValue] = useState('');
+  const [pinConfirm, setPinConfirm] = useState('');
+  const [pinError, setPinError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
+    if (limitReached) {
+      Alert.alert(
+        'Limite atteinte',
+        `Une famille ne peut pas avoir plus de ${MAX_CHILDREN} enfants.`
+      );
+      return;
+    }
     const nameError = validateName(firstName);
     const allowanceError = validateAmount(allowance);
+    const pinErr = validatePinCode(pinValue);
+    if (pinValue !== pinConfirm) {
+      setPinError('Les codes PIN ne correspondent pas');
+    } else {
+      setPinError(pinErr);
+    }
 
     setErrors({ firstName: nameError, allowance: allowanceError });
     if (nameError || allowanceError) return;
+    if (pinErr || pinValue !== pinConfirm) return;
     if (!user) return;
     if (!consentGiven) {
       Alert.alert('Consentement requis', 'Vous devez confirmer que vous êtes le parent ou tuteur légal de cet enfant.');
@@ -41,16 +66,22 @@ export default function AddChildScreen() {
 
     try {
       const birthDate = new Date(parseInt(birthYear) || 2015, 0, 1);
-      await addChild(user.familyId!, {
+      const child = await addChild(user.familyId!, {
         firstName: firstName.trim(),
         avatarId,
         birthDate,
         weeklyAllowance: parseAmountToCents(allowance),
         allowanceDay,
       });
-      Alert.alert('Enfant ajouté !', `${firstName} a bien été ajouté.`, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+
+      // Activation immédiate : crée le compte Auth et le PIN
+      await createChildAuthAccount(user.familyId!, child.id, child.inviteCode!, pinValue);
+
+      Alert.alert(
+        'Enfant ajouté et compte activé !',
+        `${firstName} peut se connecter avec le code ${child.inviteCode} et son PIN.`,
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Impossible d'ajouter l'enfant.";
       Alert.alert('Erreur', msg);
@@ -64,6 +95,41 @@ export default function AddChildScreen() {
         contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
       >
+        {limitReached && (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.error + '12',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.error + '30',
+              padding: 14,
+              marginBottom: 20,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: colors.error + '20',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="alert-circle" size={20} color={colors.error} />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.error }}>
+                Limite atteinte
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
+                Une famille ne peut pas avoir plus de {MAX_CHILDREN} enfants.
+              </Text>
+            </View>
+          </View>
+        )}
         <Input
           label="Prénom"
           placeholder="Le prénom de votre enfant"
@@ -111,6 +177,38 @@ export default function AddChildScreen() {
           onChangeText={setBirthYear}
           keyboardType="number-pad"
           maxLength={4}
+        />
+
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: '700',
+            color: colors.textPrimary,
+            marginBottom: 10,
+          }}
+        >
+          🔑 Code PIN de connexion
+        </Text>
+        <Input
+          label="Code PIN"
+          placeholder="1234"
+          icon="keypad-outline"
+          value={pinValue}
+          onChangeText={(t) => { setPinValue(t); setPinError(null); }}
+          keyboardType="number-pad"
+          maxLength={4}
+          isPassword
+        />
+        <Input
+          label="Confirmer le PIN"
+          placeholder="1234"
+          icon="keypad-outline"
+          value={pinConfirm}
+          onChangeText={(t) => { setPinConfirm(t); setPinError(null); }}
+          keyboardType="number-pad"
+          maxLength={4}
+          isPassword
+          error={pinError}
         />
 
         <Input
@@ -187,6 +285,7 @@ export default function AddChildScreen() {
           title="Ajouter l'enfant"
           onPress={handleSubmit}
           loading={isLoading}
+          disabled={limitReached || pinValue.length < 4 || pinConfirm.length < 4}
         />
       </ScrollView>
     </SafeAreaView>

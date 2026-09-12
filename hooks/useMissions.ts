@@ -3,7 +3,7 @@ import { useMissionStore } from '@/stores/missionStore';
 import { useAuthStore } from '@/stores/authStore';
 import { onMissionsSnapshot } from '@/lib/firestore';
 
-export function useMissions(childId?: string) {
+export function useMissions(childId?: string, maxResults?: number) {
   const store = useMissionStore();
   const user = useAuthStore((s) => s.user);
 
@@ -14,16 +14,16 @@ export function useMissions(childId?: string) {
 
   useEffect(() => {
     if (!user) return;
-    store.fetchMissions(user.id, user.familyId, user.role, effectiveChildId);
+    store.fetchMissions(user.id, user.familyId, user.role, effectiveChildId, maxResults);
 
     const unsub = onMissionsSnapshot(user.id, user.familyId, user.role, effectiveChildId, (missions) => {
       store.setMissions(missions);
-    });
+    }, maxResults);
 
     return () => {
       unsub();
     };
-  }, [user?.id, user?.familyId, effectiveChildId]);
+  }, [user?.id, user?.familyId, effectiveChildId, maxResults]);
 
   return store;
 }

@@ -10,6 +10,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { onMoneyRequestsSnapshot } from '@/lib/firestore';
 import { MoneyRequest } from '@/types';
 import ChildCard from '@/components/parent/ChildCard';
+import Avatar from '@/components/ui/Avatar';
 import Card from '@/components/ui/Card';
 import Header from '@/components/shared/Header';
 import NotificationBell from '@/components/shared/NotificationBell';
@@ -86,39 +87,56 @@ export default function ParentDashboard() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header
-        title={`Bonjour ${user?.displayName ?? ''}`}
-        subtitle="Tableau de bord"
+        title={`Bonjour ${user?.displayName ?? ''} 👋`}
+        subtitle="Bienvenue dans votre espace famille"
         rightAction={
-            <NotificationBell
-              count={unreadCount}
-              onPress={() => setNotifModalVisible(true)}
-            />
+          <NotificationBell
+            count={unreadCount}
+            onPress={() => setNotifModalVisible(true)}
+          />
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          padding: 20,
+          paddingBottom: 40,
+          maxWidth: 720,
+          width: '100%',
+          alignSelf: 'center',
+        }}
+      >
         {/* Bannière de vérification d'email */}
         {user && user.role === 'parent' && !user.emailVerified && (
           <View
             style={{
-              backgroundColor: colors.warning + '18',
+              backgroundColor: colors.warning + '12',
               borderRadius: 16,
-              padding: 16,
+              padding: 14,
               marginBottom: 20,
-              borderLeftWidth: 4,
-              borderLeftColor: colors.warning,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Ionicons name="mail-unread" size={24} color={colors.warning} />
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 11,
+                  backgroundColor: colors.warning + '25',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="mail-unread" size={18} color={colors.warning} />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
                   Vérifie ton email
                 </Text>
-                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
                   {verifSent
                     ? 'Email renvoyé ! Vérifie ta boîte de réception.'
-                    : 'Pour sécuriser ton compte, vérifie ton adresse email.'}
+                    : 'Un email de confirmation t\'attend dans ta boîte mail.'}
                 </Text>
               </View>
             </View>
@@ -126,32 +144,34 @@ export default function ParentDashboard() {
               <TouchableOpacity
                 onPress={handleResendVerification}
                 disabled={verifLoading}
+                activeOpacity={0.7}
                 style={{
                   flex: 1,
                   backgroundColor: colors.warning,
-                  borderRadius: 12,
-                  paddingVertical: 10,
+                  borderRadius: 10,
+                  paddingVertical: 9,
                   alignItems: 'center',
                   opacity: verifLoading ? 0.6 : 1,
                 }}
               >
-                <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>
-                  {verifLoading ? 'Envoi...' : 'Renvoyer l\'email'}
+                <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 13 }}>
+                  {verifLoading ? 'Envoi...' : "Renvoyer l'email"}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleRefreshVerification}
                 disabled={verifLoading}
+                activeOpacity={0.7}
                 style={{
                   flex: 1,
-                  backgroundColor: colors.success,
-                  borderRadius: 12,
-                  paddingVertical: 10,
+                  backgroundColor: colors.success + '12',
+                  borderRadius: 10,
+                  paddingVertical: 9,
                   alignItems: 'center',
                   opacity: verifLoading ? 0.6 : 1,
                 }}
               >
-                <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>
+                <Text style={{ color: colors.success, fontWeight: '700', fontSize: 13 }}>
                   J'ai vérifié
                 </Text>
               </TouchableOpacity>
@@ -159,78 +179,280 @@ export default function ParentDashboard() {
           </View>
         )}
 
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-          <Card style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 28, fontWeight: '800', color: colors.primary }}>
-              {children.length}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
-              Enfants
-            </Text>
-          </Card>
-          <Card style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 20, fontWeight: '800', color: colors.success }}>
-              {formatCurrencyShort(totalDistributed)}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
-              Distribué
-            </Text>
-          </Card>
-          <Card style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 28, fontWeight: '800', color: colors.warning }}>
-              {pendingCount}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>
-              À valider
-            </Text>
-          </Card>
-        </View>
-
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
-          <TouchableOpacity
-            onPress={() => router.push('/(parent)/send-money')}
+        {/* Carte héro : la famille d'abord */}
+        <View
+          style={{
+            backgroundColor: colors.primary,
+            borderRadius: 24,
+            padding: 22,
+            marginBottom: 20,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Cercles décoratifs */}
+          <View
             style={{
-              flex: 1,
-              backgroundColor: colors.primary,
-              borderRadius: 16,
-              padding: 16,
-              alignItems: 'center',
+              position: 'absolute',
+              top: -45,
+              right: -35,
+              width: 170,
+              height: 170,
+              borderRadius: 85,
+              backgroundColor: colors.primaryLight + '30',
+            }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -55,
+              left: -25,
+              width: 130,
+              height: 130,
+              borderRadius: 65,
+              backgroundColor: colors.starGold + '1A',
+            }}
+          />
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <Text style={{ fontSize: 15 }}>💰</Text>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)' }}>
+              Argent de poche distribué
+            </Text>
+          </View>
+
+          <Text style={{ fontSize: 34, fontWeight: '800', color: '#FFF', letterSpacing: -0.5 }}>
+            {formatCurrencyShort(totalDistributed)}
+          </Text>
+
+          {/* Les enfants, visibles d'un coup d'œil */}
+          <View
+            style={{
               flexDirection: 'row',
-              justifyContent: 'center',
-              gap: 8,
+              alignItems: 'center',
+              marginTop: 16,
+              paddingTop: 14,
+              borderTopWidth: 1,
+              borderTopColor: 'rgba(255,255,255,0.12)',
             }}
           >
-            <Ionicons name="send" size={20} color="#FFF" />
-            <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {children.slice(0, 4).map((child, i) => (
+                <View
+                  key={child.id}
+                  style={{
+                    marginLeft: i === 0 ? 0 : -10,
+                    borderWidth: 2,
+                    borderColor: colors.primary,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Avatar avatarId={child.avatarId} size={36} />
+                </View>
+              ))}
+              {children.length > 4 && (
+                <View
+                  style={{
+                    marginLeft: -10,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: 'rgba(255,255,255,0.22)',
+                    borderWidth: 2,
+                    borderColor: colors.primary,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>
+                    +{children.length - 4}
+                  </Text>
+                </View>
+              )}
+              <TouchableOpacity
+                onPress={() => router.push('/(parent)/child/add')}
+                activeOpacity={0.7}
+                style={{
+                  marginLeft: children.length > 0 ? -10 : 0,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: 'rgba(255,255,255,0.22)',
+                  borderWidth: 2,
+                  borderColor: colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="add" size={18} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+            <Text
+              style={{
+                marginLeft: 12,
+                flex: 1,
+                fontSize: 12,
+                fontWeight: '600',
+                color: 'rgba(255,255,255,0.75)',
+              }}
+            >
+              {children.length > 0
+                ? `${children.length} membre${children.length > 1 ? 's' : ''} dans la famille`
+                : 'Ajoute tes enfants pour commencer'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Actions rapides : grandes, lisibles par toute la famille */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
+          <Card
+            onPress={() => router.push('/(parent)/send-money')}
+            style={{ flex: 1, alignItems: 'center' }}
+            padding={18}
+          >
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 16,
+                backgroundColor: colors.primary + '15',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 26 }}>💸</Text>
+            </View>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: '700',
+                color: colors.textPrimary,
+                marginTop: 10,
+              }}
+            >
               Envoyer
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
+              de l'argent
+            </Text>
+          </Card>
+          <Card
             onPress={() => router.push('/(parent)/missions/create')}
-            style={{
-              flex: 1,
-              backgroundColor: colors.accentOrange,
-              borderRadius: 16,
-              padding: 16,
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              gap: 8,
-            }}
+            style={{ flex: 1, alignItems: 'center' }}
+            padding={18}
           >
-            <Ionicons name="flash" size={20} color="#FFF" />
-            <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 14 }}>
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 16,
+                backgroundColor: colors.accentOrange + '15',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 26 }}>⭐</Text>
+            </View>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: '700',
+                color: colors.textPrimary,
+                marginTop: 10,
+              }}
+            >
               Mission
             </Text>
-          </TouchableOpacity>
+            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
+              à accomplir
+            </Text>
+          </Card>
         </View>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>
-            Mes enfants
-          </Text>
-          <TouchableOpacity onPress={() => router.push('/(parent)/child/add')}>
-            <Ionicons name="add-circle" size={28} color={colors.primary} />
+        {/* Rappel validations en attente */}
+        {pendingCount > 0 && (
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/validations')}
+            activeOpacity={0.7}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.accentOrange + '12',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: colors.accentOrange + '30',
+              padding: 14,
+              marginBottom: 20,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: colors.accentOrange + '20',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="checkmark-done" size={20} color={colors.accentOrange} />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                📣 {pendingCount} élément{pendingCount > 1 ? 's' : ''} à valider
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
+                Les enfants attendent ta réponse !
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+          </TouchableOpacity>
+        )}
+
+        {/* Section enfants */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>
+              Mes enfants
+            </Text>
+            {children.length > 0 && (
+              <View
+                style={{
+                  backgroundColor: colors.primary + '12',
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
+                  {children.length}
+                </Text>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/child/add')}
+            activeOpacity={0.7}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              backgroundColor: colors.primary + '10',
+              borderRadius: 10,
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+            }}
+          >
+            <Ionicons name="add" size={16} color={colors.primary} />
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+              Ajouter
+            </Text>
           </TouchableOpacity>
         </View>
 
