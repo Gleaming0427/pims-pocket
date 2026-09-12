@@ -63,7 +63,8 @@
         "buildType": "app-bundle",
         "gradleCommand": ":app:bundleRelease -Pandroid.enableMinifyInReleaseBuilds=true"
       },
-      "channel": "production"
+      "channel": "production",
+      "installCommand": "npm install --no-audit --no-fund"
     }
   },
   "submit": {
