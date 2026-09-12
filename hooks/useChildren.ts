@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useChildStore } from '@/stores/childStore';
 import { useAuthStore } from '@/stores/authStore';
 import { onChildrenSnapshot } from '@/lib/firestore';
+import { subscribeCached } from '@/lib/snapshotCache';
 
 export function useChildren() {
   const store = useChildStore();
@@ -10,9 +11,13 @@ export function useChildren() {
   useEffect(() => {
     if (!user || user.role !== 'parent' || !user.familyId) return;
 
-    const unsubscribe = onChildrenSnapshot(user.familyId, (children) => {
-      store.setChildren(children);
-    });
+    const familyId = user.familyId; // narrowing conservé dans la closure
+    const key = `children|${familyId}`;
+    const unsubscribe = subscribeCached(key, () =>
+      onChildrenSnapshot(familyId, (children) => {
+        store.setChildren(children);
+      })
+    );
 
     return unsubscribe;
   }, [user?.id, user?.familyId]);

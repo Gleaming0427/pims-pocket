@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useMissionStore } from '@/stores/missionStore';
 import { useAuthStore } from '@/stores/authStore';
 import { onMissionsSnapshot } from '@/lib/firestore';
+import { subscribeCached } from '@/lib/snapshotCache';
 
 export function useMissions(childId?: string, maxResults?: number) {
   const store = useMissionStore();
@@ -16,9 +17,12 @@ export function useMissions(childId?: string, maxResults?: number) {
     if (!user) return;
     store.fetchMissions(user.id, user.familyId, user.role, effectiveChildId, maxResults);
 
-    const unsub = onMissionsSnapshot(user.id, user.familyId, user.role, effectiveChildId, (missions) => {
-      store.setMissions(missions);
-    }, maxResults);
+    const key = `missions|${user.id}|${user.familyId ?? ''}|${user.role}|${effectiveChildId ?? ''}|${maxResults ?? ''}`;
+    const unsub = subscribeCached(key, () =>
+      onMissionsSnapshot(user.id, user.familyId, user.role, effectiveChildId, (missions) => {
+        store.setMissions(missions);
+      }, maxResults)
+    );
 
     return () => {
       unsub();
