@@ -18,7 +18,7 @@ export default function Card({
   variant = 'default',
 }: CardProps) {
   const cardStyle: ViewStyle = {
-    backgroundColor: variant === 'child' ? colors.childBg : colors.surface,
+    backgroundColor: variant === 'child' ? colors.childSurface : colors.surface,
     borderRadius: 20,
     padding,
     shadowColor: '#000',

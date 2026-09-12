@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { AppNotification } from '@/types';
 import {
   getNotifications,
+  onNotificationsSnapshot,
   markNotificationRead,
 } from '@/lib/firestore';
 import {
@@ -48,6 +49,15 @@ export function useNotifications() {
 
     void registerForPushNotifications(user.id).catch(() => {});
     fetchNotifications();
+
+    // Temps réel : la cloche se met à jour dès qu'une notification arrive
+    // (mission à valider, demande d'argent…), pas seulement au lancement.
+    const unsub = onNotificationsSnapshot(user.id, (notifs) => {
+      setNotifications(notifs);
+      setUnreadCount(notifs.filter((n) => !n.read).length);
+      setIsLoading(false);
+    });
+    return () => unsub();
 
     const notifSub = addNotificationListener(() => {
       fetchNotifications();

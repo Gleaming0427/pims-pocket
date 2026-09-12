@@ -9,9 +9,11 @@ import Header from '@/components/shared/Header';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import colors from '@/constants/colors';
+import { useChildThemeStore } from '@/stores/childThemeStore';
 
 export default function ChildMissionsScreen() {
-  const { missions, isLoading } = useMissions();
+    const accent = useChildThemeStore((s) => s.accent);
+const { missions, isLoading } = useMissions();
   const { updateMissionStatus } = useMissionStore();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -44,8 +46,11 @@ export default function ChildMissionsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
-      <Header title="Mes missions" />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
+      <Header title="Mes missions" homeButton homeTarget="/(child)/dashboard" />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+      >
         {missions.length === 0 ? (
           <EmptyState
             emoji="🎮"
@@ -56,16 +61,36 @@ export default function ChildMissionsScreen() {
           <>
             {activeMissions.length > 0 && (
               <>
-                <Text
+                <View
                   style={{
-                    fontSize: 18,
-                    fontWeight: '700',
-                    color: colors.textPrimary,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
                     marginBottom: 12,
                   }}
                 >
-                  À faire ({activeMissions.length})
-                </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: '700',
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    🎯 À faire
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor: accent + '15',
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: accent }}>
+                      {activeMissions.length}
+                    </Text>
+                  </View>
+                </View>
                 {activeMissions.map((m) => (
                   <ChildMissionCard
                     key={m.id}
@@ -79,17 +104,37 @@ export default function ChildMissionsScreen() {
 
             {pendingMissions.length > 0 && (
               <>
-                <Text
+                <View
                   style={{
-                    fontSize: 18,
-                    fontWeight: '700',
-                    color: colors.accentOrange,
-                    marginTop: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginTop: 24,
                     marginBottom: 12,
                   }}
                 >
-                  En attente ({pendingMissions.length})
-                </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: '700',
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    ⏳ En attente
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor: colors.accentOrange + '15',
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.accentOrange }}>
+                      {pendingMissions.length}
+                    </Text>
+                  </View>
+                </View>
                 {pendingMissions.map((m) => (
                   <ChildMissionCard key={m.id} mission={m} />
                 ))}
@@ -98,17 +143,37 @@ export default function ChildMissionsScreen() {
 
             {completedMissions.length > 0 && (
               <>
-                <Text
+                <View
                   style={{
-                    fontSize: 18,
-                    fontWeight: '700',
-                    color: colors.success,
-                    marginTop: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginTop: 24,
                     marginBottom: 12,
                   }}
                 >
-                  Terminées ({completedMissions.length})
-                </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: '700',
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    ✅ Terminées
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor: colors.success + '15',
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.success }}>
+                      {completedMissions.length}
+                    </Text>
+                  </View>
+                </View>
                 {completedMissions.slice(0, 10).map((m) => (
                   <ChildMissionCard key={m.id} mission={m} />
                 ))}

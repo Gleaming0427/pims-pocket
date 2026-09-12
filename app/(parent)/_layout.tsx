@@ -16,6 +16,7 @@ export default function ParentLayout() {
 
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
@@ -77,11 +78,13 @@ export default function ParentLayout() {
       <Tabs.Screen name="recurring" options={{ href: null }} />
       <Tabs.Screen name="child/[id]" options={{ href: null }} />
       <Tabs.Screen name="child/add" options={{ href: null }} />
+      <Tabs.Screen name="child/edit" options={{ href: null }} />
       <Tabs.Screen name="missions/index" options={{ href: null }} />
       <Tabs.Screen name="missions/create" options={{ href: null }} />
       <Tabs.Screen name="notification-settings" options={{ href: null }} />
       <Tabs.Screen name="security" options={{ href: null }} />
       <Tabs.Screen name="remove-money" options={{ href: null }} />
+      <Tabs.Screen name="terms" options={{ href: null }} />
     </Tabs>
   );
 }

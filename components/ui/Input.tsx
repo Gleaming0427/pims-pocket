@@ -47,7 +47,7 @@ export default function Input({
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: colors.background,
+          backgroundColor: colors.surface,
           borderRadius: 14,
           borderWidth: 2,
           borderColor: error

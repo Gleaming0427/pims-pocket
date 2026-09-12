@@ -8,7 +8,7 @@ interface MissionState {
   missions: Mission[];
   isLoading: boolean;
   error: string | null;
-  fetchMissions: (userId: string, familyId: string | undefined, role: 'parent' | 'child', childId?: string) => Promise<void>;
+  fetchMissions: (userId: string, familyId: string | undefined, role: 'parent' | 'child', childId?: string, maxResults?: number) => Promise<void>;
   setMissions: (missions: Mission[]) => void;
   createMission: (data: Omit<Mission, 'id'>) => Promise<string>;
   updateMissionStatus: (missionId: string, status: Mission['status']) => Promise<void>;
@@ -21,10 +21,10 @@ export const useMissionStore = create<MissionState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchMissions: async (userId, familyId, role, childId) => {
+  fetchMissions: async (userId, familyId, role, childId, maxResults) => {
     set({ isLoading: true, error: null });
     try {
-      const missions = await firestoreLib.getMissions(userId, familyId, role, childId);
+      const missions = await firestoreLib.getMissions(userId, familyId, role, childId, maxResults);
       set({ missions, isLoading: false });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Erreur de chargement';

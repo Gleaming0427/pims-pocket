@@ -13,16 +13,26 @@ interface NotifToggleProps {
   value: boolean;
   onValueChange: (v: boolean) => void;
   color: string;
+  // Dernier élément de la liste : pas de trait en bas
+  last?: boolean;
 }
 
-function NotifToggle({ icon, label, description, value, onValueChange, color }: NotifToggleProps) {
+function NotifToggle({
+  icon,
+  label,
+  description,
+  value,
+  onValueChange,
+  color,
+  last = false,
+}: NotifToggleProps) {
   return (
     <View
       style={{
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 14,
-        borderBottomWidth: 1,
+        borderBottomWidth: last ? 0 : 1,
         borderBottomColor: colors.border,
       }}
     >
@@ -114,6 +124,7 @@ export default function NotificationSettingsScreen() {
             value={missionCompleted}
             onValueChange={setMissionCompleted}
             color={colors.success}
+            last
           />
         </Card>
 
@@ -145,6 +156,7 @@ export default function NotificationSettingsScreen() {
             value={allowanceReminder}
             onValueChange={setAllowanceReminder}
             color={colors.info}
+            last
           />
         </Card>
 
@@ -176,6 +188,7 @@ export default function NotificationSettingsScreen() {
             value={badgeUnlocked}
             onValueChange={setBadgeUnlocked}
             color={colors.secondary}
+            last
           />
         </Card>
       </ScrollView>

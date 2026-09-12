@@ -6,18 +6,23 @@ import Button from '@/components/ui/Button';
 import { Mission } from '@/types';
 import { formatCurrencyShort } from '@/utils/formatters';
 import colors from '@/constants/colors';
+import { useChildThemeStore } from '@/stores/childThemeStore';
 
 interface ChildMissionCardProps {
   mission: Mission;
   onComplete?: () => void;
   loading?: boolean;
+  // Rendre toute la carte cliquable (ex. : aller vers la page Missions)
+  onPress?: () => void;
 }
 
 const ChildMissionCard = React.memo(function ChildMissionCard({
   mission,
   onComplete,
   loading = false,
+  onPress,
 }: ChildMissionCardProps) {
+  const accent = useChildThemeStore((s) => s.accent);
   const canComplete =
     mission.status === 'available' || mission.status === 'in_progress';
   const isPending = mission.status === 'pending_validation';
@@ -26,14 +31,9 @@ const ChildMissionCard = React.memo(function ChildMissionCard({
   return (
     <Card
       variant="child"
+      onPress={onPress}
       style={{
         marginBottom: 12,
-        borderLeftWidth: 4,
-        borderLeftColor: isDone
-          ? colors.success
-          : isPending
-            ? colors.warning
-            : colors.accentOrange,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -42,7 +42,7 @@ const ChildMissionCard = React.memo(function ChildMissionCard({
             width: 48,
             height: 48,
             borderRadius: 14,
-            backgroundColor: colors.accentOrange + '25',
+            backgroundColor: colors.accentOrange + '15',
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -70,6 +70,14 @@ const ChildMissionCard = React.memo(function ChildMissionCard({
             +{formatCurrencyShort(mission.reward)}
           </Text>
         </View>
+        {onPress && (
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={colors.textLight}
+            style={{ marginLeft: 8 }}
+          />
+        )}
       </View>
 
       {mission.description ? (
@@ -93,7 +101,7 @@ const ChildMissionCard = React.memo(function ChildMissionCard({
           size="md"
           loading={loading}
           icon={<Ionicons name="checkmark-circle" size={20} color="#FFF" />}
-          style={{ marginTop: 14, borderRadius: 14 }}
+          style={{ marginTop: 14, borderRadius: 14, backgroundColor: accent }}
         />
       )}
 

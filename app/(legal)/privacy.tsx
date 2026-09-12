@@ -128,9 +128,13 @@ export default function PrivacyScreen() {
 
           <Section title="7. Conservation des données">
             <Para>
-              Vos données sont conservées tant que votre compte est actif. Vous pouvez demander la
-              suppression de votre compte et de toutes les données associées à tout moment en nous
-              contactant. Les données sont supprimées dans un délai de 30 jours suivant la demande.
+              Vos données sont conservées tant que votre compte est actif, c'est-à-dire tant que vous
+              continuez à utiliser l'application.{'\n'}• Compte actif : données conservées pour le
+              fonctionnement du service{'\n'}• Compte inactif : un compte resté inactif depuis
+              longtemps peut être supprimé après une notification préalable par e-mail{'\n'}•
+              Suppression à la demande : lors de la suppression de votre compte (ou de celui d'un
+              enfant), les données sont effacées immédiatement et au plus tard sous 30 jours{'\n'}•
+              Données techniques (journaux d'erreurs Sentry) : conservées au maximum 90 jours
             </Para>
           </Section>
 

@@ -12,15 +12,17 @@ const colors = {
   error: '#E17055',
   info: '#74B9FF',
 
-  background: '#F8F9FE',
+  background: '#FDF3E0',
   surface: '#FFFFFF',
   textPrimary: '#2D3436',
   textSecondary: '#636E72',
   textLight: '#B2BEC3',
-  border: '#E8ECF4',
+  border: '#EAE6DC',
 
-  childBg: '#FFF8E7',
-  piggyPink: '#FF6B9D',
+  // Même fond chaud partout : parent et enfant partagent le même canvas
+  childBg: '#FDF3E0',
+  // Surface des cartes côté enfant : blanc chaud qui se détache du fond crème
+  childSurface: '#FFFDF8',
   starGold: '#FFD93D',
 } as const;
 

@@ -5,10 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useMissions } from '@/hooks/useMissions';
 import { useChildren } from '@/hooks/useChildren';
+import { useSwipeToHome } from '@/hooks/useSwipeToHome';
 import TransactionItem from '@/components/parent/TransactionItem';
 import Header from '@/components/shared/Header';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingScreen from '@/components/shared/LoadingScreen';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import colors from '@/constants/colors';
 import { formatCurrencyShort, formatRelativeDate } from '@/utils/formatters';
 import { Transaction, Mission } from '@/types';
@@ -41,9 +44,7 @@ const MissionTimelineItem = React.memo(function MissionTimelineItem({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        paddingVertical: 8,
       }}
     >
       <View
@@ -87,20 +88,33 @@ const MissionTimelineItem = React.memo(function MissionTimelineItem({
 // ─── Page ───
 
 export default function HistoryScreen() {
+  const swipeToHome = useSwipeToHome();
   const { children } = useChildren();
 
   // Le filtre doit utiliser linkedUserId (Auth UID), pas child.id (doc ID).
   // Transactions et missions référencent childId = Auth UID = linkedUserId.
   const [selectedChildAuthUid, setSelectedChildAuthUid] = useState<string | null>(null);
 
+  // Pagination : 8 opérations affichées par défaut (pour "Tous" comme pour
+  // chaque enfant), "Voir plus" relance les requêtes avec une limite +8.
+  const [pageSize, setPageSize] = useState(8);
+
+  const handleFilterChange = (authUid: string | null) => {
+    setSelectedChildAuthUid(authUid);
+    setPageSize(8);
+  };
+
   const { transactions, isLoading: txLoading } = useTransactions(
-    selectedChildAuthUid ?? undefined
+    selectedChildAuthUid ?? undefined,
+    pageSize
   );
   const { missions, isLoading: missionsLoading } = useMissions(
-    selectedChildAuthUid ?? undefined
+    selectedChildAuthUid ?? undefined,
+    pageSize
   );
 
-  // Fusionner transactions et missions en une timeline triée par date desc
+  // Fusionner transactions et missions en une timeline triée par date desc,
+  // limitée à la page courante.
   const timeline = useMemo<TimelineEntry[]>(() => {
     const txEntries: TimelineEntry[] = transactions.map((tx) => ({
       _type: 'transaction' as const,
@@ -110,10 +124,16 @@ export default function HistoryScreen() {
       _type: 'mission' as const,
       data: m,
     }));
-    return [...txEntries, ...msEntries].sort(
-      (a, b) => b.data.createdAt.toMillis() - a.data.createdAt.toMillis()
-    );
-  }, [transactions, missions]);
+    return [...txEntries, ...msEntries]
+      .sort(
+        (a, b) => b.data.createdAt.toMillis() - a.data.createdAt.toMillis()
+      )
+      .slice(0, pageSize);
+  }, [transactions, missions, pageSize]);
+
+  // Il reste potentiellement des opérations si une des deux collections
+  // a renvoyé exactement pageSize résultats.
+  const hasMore = transactions.length >= pageSize || missions.length >= pageSize;
 
   // Résoudre linkedUserId → nom de l'enfant
   const getChildName = useCallback(
@@ -127,18 +147,23 @@ export default function HistoryScreen() {
       if (item._type === 'transaction') {
         const tx = item.data;
         return (
-          <TransactionItem
-            transaction={tx}
-            childName={getChildName(tx.childId)}
-          />
+          <Card style={{ marginBottom: 8 }} padding={12}>
+            <TransactionItem
+              transaction={tx}
+              childName={getChildName(tx.childId)}
+              showDivider={false}
+            />
+          </Card>
         );
       }
       const mission = item.data;
       return (
-        <MissionTimelineItem
-          mission={mission}
-          childName={getChildName(mission.childId)}
-        />
+        <Card style={{ marginBottom: 8 }} padding={12}>
+          <MissionTimelineItem
+            mission={mission}
+            childName={getChildName(mission.childId)}
+          />
+        </Card>
       );
     },
     [getChildName]
@@ -154,7 +179,7 @@ export default function HistoryScreen() {
     () => (
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TouchableOpacity
-          onPress={() => setSelectedChildAuthUid(null)}
+          onPress={() => handleFilterChange(null)}
           style={{
             paddingHorizontal: 16,
             paddingVertical: 8,
@@ -177,7 +202,7 @@ export default function HistoryScreen() {
         {children.map((child) => (
           <TouchableOpacity
             key={child.id}
-            onPress={() => setSelectedChildAuthUid(child.linkedUserId!)}
+            onPress={() => handleFilterChange(child.linkedUserId!)}
             style={{
               paddingHorizontal: 16,
               paddingVertical: 8,
@@ -216,9 +241,10 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <Header title="Historique" />
-      <FlatList
-        data={timeline}
+      <Header title="Historique" homeButton />
+      <View style={{ flex: 1 }} {...swipeToHome}>
+        <FlatList
+          data={timeline}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ListHeaderComponent={
@@ -237,6 +263,17 @@ export default function HistoryScreen() {
             description="Les transactions et missions apparaîtront ici."
           />
         }
+        ListFooterComponent={
+          hasMore ? (
+            <View style={{ marginTop: 20 }}>
+              <Button
+                title="Voir plus"
+                variant="outline"
+                onPress={() => setPageSize((p) => p + 8)}
+              />
+            </View>
+          ) : null
+        }
         contentContainerStyle={{
           padding: 20,
           paddingBottom: 40,
@@ -248,8 +285,9 @@ export default function HistoryScreen() {
         windowSize={7}
         maxToRenderPerBatch={15}
         removeClippedSubviews
-        initialNumToRender={10}
-      />
+          initialNumToRender={10}
+        />
+      </View>
     </SafeAreaView>
   );
 }

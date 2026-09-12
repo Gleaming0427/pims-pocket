@@ -1,20 +1,23 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useAuthStore } from '@/stores/authStore';
 import Header from '@/components/shared/Header';
 import Card from '@/components/ui/Card';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingScreen from '@/components/shared/LoadingScreen';
+import Button from '@/components/ui/Button';
 import { formatCurrencyShort, formatRelativeDate } from '@/utils/formatters';
 import colors from '@/constants/colors';
+import { useChildThemeStore } from '@/stores/childThemeStore';
 
 const typeIcon: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
   allowance: { icon: 'calendar', color: colors.primary },
   mission_reward: { icon: 'trophy', color: colors.accentOrange },
   bonus: { icon: 'star', color: colors.starGold },
-  gift: { icon: 'gift', color: colors.piggyPink },
+  gift: { icon: 'gift', color: colors.secondary },
   saving: { icon: 'wallet', color: colors.info },
   spending: { icon: 'cart', color: colors.error },
   request: { icon: 'hand-left', color: colors.secondary },
@@ -85,7 +88,16 @@ const TransactionRow = React.memo(function TransactionRow({
 });
 
 export default function ChildHistoryScreen() {
-  const { transactions, isLoading } = useTransactions();
+    const accent = useChildThemeStore((s) => s.accent);
+const user = useAuthStore((s) => s.user);
+
+  // Pagination : 8 opérations affichées, « Voir plus » relance la requête (+8)
+  const [pageSize, setPageSize] = useState(8);
+
+  // Filtrer par le propre UID de l'enfant : requis par les règles Firestore
+  const { transactions, isLoading } = useTransactions(user?.id, pageSize);
+
+  const hasMore = transactions.length >= pageSize;
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof transactions)[number] }) => (
@@ -119,6 +131,17 @@ export default function ChildHistoryScreen() {
             title="Rien pour l'instant"
             description="Ton historique apparaîtra ici quand tu recevras ou dépenseras de l'argent."
           />
+        }
+        ListFooterComponent={
+          hasMore ? (
+            <View style={{ marginTop: 16 }}>
+              <Button
+                title="Voir plus"
+                variant="outline"
+                onPress={() => setPageSize((p) => p + 8)}
+              />
+            </View>
+          ) : null
         }
         contentContainerStyle={{
           padding: 20,

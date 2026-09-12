@@ -7,7 +7,7 @@ interface TransactionState {
   transactions: Transaction[];
   isLoading: boolean;
   error: string | null;
-  fetchTransactions: (userId: string, familyId: string | undefined, role: 'parent' | 'child', childId?: string) => Promise<void>;
+  fetchTransactions: (userId: string, familyId: string | undefined, role: 'parent' | 'child', childId?: string, maxResults?: number) => Promise<void>;
   sendMoney: (
     familyId: string,
     childDocId: string,
@@ -30,10 +30,10 @@ export const useTransactionStore = create<TransactionState>((set) => ({
   isLoading: false,
   error: null,
 
-  fetchTransactions: async (userId, familyId, role, childId) => {
+  fetchTransactions: async (userId, familyId, role, childId, maxResults) => {
     set({ isLoading: true, error: null });
     try {
-      const transactions = await firestoreLib.getTransactions(userId, familyId, role, childId);
+      const transactions = await firestoreLib.getTransactions(userId, familyId, role, childId, maxResults);
       set({ transactions, isLoading: false });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Erreur de chargement';

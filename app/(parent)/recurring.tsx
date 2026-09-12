@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
 import Button from '@/components/ui/Button';
 import Header from '@/components/shared/Header';
+import EmptyState from '@/components/shared/EmptyState';
 import { formatCurrencyShort, getDayName } from '@/utils/formatters';
 import colors from '@/constants/colors';
 
@@ -20,6 +21,8 @@ const DAYS = [
   { value: 6, label: 'Samedi' },
   { value: 0, label: 'Dimanche' },
 ];
+
+const quickAmounts = [2, 5, 10, 20];
 
 export default function RecurringScreen() {
   const user = useAuthStore((s) => s.user);
@@ -66,32 +69,53 @@ export default function RecurringScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <Header title="Versements récurrents" showBack />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-        <Card style={{ marginBottom: 20, backgroundColor: colors.info + '15' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="information-circle" size={22} color={colors.info} />
-            <Text
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+      >
+        {/* Explication */}
+        <View
+          style={{
+            backgroundColor: colors.primary + '08',
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.primary + '15',
+            padding: 14,
+            marginBottom: 20,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View
               style={{
-                flex: 1,
-                marginLeft: 10,
-                fontSize: 13,
-                color: colors.textSecondary,
-                lineHeight: 20,
+                width: 36,
+                height: 36,
+                borderRadius: 11,
+                backgroundColor: colors.primary + '15',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              Les versements sont envoyés automatiquement chaque semaine.
-              Appuyez sur un enfant pour modifier son montant ou son jour de versement.
-            </Text>
+              <Ionicons name="calendar" size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
+                Argent de poche automatique
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1, lineHeight: 17 }}>
+                Versé chaque semaine le jour choisi. Appuie sur un enfant pour modifier.
+              </Text>
+            </View>
           </View>
-        </Card>
+        </View>
 
         {children.length === 0 && (
-          <Card style={{ alignItems: 'center', paddingVertical: 30 }}>
-            <Ionicons name="people-outline" size={40} color={colors.textLight} />
-            <Text style={{ fontSize: 15, color: colors.textSecondary, marginTop: 10 }}>
-              Aucun enfant ajouté
-            </Text>
-          </Card>
+          <EmptyState
+            emoji="👶"
+            title="Aucun enfant"
+            description="Ajoute un enfant pour configurer son argent de poche hebdomadaire."
+            actionLabel="Ajouter un enfant"
+            onAction={() => {}}
+          />
         )}
 
         {children.map((child) => {
@@ -100,49 +124,87 @@ export default function RecurringScreen() {
           return (
             <Card key={child.id} style={{ marginBottom: 12 }}>
               <TouchableOpacity
-                onPress={() => isEditing ? cancelEdit() : startEdit(child)}
+                onPress={() => (isEditing ? cancelEdit() : startEdit(child))}
                 activeOpacity={0.7}
                 style={{ flexDirection: 'row', alignItems: 'center' }}
               >
-                <Avatar avatarId={child.avatarId} size={48} />
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <Avatar avatarId={child.avatarId} size={52} />
+                <View style={{ flex: 1, marginLeft: 14 }}>
                   <Text
-                    style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}
+                    style={{ fontSize: 17, fontWeight: '700', color: colors.textPrimary }}
                   >
                     {child.firstName}
                   </Text>
-                  <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                     Chaque {getDayName(child.allowanceDay).toLowerCase()}
                   </Text>
                 </View>
-                <Text
-                  style={{ fontSize: 18, fontWeight: '800', color: colors.primary }}
-                >
-                  {formatCurrencyShort(child.weeklyAllowance)}
-                </Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text
+                    style={{ fontSize: 18, fontWeight: '800', color: colors.primary }}
+                  >
+                    {formatCurrencyShort(child.weeklyAllowance)}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.textLight, marginTop: 2 }}>
+                    par semaine
+                  </Text>
+                </View>
                 <Ionicons
                   name={isEditing ? 'chevron-up' : 'chevron-down'}
-                  size={20}
+                  size={18}
                   color={colors.textLight}
                   style={{ marginLeft: 8 }}
                 />
               </TouchableOpacity>
 
               {isEditing && (
-                <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 8 }}>
-                    Montant hebdomadaire
+                <View
+                  style={{
+                    marginTop: 16,
+                    borderTopWidth: 1,
+                    borderTopColor: colors.border,
+                    paddingTop: 16,
+                  }}
+                >
+                  {/* Aperçu en direct */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      backgroundColor: colors.primary + '08',
+                      borderRadius: 12,
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Ionicons name="eye" size={16} color={colors.primary} />
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textPrimary }}>
+                      {editAmount.trim() || '0'} € chaque {getDayName(editDay).toLowerCase()}
+                    </Text>
+                  </View>
+
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: '700',
+                      color: colors.textPrimary,
+                      marginBottom: 10,
+                    }}
+                  >
+                    💶 Montant hebdomadaire
                   </Text>
                   <View
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      backgroundColor: colors.background,
+                      backgroundColor: colors.surface,
                       borderRadius: 12,
                       borderWidth: 1,
                       borderColor: colors.border,
                       paddingHorizontal: 14,
-                      marginBottom: 16,
+                      marginBottom: 12,
                     }}
                   >
                     <TextInput
@@ -162,34 +224,78 @@ export default function RecurringScreen() {
                     </Text>
                   </View>
 
-                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 8 }}>
-                    Jour de versement
-                  </Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-                    {DAYS.map((d) => (
-                      <TouchableOpacity
-                        key={d.value}
-                        onPress={() => setEditDay(d.value)}
-                        style={{
-                          paddingVertical: 8,
-                          paddingHorizontal: 14,
-                          borderRadius: 10,
-                          backgroundColor: editDay === d.value ? colors.primary : colors.background,
-                          borderWidth: 1,
-                          borderColor: editDay === d.value ? colors.primary : colors.border,
-                        }}
-                      >
-                        <Text
+                  {/* Montants rapides */}
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
+                    {quickAmounts.map((a) => {
+                      const isAmount = editAmount === String(a);
+                      return (
+                        <TouchableOpacity
+                          key={a}
+                          onPress={() => setEditAmount(String(a))}
+                          activeOpacity={0.7}
                           style={{
-                            fontSize: 13,
-                            fontWeight: '600',
-                            color: editDay === d.value ? '#FFF' : colors.textSecondary,
+                            flex: 1,
+                            paddingVertical: 9,
+                            borderRadius: 12,
+                            alignItems: 'center',
+                            backgroundColor: isAmount ? colors.primary + '15' : colors.background,
+                            borderWidth: 1.5,
+                            borderColor: isAmount ? colors.primary : colors.border,
                           }}
                         >
-                          {d.label.slice(0, 3)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontWeight: '700',
+                              color: isAmount ? colors.primary : colors.textSecondary,
+                            }}
+                          >
+                            {a} €
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: '700',
+                      color: colors.textPrimary,
+                      marginBottom: 10,
+                    }}
+                  >
+                    📅 Jour de versement
+                  </Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                    {DAYS.map((d) => {
+                      const isDay = editDay === d.value;
+                      return (
+                        <TouchableOpacity
+                          key={d.value}
+                          onPress={() => setEditDay(d.value)}
+                          activeOpacity={0.7}
+                          style={{
+                            paddingVertical: 8,
+                            paddingHorizontal: 14,
+                            borderRadius: 10,
+                            backgroundColor: isDay ? colors.primary + '15' : colors.background,
+                            borderWidth: 1.5,
+                            borderColor: isDay ? colors.primary : colors.border,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              fontWeight: '700',
+                              color: isDay ? colors.primary : colors.textSecondary,
+                            }}
+                          >
+                            {d.label.slice(0, 3)}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
 
                   <View style={{ flexDirection: 'row', gap: 10 }}>
