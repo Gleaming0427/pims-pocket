@@ -14,7 +14,8 @@
         "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "wallet-jr.firebasestorage.app",
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "433560362929",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:433560362929:web:8da3817efebc89b8c57a90",
-        "EXPO_PUBLIC_USE_EMULATORS": "false"
+        "EXPO_PUBLIC_USE_EMULATORS": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://da1430f6e4201b8eecc4bdb18cd7f313@o4511401287090176.ingest.de.sentry.io/4511401290039376"
       },
       "ios": {
         "simulator": true
@@ -32,7 +33,8 @@
         "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "wallet-jr.firebasestorage.app",
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "433560362929",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:433560362929:web:8da3817efebc89b8c57a90",
-        "EXPO_PUBLIC_USE_EMULATORS": "false"
+        "EXPO_PUBLIC_USE_EMULATORS": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://da1430f6e4201b8eecc4bdb18cd7f313@o4511401287090176.ingest.de.sentry.io/4511401290039376"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -50,7 +52,8 @@
         "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "wallet-jr.firebasestorage.app",
         "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "433560362929",
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:433560362929:web:8da3817efebc89b8c57a90",
-        "EXPO_PUBLIC_USE_EMULATORS": "false"
+        "EXPO_PUBLIC_USE_EMULATORS": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://da1430f6e4201b8eecc4bdb18cd7f313@o4511401287090176.ingest.de.sentry.io/4511401290039376"
       },
       "ios": {
         "resourceClass": "m-medium"
