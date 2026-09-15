@@ -2,6 +2,10 @@
 
 ![Pims Pocket](docs/banner.svg)
 
+<p align="center">
+  <img src="assets/icon.png" width="96" alt="Icône Pims Pocket"/>
+</p>
+
 Pims Pocket est une application mobile de gestion d'argent de poche pour toute la famille.
 
 Les parents créent des missions, versent l'argent de poche et suivent les dépenses. Les enfants découvrent leur tirelire, accomplissent des missions et apprennent à épargner.
@@ -51,7 +55,9 @@ Les données sont hébergées sur les serveurs Firebase de Google, situés dans 
 
 ## Dépôt du serveur
 
-La logique serveur (Cloud Functions, règles Firestore et index) vit dans un dépôt privé afin de préserver la sécurité de l'authentification. Ce dépôt contient le client complet de l'application.
+Le client est entièrement open source, mais la logique serveur vit dans un **dépôt privé** : Cloud Functions, règles Firestore et index Firestore.
+
+Ce choix limite volontairement les risques. Ces fichiers décrivent la mécanique interne de la sécurité : le hachage des codes PIN, les seuils de blocage des tentatives de connexion et le modèle exact des permissions. Les garder privés réduit la surface d'attaque, sans rien cacher du fonctionnement de l'application côté client, qui est ce qui intéresse les familles.
 
 ## Développement
 
