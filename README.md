@@ -10,6 +10,8 @@ Pims Pocket est une application mobile de gestion d'argent de poche pour toute l
 
 Les parents créent des missions, versent l'argent de poche et suivent les dépenses. Les enfants découvrent leur tirelire, accomplissent des missions et apprennent à épargner.
 
+**📱 Disponible sur Google Play : [play.google.com/store/apps/details?id=com.pimspocket.app](https://play.google.com/store/apps/details?id=com.pimspocket.app)**
+
 [![Licence AGPL v3](https://img.shields.io/badge/Licence-AGPL--3.0-blue.svg)](LICENSE)
 [![Expo SDK 54](https://img.shields.io/badge/Expo-SDK%2054-6C5CE7.svg)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React%20Native-0.81-61DAFB.svg)](https://reactnative.dev)
