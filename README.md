@@ -1,88 +1,56 @@
-# Pims Pocket
+# Pims Pocket 🐷
 
-Application mobile d'argent de poche pour enfants. Les parents gèrent l'argent de poche, les missions et les versements. Les enfants visualisent leur tirelire, accomplissent des missions et épargnent pour des objectifs.
+**L'argent de poche en famille.**
 
+Pims Pocket est une application mobile de gestion d'argent de poche familial, pensée pour les parents et leurs enfants. Les parents créent des missions, versent l'argent de poche et valident les dépenses ; les enfants voient leur tirelire, accomplissent des missions et apprennent à épargner.
+
+![Logo](assets/icon.png)
+
+[![AGPL v3](https://img.shields.io/badge/Licence-AGPL--3.0-blue.svg)](LICENSE)
+[![Expo SDK 54](https://img.shields.io/badge/Expo-SDK%2054-6C5CE7.svg)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.81-61DAFB.svg)](https://reactnative.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%2B%20Auth%20%2B%20Functions-FFCA28.svg)](https://firebase.google.com)
+
+## L'app
+
+- **Côté parent** : tableau de bord familial, gestion des enfants, missions et récompenses, versements d'argent de poche, validations, historique.
+- **Côté enfant** : tirelire et solde, missions à accomplir, objectifs d'épargne, badges, demandes d'argent aux parents.
+- Connexion enfant **sans email ni mot de passe** : code d'invitation à 6 chiffres + code PIN à 4 chiffres.
+- 100 % en français, pensé pour les familles.
 
 ## Stack technique
 
-- **Frontend** : React Native + Expo SDK 54, Expo Router
-- **Backend** : Firebase (Auth, Firestore, Cloud Functions)
-- **Styling** : NativeWind (TailwindCSS)
-- **State** : Zustand
-- **Animations** : React Native Reanimated
-- **Langue** : Français
+- **Expo SDK 54** (React Native, Expo Router, EAS Build & Update)
+- **Firebase** : Authentication, Cloud Firestore, Cloud Functions, Cloud Messaging
+- **Zustand** pour l'état global, **NativeWind** pour le styling
+- **Sentry** pour le suivi des erreurs
 
-## Prérequis
+## Architecture
 
-- Node.js 18+
-- Expo CLI (`npm install -g expo-cli`)
-- Un projet Firebase configuré
-- Firebase CLI (`npm install -g firebase-tools`)
+- Données centrées sur la **famille** : `families/{familyId}/children/{childDocId}`.
+- Les montants sont stockés en **centimes** (entiers).
+- Les permissions sont appliquées côté serveur via les règles Firestore et validées dans chaque Cloud Function.
 
-## Installation
+## Stockage des données
+
+Les données sont hébergées sur les serveurs Firebase de Google, situés dans l'Union européenne. La politique de confidentialité complète est disponible dans l'application.
+
+## Dépôt du serveur
+
+Le serveur (Cloud Functions, règles Firestore et index) vit dans un **dépôt privé** afin de préserver la défense en profondeur de la logique d'authentification. Ce dépôt contient le client complet de l'application.
+
+## Développement
 
 ```bash
-# Cloner le projet
-git clone <repo-url>
-cd wallet-jr
-
-# Installer les dépendances
 npm install
-
-# Copier la config Firebase
-cp .env.example .env
-# Remplir les valeurs Firebase dans .env
-
-# Lancer l'app
-npx expo start
+npx expo start              # Dev server (Expo Go)
+npx expo run:android        # Android natif
+npx expo run:ios            # iOS natif
+eas build --profile production   # Builds de production (EAS)
 ```
 
-## Configuration Firebase
+Les variables d'environnement sont préfixées `EXPO_PUBLIC_` (voir `.env.example`).
 
-1. Créer un projet Firebase sur [console.firebase.google.com](https://console.firebase.google.com)
-2. Activer **Authentication** (email/password)
-3. Activer **Cloud Firestore**
-4. Copier les clés de configuration dans `.env`
-5. Déployer les règles Firestore : `firebase deploy --only firestore:rules`
-6. Déployer les Cloud Functions :
+## Licence
 
-```bash
-cd functions
-npm install
-cd ..
-firebase deploy --only functions
-```
-
-## Structure du projet
-
-```
-app/          # Screens (Expo Router file-based routing)
-  (auth)/     # Authentification (welcome, login, register)
-  (parent)/   # Interface parent (dashboard, enfants, missions, historique)
-  (child)/    # Interface enfant (tirelire, missions, objectifs, badges)
-components/   # Composants réutilisables (ui/, parent/, child/, shared/)
-lib/          # Firebase config, auth, firestore, notifications
-stores/       # Zustand stores (auth, child, mission, transaction)
-hooks/        # Custom hooks
-types/        # Types TypeScript
-constants/    # Couleurs, badges, avatars
-utils/        # Formatters, validators
-functions/    # Firebase Cloud Functions
-```
-
-## Cloud Functions
-
-- **processRecurringAllowances** : versement automatique hebdomadaire (cron 8h)
-- **checkBadges** : attribution de badges sur création de transaction
-- **onMissionUpdate** : notifications quand une mission change de statut
-- **onMoneyRequestUpdate** : notifications sur les demandes d'argent
-- **onGoalUpdate** : notification quand un objectif est atteint
-
-## Commandes
-
-```bash
-npx expo start          # Lancer le dev server
-npx expo start --ios    # Lancer sur iOS
-npx expo start --android # Lancer sur Android
-firebase deploy         # Déployer rules + functions
-```
+[GNU Affero General Public License v3.0](LICENSE) — les forks et modifications doivent être publiés sous la même licence.
