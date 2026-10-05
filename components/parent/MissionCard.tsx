@@ -10,19 +10,25 @@ interface MissionCardProps {
   mission: Mission;
   onPress?: () => void;
   childName?: string;
+  // Ouvre l'édition (qui permet aussi de supprimer)
   onEdit?: () => void;
+  // Suppression directe, pour les missions qu'on ne modifie plus (terminées)
   onDelete?: () => void;
 }
 
-const statusConfig: Record<
-  Mission['status'],
-  { label: string; color: string; bg: string }
-> = {
-  available: { label: 'Disponible', color: colors.info, bg: colors.info + '20' },
-  in_progress: { label: 'En cours', color: colors.accentOrange, bg: colors.accentOrange + '20' },
-  pending_validation: { label: 'À valider', color: colors.warning, bg: colors.warning + '20' },
-  completed: { label: 'Terminée', color: colors.success, bg: colors.success + '20' },
-  expired: { label: 'Expirée', color: colors.textLight, bg: colors.textLight + '20' },
+export const missionStatusConfig: Record<Mission['status'], { label: string; color: string }> = {
+  available: { label: 'Disponible', color: colors.info },
+  in_progress: { label: 'En cours', color: colors.accentOrange },
+  pending_validation: { label: 'À valider', color: colors.warning },
+  completed: { label: 'Terminée', color: colors.success },
+  expired: { label: 'Expirée', color: colors.textLight },
+};
+
+const frequencyLabel: Record<NonNullable<Mission['recurringFrequency']>, string> = {
+  daily: 'Chaque jour',
+  weekly: 'Chaque semaine',
+  biweekly: 'Une semaine sur deux',
+  monthly: 'Chaque mois',
 };
 
 const MissionCard = React.memo(function MissionCard({
@@ -32,24 +38,34 @@ const MissionCard = React.memo(function MissionCard({
   onEdit,
   onDelete,
 }: MissionCardProps) {
-  const status = statusConfig[mission.status];
+  const status = missionStatusConfig[mission.status];
+  const isDone = mission.status === 'completed' || mission.status === 'expired';
+
+  const details = [
+    childName || null,
+    mission.isRecurring
+      ? (mission.recurringFrequency && frequencyLabel[mission.recurringFrequency]) || 'Récurrente'
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <Card style={{ marginBottom: 12 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-        {/* Zone cliquable : les boutons crayon/poubelle sont DEHORS */}
+    <Card padding={14} style={{ marginBottom: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {/* Zone cliquable : le bouton d'action est DEHORS */}
         <TouchableOpacity
           onPress={onPress}
           disabled={!onPress}
           activeOpacity={0.7}
-          style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start' }}
+          style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
         >
           <View
             style={{
               width: 44,
               height: 44,
               borderRadius: 12,
-              backgroundColor: colors.accentOrange + '15',
+              backgroundColor: (isDone ? colors.success : colors.accentOrange) + '18',
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -57,84 +73,66 @@ const MissionCard = React.memo(function MissionCard({
             <Ionicons
               name={(mission.icon as keyof typeof Ionicons.glyphMap) || 'flash'}
               size={22}
-              color={colors.accentOrange}
+              color={isDone ? colors.success : colors.accentOrange}
             />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text
-              style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}
+              style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}
               numberOfLines={1}
             >
               {mission.title}
             </Text>
-            {childName && (
-              <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
-                {childName}
+            {details.length > 0 && (
+              <Text
+                numberOfLines={1}
+                style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}
+              >
+                {details}
               </Text>
             )}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-              <View
-                style={{
-                  backgroundColor: status.bg,
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ fontSize: 12, fontWeight: '600', color: status.color }}>
-                  {status.label}
-                </Text>
-              </View>
-              {mission.isRecurring && (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginLeft: 8,
-                  }}
-                >
-                  <Ionicons name="repeat" size={14} color={colors.textLight} />
-                  <Text
-                    style={{ fontSize: 12, color: colors.textLight, marginLeft: 4 }}
-                  >
-                    Récurrent
-                  </Text>
-                </View>
-              )}
+          </View>
+          <View style={{ alignItems: 'flex-end', marginLeft: 8 }}>
+            <Text style={{ fontSize: 15, fontWeight: '800', color: colors.textPrimary }}>
+              +{formatCurrencyShort(mission.reward)}
+            </Text>
+            <View
+              style={{
+                backgroundColor: status.color + '25',
+                borderRadius: 999,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                marginTop: 4,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textPrimary }}>
+                {status.label}
+              </Text>
             </View>
           </View>
-          <Text
-            style={{
-              fontSize: 17,
-              fontWeight: '800',
-              color: colors.success,
-              marginLeft: 8,
-            }}
-          >
-            {formatCurrencyShort(mission.reward)}
-          </Text>
         </TouchableOpacity>
 
-        <View style={{ marginLeft: 10, alignItems: 'center' }}>
-          {onEdit && (
-            <TouchableOpacity
-              onPress={onEdit}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={{ paddingVertical: 2 }}
-            >
-              <Ionicons name="pencil" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-          {onDelete && (
-            <TouchableOpacity
-              onPress={onDelete}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              style={{ paddingVertical: 2, marginTop: 6 }}
-            >
-              <Ionicons name="trash-outline" size={20} color={colors.error} />
-            </TouchableOpacity>
-          )}
-        </View>
+        {onEdit ? (
+          <TouchableOpacity
+            onPress={onEdit}
+            accessibilityRole="button"
+            accessibilityLabel={`Modifier ${mission.title}`}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={{ marginLeft: 10, padding: 2 }}
+          >
+            <Ionicons name="ellipsis-horizontal" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        ) : onDelete ? (
+          <TouchableOpacity
+            onPress={onDelete}
+            accessibilityRole="button"
+            accessibilityLabel={`Supprimer ${mission.title}`}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={{ marginLeft: 10, padding: 2 }}
+          >
+            <Ionicons name="trash-outline" size={19} color={colors.textLight} />
+          </TouchableOpacity>
+        ) : null}
       </View>
     </Card>
   );

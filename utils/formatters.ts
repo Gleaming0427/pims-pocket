@@ -73,3 +73,28 @@ export function getAge(birthDate: Timestamp | Date): number {
   }
   return age;
 }
+
+// Rythme de l'argent de poche, en toutes lettres : « chaque samedi »,
+// « un samedi sur deux », « le 5 de chaque mois »
+export function allowanceScheduleLabel(child: {
+  allowanceDay: number;
+  allowanceFrequency?: 'weekly' | 'biweekly' | 'monthly';
+  allowanceDayOfMonth?: number;
+}): string {
+  const frequency = child.allowanceFrequency ?? 'weekly';
+  if (frequency === 'monthly') {
+    const day = child.allowanceDayOfMonth ?? 1;
+    return `le ${day === 1 ? '1er' : day} de chaque mois`;
+  }
+  const dayName = getDayName(child.allowanceDay).toLowerCase();
+  return frequency === 'biweekly' ? `un ${dayName} sur deux` : `chaque ${dayName}`;
+}
+
+// Période d'un versement : « par semaine », « toutes les 2 semaines », « par mois »
+export function allowancePeriodLabel(
+  frequency: 'weekly' | 'biweekly' | 'monthly' = 'weekly',
+  short = false
+): string {
+  if (short) return { weekly: '/sem', biweekly: '/2 sem', monthly: '/mois' }[frequency];
+  return { weekly: 'par semaine', biweekly: 'toutes les 2 semaines', monthly: 'par mois' }[frequency];
+}

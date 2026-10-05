@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { Mission } from '@/types';
 import { formatCurrencyShort } from '@/utils/formatters';
 import colors from '@/constants/colors';
+import { getContrastTextColor, getReadableAccent } from '@/utils/colorContrast';
 import { useChildThemeStore } from '@/stores/childThemeStore';
 
 interface ChildMissionCardProps {
@@ -16,6 +17,13 @@ interface ChildMissionCardProps {
   onPress?: () => void;
 }
 
+const frequencyLabel: Record<NonNullable<Mission['recurringFrequency']>, string> = {
+  daily: 'Chaque jour',
+  weekly: 'Chaque semaine',
+  biweekly: 'Une semaine sur deux',
+  monthly: 'Chaque mois',
+};
+
 const ChildMissionCard = React.memo(function ChildMissionCard({
   mission,
   onComplete,
@@ -23,26 +31,24 @@ const ChildMissionCard = React.memo(function ChildMissionCard({
   onPress,
 }: ChildMissionCardProps) {
   const accent = useChildThemeStore((s) => s.accent);
-  const canComplete =
-    mission.status === 'available' || mission.status === 'in_progress';
+  const canComplete = mission.status === 'available' || mission.status === 'in_progress';
   const isPending = mission.status === 'pending_validation';
   const isDone = mission.status === 'completed';
+  const iconColor = isDone ? colors.success : isPending ? colors.accentOrange : accent;
+
+  const recurrence = mission.isRecurring
+    ? (mission.recurringFrequency && frequencyLabel[mission.recurringFrequency]) || 'Récurrente'
+    : null;
 
   return (
-    <Card
-      variant="child"
-      onPress={onPress}
-      style={{
-        marginBottom: 12,
-      }}
-    >
+    <Card onPress={onPress} padding={14} style={{ marginBottom: 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View
           style={{
             width: 48,
             height: 48,
             borderRadius: 14,
-            backgroundColor: colors.accentOrange + '15',
+            backgroundColor: iconColor + '18',
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -50,107 +56,63 @@ const ChildMissionCard = React.memo(function ChildMissionCard({
           <Ionicons
             name={(mission.icon as keyof typeof Ionicons.glyphMap) || 'flash'}
             size={24}
-            color={colors.accentOrange}
+            color={getReadableAccent(iconColor)}
           />
         </View>
         <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text
-            style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}
-          >
+          <Text numberOfLines={2} style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>
             {mission.title}
           </Text>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '800',
-              color: colors.starGold,
-              marginTop: 4,
-            }}
-          >
-            +{formatCurrencyShort(mission.reward)}
-          </Text>
+          {recurrence && (
+            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+              {recurrence}
+            </Text>
+          )}
         </View>
+        <Text style={{ fontSize: 17, fontWeight: '800', color: colors.textPrimary, marginLeft: 8 }}>
+          +{formatCurrencyShort(mission.reward)}
+        </Text>
         {onPress && (
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={colors.textLight}
-            style={{ marginLeft: 8 }}
-          />
+          <Ionicons name="chevron-forward" size={18} color={colors.textLight} style={{ marginLeft: 6 }} />
         )}
       </View>
 
       {mission.description ? (
-        <Text
-          style={{
-            fontSize: 14,
-            color: colors.textSecondary,
-            marginTop: 10,
-            lineHeight: 20,
-          }}
-        >
+        <Text style={{ fontSize: 14, color: colors.textSecondary, marginTop: 10, lineHeight: 20 }}>
           {mission.description}
         </Text>
       ) : null}
 
       {canComplete && onComplete && (
         <Button
+          accentColor={accent}
           title="J'ai terminé !"
           onPress={onComplete}
-          variant="primary"
-          size="md"
           loading={loading}
-          icon={<Ionicons name="checkmark-circle" size={20} color="#FFF" />}
-          style={{ marginTop: 14, borderRadius: 14, backgroundColor: accent }}
+          icon={<Ionicons name="checkmark-circle" size={20} color={getContrastTextColor(accent)} />}
+          style={{ marginTop: 14 }}
         />
       )}
 
-      {isPending && (
+      {(isPending || isDone) && (
         <View
           style={{
-            marginTop: 14,
-            backgroundColor: colors.warning + '20',
-            padding: 12,
+            marginTop: 12,
+            backgroundColor: colors.canvas,
+            paddingHorizontal: 12,
+            paddingVertical: 10,
             borderRadius: 12,
             flexDirection: 'row',
             alignItems: 'center',
           }}
         >
-          <Ionicons name="hourglass" size={18} color={colors.accentOrange} />
-          <Text
-            style={{
-              marginLeft: 8,
-              fontSize: 14,
-              color: colors.accentOrange,
-              fontWeight: '600',
-            }}
-          >
-            En attente de validation...
-          </Text>
-        </View>
-      )}
-
-      {isDone && (
-        <View
-          style={{
-            marginTop: 14,
-            backgroundColor: colors.success + '20',
-            padding: 12,
-            borderRadius: 12,
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        >
-          <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-          <Text
-            style={{
-              marginLeft: 8,
-              fontSize: 14,
-              color: colors.success,
-              fontWeight: '600',
-            }}
-          >
-            Mission accomplie !
+          <Ionicons
+            name={isDone ? 'checkmark-circle' : 'hourglass-outline'}
+            size={18}
+            color={getReadableAccent(isDone ? colors.success : colors.accentOrange)}
+          />
+          <Text style={{ marginLeft: 8, fontSize: 13, fontWeight: '600', color: colors.textPrimary }}>
+            {isDone ? 'Mission accomplie, récompense reçue' : 'En attente de validation par un parent'}
           </Text>
         </View>
       )}

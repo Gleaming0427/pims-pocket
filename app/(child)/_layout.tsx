@@ -4,6 +4,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMissions } from '@/hooks/useMissions';
+import { usePageTransitions } from '@/hooks/usePageTransitions';
 import Badge from '@/components/ui/Badge';
 import { useAuthStore } from '@/stores/authStore';
 import { useChildThemeStore } from '@/stores/childThemeStore';
@@ -11,9 +12,11 @@ import { isThemeColor } from '@/constants/childThemes';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import colors from '@/constants/colors';
+import { getReadableAccent } from '@/utils/colorContrast';
 
 export default function ChildLayout() {
   const insets = useSafeAreaInsets();
+  const { tabOptions } = usePageTransitions();
   const { missions } = useMissions();
   const user = useAuthStore((s) => s.user);
   const accent = useChildThemeStore((s) => s.accent);
@@ -44,8 +47,8 @@ export default function ChildLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: accent,
+        ...tabOptions,
+        tabBarActiveTintColor: getReadableAccent(accent),
         tabBarInactiveTintColor: colors.textLight,
         tabBarStyle: {
           backgroundColor: colors.surface,
@@ -61,8 +64,8 @@ export default function ChildLayout() {
         name="dashboard"
         options={{
           title: 'Ma Tirelire',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="wallet" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'wallet' : 'wallet-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -70,9 +73,9 @@ export default function ChildLayout() {
         name="missions"
         options={{
           title: 'Missions',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <View>
-              <Ionicons name="flash" size={size} color={color} />
+              <Ionicons name={focused ? 'flash' : 'flash-outline'} size={size} color={color} />
               {availableCount > 0 && (
                 <View style={{ position: 'absolute', top: -4, right: -8 }}>
                   <Badge count={availableCount} />
@@ -86,8 +89,8 @@ export default function ChildLayout() {
         name="goals/index"
         options={{
           title: 'Objectifs',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="flag" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'flag' : 'flag-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -95,8 +98,8 @@ export default function ChildLayout() {
         name="badges"
         options={{
           title: 'Badges',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="ribbon" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'ribbon' : 'ribbon-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -104,8 +107,8 @@ export default function ChildLayout() {
         name="profile"
         options={{
           title: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
           ),
         }}
       />

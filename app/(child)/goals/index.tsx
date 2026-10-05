@@ -6,22 +6,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/stores/authStore';
 import { onGoalsSnapshot, deleteGoal, saveToGoal, updateGoal } from '@/lib/firestore';
 import { Goal } from '@/types';
-import GoalCard from '@/components/child/GoalCard';
+import GoalProgressCard from '@/components/shared/GoalProgressCard';
+import EmptyTabCard from '@/components/shared/EmptyTabCard';
+import { SplitBar, LegendRow } from '@/components/shared/SplitBar';
 import Header from '@/components/shared/Header';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import EmptyState from '@/components/shared/EmptyState';
+import Card from '@/components/ui/Card';
+import Chip from '@/components/ui/Chip';
+import DashedButton from '@/components/ui/DashedButton';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import { formatCurrencyShort } from '@/utils/formatters';
 import { validateAmount, parseAmountToCents } from '@/utils/validators';
 import colors from '@/constants/colors';
+import { getContrastTextColor, getReadableAccent } from '@/utils/colorContrast';
 import { useChildThemeStore } from '@/stores/childThemeStore';
 
 const quickAmounts = [1, 2, 5, 10, 20];
 
+type GoalTab = 'active' | 'completed';
+
 export default function GoalsScreen() {
-    const accent = useChildThemeStore((s) => s.accent);
-const router = useRouter();
+  const accent = useChildThemeStore((s) => s.accent);
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,11 +37,11 @@ const router = useRouter();
   const [saveAmount, setSaveAmount] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [tab, setTab] = useState<GoalTab>('active');
 
-  // Édition d'objectif (titre / description / prix)
+  // Édition d'objectif (titre / prix)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
   const [editTarget, setEditTarget] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -69,6 +77,7 @@ const router = useRouter();
   }, [user?.childDocId]);
 
   const handleSave = async () => {
+    if (isSaving) return;
     if (!selectedGoal || !user?.familyId || !user?.childDocId) return;
     const amountError = validateAmount(saveAmount);
     setSaveError(amountError);
@@ -102,11 +111,11 @@ const router = useRouter();
   const openEdit = (goal: Goal) => {
     setEditingGoal(goal);
     setEditTitle(goal.title);
-    setEditDescription(goal.description ?? '');
     setEditTarget(String(Number(goal.targetAmount) / 100));
   };
 
   const saveEdit = async () => {
+    if (isUpdating) return;
     if (!editingGoal) return;
     if (!editTitle.trim()) {
       Alert.alert('Erreur', "Donne un nom à ton objectif !");
@@ -121,7 +130,6 @@ const router = useRouter();
     try {
       await updateGoal(editingGoal.id, {
         title: editTitle.trim(),
-        description: editDescription.trim(),
         targetAmount: Math.round(amount * 100),
       });
       setEditingGoal(null);
@@ -142,20 +150,23 @@ const router = useRouter();
 
   const activeGoals = goals.filter((g) => g.status === 'active');
   const completedGoals = goals.filter((g) => g.status === 'completed');
+  const savedInActive = activeGoals.reduce((sum, g) => sum + (Number(g.currentAmount) || 0), 0);
+  const targetOfActive = activeGoals.reduce((sum, g) => sum + (Number(g.targetAmount) || 0), 0);
+  const remainingOfActive = Math.max(0, targetOfActive - savedInActive);
 
   const remainingCents = selectedGoal
     ? Math.max(0, Number(selectedGoal.targetAmount) - Number(selectedGoal.currentAmount))
     : 0;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header
         title="Mes objectifs"
         homeButton
         homeTarget="/(child)/dashboard"
         rightAction={
           <TouchableOpacity onPress={() => router.push('/(child)/goals/create')}>
-            <Ionicons name="add-circle" size={28} color={accent} />
+            <Ionicons name="add-circle" size={28} color={getReadableAccent(accent)} />
           </TouchableOpacity>
         }
       />
@@ -163,79 +174,108 @@ const router = useRouter();
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
         {goals.length === 0 ? (
-          <EmptyState
-            emoji="🎯"
-            title="Aucun objectif"
-            description="Fixe-toi un objectif d'épargne pour économiser pour quelque chose qui te fait envie !"
-            actionLabel="Créer un objectif"
-            onAction={() => router.push('/(child)/goals/create')}
-          />
+          <>
+            <EmptyTabCard
+              emoji="🎯"
+              title="Aucun objectif"
+              description="Fixe-toi un objectif d'épargne pour économiser pour quelque chose qui te fait envie !"
+            />
+            <Button
+              accentColor={accent}
+              title="Créer un objectif"
+              icon={<Ionicons name="add" size={18} color={getContrastTextColor(accent)} />}
+              onPress={() => router.push('/(child)/goals/create')}
+            />
+          </>
         ) : (
           <>
-            {activeGoals.length > 0 && (
+            {/* Synthèse de l'épargne */}
+            <Card padding={20} style={{ marginBottom: 16 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                Mon épargne
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                {activeGoals.length} objectif{activeGoals.length > 1 ? 's' : ''} en cours
+                {completedGoals.length > 0
+                  ? ` · ${completedGoals.length} atteint${completedGoals.length > 1 ? 's' : ''}`
+                  : ''}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 18 }}>
+                <Text style={{ fontSize: 34, fontWeight: '800', color: colors.textPrimary, letterSpacing: -1 }}>
+                  {formatCurrencyShort(savedInActive)}
+                </Text>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginLeft: 8 }}>
+                  épargnés
+                </Text>
+              </View>
+              <SplitBar
+                segments={[
+                  { value: savedInActive, color: colors.starGold },
+                  { value: remainingOfActive, color: colors.canvasMuted },
+                ]}
+                style={{ marginTop: 14, marginBottom: 12 }}
+              />
+              <LegendRow
+                color={colors.starGold}
+                label="Épargné"
+                share={targetOfActive > 0 ? `${Math.round((savedInActive / targetOfActive) * 100)} %` : undefined}
+                amount={savedInActive}
+              />
+              <LegendRow color={colors.textLight} outlined label="Reste à épargner" amount={remainingOfActive} />
+              {completedGoals.length > 0 && (
+                <LegendRow
+                  color={colors.success}
+                  label="Objectifs atteints"
+                  share={`${completedGoals.length}`}
+                  amount={completedGoals.reduce((sum, g) => sum + (Number(g.targetAmount) || 0), 0)}
+                />
+              )}
+            </Card>
+
+            <SegmentedControl
+              value={tab}
+              onChange={setTab}
+              style={{ marginBottom: 14 }}
+              options={[
+                { value: 'active', label: 'En cours', count: activeGoals.length },
+                { value: 'completed', label: 'Atteints', count: completedGoals.length },
+              ]}
+            />
+
+            {tab === 'active' && (
               <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>
-                    🎯 En cours
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: colors.starGold + '25',
-                      borderRadius: 8,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textPrimary }}>
-                      {activeGoals.length}
-                    </Text>
-                  </View>
-                </View>
-                {activeGoals.map((g) => (
-                  <GoalCard key={g.id} goal={g} onPress={() => openGoal(g)} onEdit={() => openEdit(g)} />
-                ))}
+                {activeGoals.length === 0 ? (
+                  <EmptyTabCard
+                    emoji="🌱"
+                    title="Pas d'objectif en cours"
+                    description="Choisis ton prochain rêve et commence à épargner."
+                  />
+                ) : (
+                  activeGoals.map((g) => (
+                    <GoalProgressCard
+                      key={g.id}
+                      goal={g}
+                      accentColor={colors.starGold}
+                      onSave={() => openGoal(g)}
+                      saveColor={accent}
+                      onEdit={() => openEdit(g)}
+                    />
+                  ))
+                )}
+                <DashedButton label="Nouvel objectif" onPress={() => router.push('/(child)/goals/create')} />
               </>
             )}
 
-            {completedGoals.length > 0 && (
-              <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: 24,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>
-                    🎉 Réalisés
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: colors.success + '15',
-                      borderRadius: 8,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.success }}>
-                      {completedGoals.length}
-                    </Text>
-                  </View>
-                </View>
-                {completedGoals.map((g) => (
-                  <GoalCard key={g.id} goal={g} />
-                ))}
-              </>
-            )}
+            {tab === 'completed' &&
+              (completedGoals.length === 0 ? (
+                <EmptyTabCard
+                  emoji="🏆"
+                  title="Aucun objectif atteint"
+                  description="Tes objectifs réalisés apparaîtront ici. Courage !"
+                />
+              ) : (
+                completedGoals.map((g) => <GoalProgressCard key={g.id} goal={g} />)
+              ))}
           </>
         )}
       </ScrollView>
@@ -271,7 +311,7 @@ const router = useRouter();
                     justifyContent: 'center',
                   }}
                 >
-                  <Ionicons name="pencil" size={20} color={accent} />
+                  <Ionicons name="pencil" size={20} color={getReadableAccent(accent)} />
                 </View>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary }}>
                   Modifier
@@ -283,6 +323,7 @@ const router = useRouter();
             </View>
 
             <Input
+              accentColor={accent}
               label="Nom de l'objectif"
               placeholder='Ex: "Nintendo Switch"'
               icon="flag-outline"
@@ -292,16 +333,7 @@ const router = useRouter();
             />
 
             <Input
-              label="Description (optionnel)"
-              placeholder="Décris ton objectif..."
-              icon="document-text-outline"
-              value={editDescription}
-              onChangeText={setEditDescription}
-              multiline
-              maxLength={200}
-            />
-
-            <Input
+              accentColor={accent}
               label="Montant à atteindre (€)"
               placeholder="50,00"
               icon="cash-outline"
@@ -311,42 +343,24 @@ const router = useRouter();
             />
 
             <View style={{ flexDirection: 'row', gap: 8, marginTop: -6, marginBottom: 20 }}>
-              {[10, 20, 50, 100].map((a) => {
-                const isAmount = editTarget === String(a);
-                return (
-                  <TouchableOpacity
-                    key={a}
-                    onPress={() => setEditTarget(String(a))}
-                    activeOpacity={0.7}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 10,
-                      borderRadius: 12,
-                      alignItems: 'center',
-                      backgroundColor: isAmount ? accent + '15' : colors.childBg,
-                      borderWidth: 1.5,
-                      borderColor: isAmount ? accent : colors.border,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '700',
-                        color: isAmount ? accent : colors.textSecondary,
-                      }}
-                    >
-                      {a} €
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {[10, 20, 50, 100].map((a) => (
+                <Chip
+                  accentColor={accent}
+                  key={a}
+                  label={`${a} €`}
+                  selected={editTarget === String(a)}
+                  surface="card"
+                  onPress={() => setEditTarget(String(a))}
+                  style={{ flex: 1 }}
+                />
+              ))}
             </View>
 
             <Button
+              accentColor={accent}
               title="Enregistrer"
               onPress={saveEdit}
               loading={isUpdating}
-              style={{ backgroundColor: accent }}
             />
 
             <TouchableOpacity
@@ -413,31 +427,20 @@ const router = useRouter();
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
                   {quickAmounts.map((a) => (
-                    <TouchableOpacity
+                    <Chip
+                      accentColor={accent}
                       key={a}
+                      label={`${a} €`}
+                      selected={saveAmount === String(a)}
+                      surface="card"
                       onPress={() => { setSaveAmount(String(a)); setSaveError(null); }}
-                      style={{
-                        flex: 1,
-                        paddingVertical: 10,
-                        borderRadius: 12,
-                        alignItems: 'center',
-                        backgroundColor: saveAmount === String(a) ? accent + '15' : colors.childBg,
-                        borderWidth: 1.5,
-                        borderColor: saveAmount === String(a) ? accent : colors.border,
-                      }}
-                    >
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '700',
-                        color: saveAmount === String(a) ? accent : colors.textSecondary,
-                      }}>
-                        {a} €
-                      </Text>
-                    </TouchableOpacity>
+                      style={{ flex: 1, paddingLeft: 8, paddingRight: 8 }}
+                    />
                   ))}
                 </View>
 
                 <Input
+                  accentColor={accent}
                   label="Ou montant libre (€)"
                   placeholder="3,50"
                   icon="cash-outline"
@@ -447,7 +450,49 @@ const router = useRouter();
                   error={saveError}
                 />
 
+                {parsedSaveCents > 0 && (
+                  <View
+                    style={{
+                      backgroundColor: colors.canvas,
+                      borderRadius: 14,
+                      padding: 12,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: colors.textSecondary }}>Après ce versement</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginTop: 2 }}>
+                      {formatCurrencyShort(Number(selectedGoal.currentAmount) + parsedSaveCents)} /{' '}
+                      {formatCurrencyShort(selectedGoal.targetAmount)}
+                      {Number(selectedGoal.currentAmount) + parsedSaveCents >= Number(selectedGoal.targetAmount)
+                        ? '  🎉 Objectif atteint !'
+                        : ''}
+                    </Text>
+                    <SplitBar
+                      segments={[
+                        {
+                          value: Math.min(
+                            Number(selectedGoal.targetAmount),
+                            Number(selectedGoal.currentAmount) + parsedSaveCents
+                          ),
+                          color: colors.starGold,
+                        },
+                        {
+                          value: Math.max(
+                            0,
+                            Number(selectedGoal.targetAmount) -
+                              Number(selectedGoal.currentAmount) -
+                              parsedSaveCents
+                          ),
+                          color: colors.canvasMuted,
+                        },
+                      ]}
+                      style={{ marginTop: 8, height: 8, backgroundColor: colors.surface }}
+                    />
+                  </View>
+                )}
+
                 <Button
+                  accentColor={accent}
                   title={
                     parsedSaveCents > 0
                       ? `Épargner ${formatCurrencyShort(parsedSaveCents)}`
@@ -456,7 +501,7 @@ const router = useRouter();
                   onPress={handleSave}
                   loading={isSaving}
                   disabled={parsedSaveCents === 0}
-                  style={{ marginTop: 8, backgroundColor: accent }}
+                  style={{ marginTop: 8 }}
                 />
               </>
             )}

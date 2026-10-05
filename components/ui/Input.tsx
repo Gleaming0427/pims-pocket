@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '@/constants/colors';
+import { getReadableAccent } from '@/utils/colorContrast';
 
 interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -16,6 +17,7 @@ interface InputProps extends Omit<TextInputProps, 'style'> {
   icon?: keyof typeof Ionicons.glyphMap;
   isPassword?: boolean;
   containerStyle?: ViewStyle;
+  accentColor?: string;
 }
 
 export default function Input({
@@ -24,8 +26,10 @@ export default function Input({
   icon,
   isPassword,
   containerStyle,
+  accentColor = colors.primary,
   ...props
 }: InputProps) {
+  const focusColor = getReadableAccent(accentColor);
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -53,8 +57,8 @@ export default function Input({
           borderColor: error
             ? colors.error
             : focused
-              ? colors.primary
-              : colors.border,
+              ? focusColor
+              : colors.canvasMuted,
           paddingHorizontal: 14,
           minHeight: 52,
         }}
@@ -63,11 +67,12 @@ export default function Input({
           <Ionicons
             name={icon}
             size={20}
-            color={focused ? colors.primary : colors.textLight}
+            color={error ? colors.error : focused ? accentColor : colors.textLight}
             style={{ marginRight: 10 }}
           />
         )}
         <TextInput
+          selectionColor={focusColor}
           {...props}
           secureTextEntry={isPassword && !showPassword}
           onFocus={(e) => {

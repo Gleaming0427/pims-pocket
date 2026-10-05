@@ -7,11 +7,12 @@ import {
   TextStyle,
 } from 'react-native';
 import colors from '@/constants/colors';
+import { getContrastTextColor } from '@/utils/colorContrast';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'dark' | 'light';
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   loading?: boolean;
@@ -19,6 +20,7 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   fullWidth?: boolean;
+  accentColor?: string;
 }
 
 export default function Button({
@@ -32,6 +34,7 @@ export default function Button({
   style,
   textStyle,
   fullWidth = true,
+  accentColor,
 }: ButtonProps) {
   const baseStyle: ViewStyle = {
     flexDirection: 'row',
@@ -48,19 +51,23 @@ export default function Button({
   };
 
   const variantStyles: Record<string, ViewStyle> = {
-    primary: { backgroundColor: colors.primary },
-    secondary: { backgroundColor: colors.secondary },
-    outline: { backgroundColor: 'transparent', borderWidth: 2, borderColor: colors.primary },
+    primary: { backgroundColor: accentColor ?? colors.primary },
+    secondary: { backgroundColor: accentColor ?? colors.secondary },
+    outline: { backgroundColor: 'transparent', borderWidth: 2, borderColor: accentColor ?? colors.primary },
     danger: { backgroundColor: colors.error },
     ghost: { backgroundColor: 'transparent' },
+    dark: { backgroundColor: colors.textPrimary },
+    light: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.canvasMuted },
   };
 
   const textColors: Record<string, string> = {
-    primary: '#FFFFFF',
-    secondary: '#FFFFFF',
-    outline: colors.primary,
+    primary: accentColor ? getContrastTextColor(accentColor) : '#FFFFFF',
+    secondary: accentColor ? getContrastTextColor(accentColor) : '#FFFFFF',
+    outline: accentColor ? colors.textPrimary : colors.primary,
     danger: '#FFFFFF',
-    ghost: colors.primary,
+    ghost: accentColor ? colors.textPrimary : colors.primary,
+    dark: '#FFFFFF',
+    light: colors.textPrimary,
   };
 
   const textSizes: Record<string, TextStyle> = {
@@ -85,7 +92,7 @@ export default function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={textColors[variant]} size="small" />
+        <ActivityIndicator color={textStyle?.color ?? textColors[variant]} size="small" />
       ) : (
         <>
           {icon && <>{icon}</>}

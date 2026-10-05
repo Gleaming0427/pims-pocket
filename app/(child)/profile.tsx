@@ -9,8 +9,10 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import Avatar from '@/components/ui/Avatar';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import GroupTitle from '@/components/ui/GroupTitle';
 import Header from '@/components/shared/Header';
 import colors from '@/constants/colors';
+import { getContrastTextColor } from '@/utils/colorContrast';
 import { useChildThemeStore } from '@/stores/childThemeStore';
 import { CHILD_THEMES } from '@/constants/childThemes';
 import { updateChildThemeColor } from '@/lib/firestore';
@@ -18,7 +20,7 @@ import { updateChildThemeColor } from '@/lib/firestore';
 export default function ChildProfileScreen() {
   const accent = useChildThemeStore((s) => s.accent);
   const setAccent = useChildThemeStore((s) => s.setAccent);
-const router = useRouter();
+  const router = useRouter();
   const { user, signOut } = useAuthStore();
   const [avatarId, setAvatarId] = useState<string | null>(null);
 
@@ -51,90 +53,44 @@ const router = useRouter();
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header title="Mon profil" homeButton homeTarget="/(child)/dashboard" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
       >
-        {/* Héro profil turquoise — miroir du profil adulte */}
-        <View
-          style={{
-            backgroundColor: accent,
-            borderRadius: 24,
-            padding: 24,
-            marginBottom: 16,
-            overflow: 'hidden',
-            alignItems: 'center',
-          }}
-        >
-          {/* Cercles décoratifs */}
-          <View
-            style={{
-              position: 'absolute',
-              top: -45,
-              right: -35,
-              width: 170,
-              height: 170,
-              borderRadius: 85,
-              backgroundColor: 'rgba(255,255,255,0.12)',
-            }}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              bottom: -55,
-              left: -25,
-              width: 130,
-              height: 130,
-              borderRadius: 65,
-              backgroundColor: colors.starGold + '25',
-            }}
-          />
-
-          {avatarId ? (
-            <View
-              style={{
-                borderWidth: 3,
-                borderColor: 'rgba(255,255,255,0.25)',
-                borderRadius: 999,
-              }}
-            >
-              <Avatar avatarId={avatarId} size={80} />
+        <Card padding={20}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            {avatarId ? (
+              <Avatar avatarId={avatarId} size={64} />
+            ) : (
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: accent + '15', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 32 }}>🧒</Text>
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary }}>
+                {user?.displayName ?? 'Mon profil'}
+              </Text>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>
+                Ton espace Pims Pocket
+              </Text>
             </View>
-          ) : (
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: 'rgba(255,255,255,0.22)',
-                borderWidth: 3,
-                borderColor: 'rgba(255,255,255,0.25)',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 44 }}>🧒</Text>
-            </View>
-          )}
-          <Text
-            style={{
-              fontSize: 22,
-              fontWeight: '800',
-              color: '#FFF',
-              marginTop: 12,
-            }}
-          >
-            {user?.displayName ?? 'Mon profil'}
-          </Text>
-        </View>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.canvasMuted }}>
+            <Ionicons name="sparkles-outline" size={18} color={colors.textSecondary} />
+            <Text style={{ flex: 1, fontSize: 13, color: colors.textSecondary }}>
+              Des missions, des rêves et plein de progrès !
+            </Text>
+          </View>
+        </Card>
 
-        {/* Liste : même pattern que les réglages adulte */}
+        <GroupTitle label="Mon activité" />
         <Card>
           <TouchableOpacity
             onPress={() => router.push('/(child)/history')}
             activeOpacity={0.7}
+            accessibilityRole="button"
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -146,12 +102,12 @@ const router = useRouter();
                 width: 38,
                 height: 38,
                 borderRadius: 12,
-                backgroundColor: accent + '15',
+                backgroundColor: colors.canvas,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Ionicons name="time-outline" size={19} color={accent} />
+              <Ionicons name="time-outline" size={19} color={colors.textPrimary} />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
@@ -164,11 +120,12 @@ const router = useRouter();
             <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
           </TouchableOpacity>
 
-          <View style={{ height: 1, backgroundColor: colors.border }} />
+          <View style={{ height: 1, backgroundColor: colors.canvasMuted, marginLeft: 50 }} />
 
           <TouchableOpacity
             onPress={() => router.push('/(child)/badges')}
             activeOpacity={0.7}
+            accessibilityRole="button"
             style={{
               flexDirection: 'row',
               alignItems: 'center',
@@ -180,7 +137,7 @@ const router = useRouter();
                 width: 38,
                 height: 38,
                 borderRadius: 12,
-                backgroundColor: colors.starGold + '25',
+                backgroundColor: colors.canvas,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -199,23 +156,26 @@ const router = useRouter();
           </TouchableOpacity>
         </Card>
 
-        {/* Gemme de couleur */}
-        <Card style={{ marginTop: 16 }}>
+        <GroupTitle label="Personnalisation" />
+        <Card padding={20}>
           <Text
             style={{
               fontSize: 15,
               fontWeight: '700',
               color: colors.textPrimary,
-              marginBottom: 14,
+              marginBottom: 4,
             }}
           >
-            💎 Mes couleurs
+            Ma couleur
+          </Text>
+          <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 16 }}>
+            Choisis la couleur de tes boutons et de tes onglets.
           </Text>
           <View
             style={{
               flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 12,
             }}
           >
             {CHILD_THEMES.map((theme) => {
@@ -234,7 +194,20 @@ const router = useRouter();
                     }
                   }}
                   activeOpacity={0.7}
-                  style={{ alignItems: 'center' }}
+                  accessibilityRole="radio"
+                  accessibilityLabel={theme.label}
+                  accessibilityState={{ selected: isSelected }}
+                  style={{
+                    flexGrow: 1,
+                    flexBasis: '28%',
+                    alignItems: 'center',
+                    paddingVertical: 12,
+                    paddingHorizontal: 4,
+                    borderRadius: 16,
+                    backgroundColor: colors.canvas,
+                    borderWidth: 2,
+                    borderColor: isSelected ? colors.textPrimary : colors.canvas,
+                  }}
                 >
                   <View
                     style={{
@@ -242,14 +215,14 @@ const router = useRouter();
                       height: 42,
                       borderRadius: 13,
                       backgroundColor: theme.color,
-                      borderWidth: isSelected ? 3 : 0,
+                      borderWidth: 0,
                       borderColor: colors.textPrimary,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
                     {isSelected && (
-                      <Ionicons name="checkmark" size={22} color="#FFF" />
+                      <Ionicons name="checkmark" size={22} color={getContrastTextColor(theme.color)} />
                     )}
                   </View>
                   <Text
@@ -268,12 +241,14 @@ const router = useRouter();
           </View>
         </Card>
 
+        <GroupTitle label="Mon compte" />
         <Button
           title="Se déconnecter"
           onPress={handleSignOut}
-          variant="danger"
-          style={{ marginTop: 32 }}
-          icon={<Ionicons name="log-out-outline" size={20} color="#FFF" />}
+          variant="ghost"
+          style={{ backgroundColor: colors.surface }}
+          textStyle={{ color: colors.error }}
+          icon={<Ionicons name="log-out-outline" size={20} color={colors.error} />}
         />
       </ScrollView>
     </SafeAreaView>

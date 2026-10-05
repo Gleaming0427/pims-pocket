@@ -8,8 +8,10 @@ import colors from '@/constants/colors';
 interface TransactionItemProps {
   transaction: Transaction;
   childName?: string;
-  // Séparateur bas (désactivé quand la ligne vit dans une Card)
+  // Séparateur sous la ligne (à désactiver sur la dernière ligne d'une carte)
   showDivider?: boolean;
+  // Remplace la date relative (ex. : l'heure, quand la liste est groupée par jour)
+  meta?: string;
 }
 
 const typeConfig: Record<
@@ -35,62 +37,63 @@ const FALLBACK_CONFIG = {
 // Les transactions de retrait (penalty) sont stockées avec amount > 0
 // (contrainte Firestore Rules) mais doivent s'afficher comme un débit.
 // 'saving' : débit quand amount < 0 (épargne), crédit quand > 0 (remboursement).
-const isDebitType = (type: Transaction['type']) =>
-  type === 'penalty' || type === 'spending';
+export const isDebitTransaction = (transaction: Transaction) =>
+  transaction.type === 'penalty' || transaction.type === 'spending' || transaction.amount < 0;
 
 const TransactionItem = React.memo(function TransactionItem({
   transaction,
   childName,
   showDivider = true,
+  meta,
 }: TransactionItemProps) {
   const config = typeConfig[transaction.type] ?? FALLBACK_CONFIG;
-  const isDebit = isDebitType(transaction.type) || transaction.amount < 0;
+  const isDebit = isDebitTransaction(transaction);
   const displayAmount = Math.abs(transaction.amount);
 
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: showDivider ? 12 : 8,
-        borderBottomWidth: showDivider ? 1 : 0,
-        borderBottomColor: colors.border,
-      }}
-    >
-      <View
-        style={{
-          width: 42,
-          height: 42,
-          borderRadius: 12,
-          backgroundColor: config.color + '20',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Ionicons name={config.icon} size={20} color={config.color} />
-      </View>
-      <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text
-          style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}
-          numberOfLines={1}
+    <View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }}>
+        <View
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 12,
+            backgroundColor: config.color + '20',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          {transaction.description || config.label}
-        </Text>
-        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-          {childName ? `${childName} · ` : ''}
-          {formatRelativeDate(transaction.createdAt)}
+          <Ionicons name={config.icon} size={20} color={config.color} />
+        </View>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text
+            style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}
+            numberOfLines={1}
+          >
+            {transaction.description || config.label}
+          </Text>
+          <Text numberOfLines={1} style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+            {[childName, meta ?? formatRelativeDate(transaction.createdAt)]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+        </View>
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: '800',
+            color: isDebit ? colors.textPrimary : colors.success,
+            marginLeft: 8,
+          }}
+        >
+          {isDebit ? '−' : '+'}
+          {formatCurrencyShort(displayAmount)}
         </Text>
       </View>
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: '700',
-          color: isDebit ? colors.error : colors.success,
-        }}
-      >
-        {isDebit ? '−' : '+'}
-        {formatCurrencyShort(displayAmount)}
-      </Text>
+      {/* Séparateur aligné sur le texte (après l'icône) */}
+      {showDivider && (
+        <View style={{ height: 1, backgroundColor: colors.canvasMuted, marginLeft: 54 }} />
+      )}
     </View>
   );
 });

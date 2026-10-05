@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { BadgeDefinition } from '@/types';
 import colors from '@/constants/colors';
+import BadgeArtwork from '@/components/child/BadgeArtwork';
 
 interface BadgeItemProps {
   badge: BadgeDefinition;
@@ -11,7 +12,6 @@ interface BadgeItemProps {
 
 const BadgeItem = React.memo(function BadgeItem({ badge, earned, size = 'sm' }: BadgeItemProps) {
   const dim = size === 'sm' ? 64 : 88;
-  const fontSize = size === 'sm' ? 28 : 40;
   const textSize = size === 'sm' ? 11 : 13;
 
   return (
@@ -19,7 +19,6 @@ const BadgeItem = React.memo(function BadgeItem({ badge, earned, size = 'sm' }: 
       style={{
         alignItems: 'center',
         width: dim + 16,
-        opacity: earned ? 1 : 0.35,
       }}
     >
       <View
@@ -34,7 +33,7 @@ const BadgeItem = React.memo(function BadgeItem({ badge, earned, size = 'sm' }: 
           borderColor: colors.starGold,
         }}
       >
-        <Text style={{ fontSize }}>{earned ? badge.emoji : '🔒'}</Text>
+        <BadgeArtwork badgeId={badge.id} size={dim - 16} locked={!earned} />
       </View>
       <Text
         style={{

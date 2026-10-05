@@ -1,160 +1,115 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAuthStore } from '@/stores/authStore';
 import Header from '@/components/shared/Header';
+import EmptyTabCard from '@/components/shared/EmptyTabCard';
+import TransactionItem, { isDebitTransaction } from '@/components/parent/TransactionItem';
 import Card from '@/components/ui/Card';
-import EmptyState from '@/components/shared/EmptyState';
-import LoadingScreen from '@/components/shared/LoadingScreen';
 import Button from '@/components/ui/Button';
-import { formatCurrencyShort, formatRelativeDate } from '@/utils/formatters';
+import GroupTitle from '@/components/ui/GroupTitle';
+import { formatCurrencyShort } from '@/utils/formatters';
+import { Transaction } from '@/types';
 import colors from '@/constants/colors';
-import { useChildThemeStore } from '@/stores/childThemeStore';
 
-const typeIcon: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
-  allowance: { icon: 'calendar', color: colors.primary },
-  mission_reward: { icon: 'trophy', color: colors.accentOrange },
-  bonus: { icon: 'star', color: colors.starGold },
-  gift: { icon: 'gift', color: colors.secondary },
-  saving: { icon: 'wallet', color: colors.info },
-  spending: { icon: 'cart', color: colors.error },
-  request: { icon: 'hand-left', color: colors.secondary },
-};
+const PAGE_SIZE = 8;
 
-const TransactionRow = React.memo(function TransactionRow({
-  description, createdAt, type, amount,
-}: {
-  description: string;
-  createdAt: Date | import('@/types').Timestamp;
-  type: string;
-  amount: number;
-}) {
-  const config = useMemo(
-    () => typeIcon[type] ?? { icon: 'ellipse' as const, color: colors.textLight },
-    [type]
-  );
-  const isPositive = amount > 0;
-  const formattedDate = useMemo(() => formatRelativeDate(createdAt), [createdAt]);
-  const formattedAmount = useMemo(() => formatCurrencyShort(amount), [amount]);
-
-  return (
-    <Card
-      variant="child"
-      style={{
-        marginBottom: 8,
-        borderLeftWidth: 4,
-        borderLeftColor: isPositive ? colors.success : type === 'saving' ? colors.info : colors.error,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            backgroundColor: config.color + '20',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Ionicons name={config.icon} size={20} color={config.color} />
-        </View>
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text
-            style={{ fontSize: 14, fontWeight: '600', color: colors.textPrimary }}
-            numberOfLines={1}
-          >
-            {description}
-          </Text>
-          <Text style={{ fontSize: 12, color: colors.textLight, marginTop: 2 }}>
-            {formattedDate}
-          </Text>
-        </View>
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: '700',
-            color: isPositive ? colors.success : colors.error,
-          }}
-        >
-          {isPositive ? '+' : ''}
-          {formattedAmount}
-        </Text>
-      </View>
-    </Card>
-  );
-});
+function dayLabel(date: Date) {
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Aujourd'hui";
+  if (date.toDateString() === yesterday.toDateString()) return 'Hier';
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+    ...(date.getFullYear() !== today.getFullYear() ? { year: 'numeric' as const } : {}),
+  });
+}
 
 export default function ChildHistoryScreen() {
-    const accent = useChildThemeStore((s) => s.accent);
-const user = useAuthStore((s) => s.user);
-
-  // Pagination : 8 opérations affichées, « Voir plus » relance la requête (+8)
-  const [pageSize, setPageSize] = useState(8);
-
-  // Filtrer par le propre UID de l'enfant : requis par les règles Firestore
-  const { transactions, isLoading } = useTransactions(user?.id, pageSize);
-
-  const hasMore = transactions.length >= pageSize;
-
-  const renderItem = useCallback(
-    ({ item }: { item: (typeof transactions)[number] }) => (
-      <TransactionRow
-        description={item.description}
-        createdAt={item.createdAt}
-        type={item.type}
-        amount={item.amount}
-      />
-    ),
-    []
-  );
-
-  const keyExtractor = useCallback(
-    (item: (typeof transactions)[number]) => item.id,
-    []
-  );
-
-  if (isLoading) return <LoadingScreen />;
+  const user = useAuthStore((state) => state.user);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const { transactions, isLoading, error } = useTransactions(user?.id, pageSize);
+  const groups = useMemo(() => {
+    const result: { key: string; label: string; transactions: Transaction[] }[] = [];
+    const sorted = [...transactions].sort((first, second) => second.createdAt.toMillis() - first.createdAt.toMillis());
+    for (const transaction of sorted) {
+      const date = transaction.createdAt.toDate();
+      const key = date.toDateString();
+      const last = result[result.length - 1];
+      if (last?.key === key) last.transactions.push(transaction);
+      else result.push({ key, label: dayLabel(date), transactions: [transaction] });
+    }
+    return result;
+  }, [transactions]);
+  const totals = useMemo(() => transactions.reduce((sum, transaction) => {
+    if (isDebitTransaction(transaction)) sum.debit += Math.abs(transaction.amount);
+    else sum.credit += Math.abs(transaction.amount);
+    return sum;
+  }, { credit: 0, debit: 0 }), [transactions]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header title="Mon historique" showBack />
       <FlatList
-        data={transactions}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        ListEmptyComponent={
-          <EmptyState
-            emoji="📜"
-            title="Rien pour l'instant"
-            description="Ton historique apparaîtra ici quand tu recevras ou dépenseras de l'argent."
-          />
+        data={groups}
+        keyExtractor={(group) => group.key}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center', flexGrow: 1 }}
+        ListHeaderComponent={
+          <View>
+            {!!error && (
+              <EmptyTabCard emoji="☁️" title="Chargement interrompu" description="Impossible de récupérer tes dernières opérations. Réessaie dans un instant." />
+            )}
+            {transactions.length > 0 && (
+              <Card padding={20}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>Mes mouvements</Text>
+                <View style={{ flexDirection: 'row', marginTop: 16 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>Entrées</Text>
+                    <Text style={{ fontSize: 22, fontWeight: '800', color: colors.success, marginTop: 4 }}>
+                      +{formatCurrencyShort(totals.credit)}
+                    </Text>
+                  </View>
+                  <View style={{ width: 1, backgroundColor: colors.canvasMuted, marginHorizontal: 16 }} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13, color: colors.textSecondary }}>Sorties</Text>
+                    <Text style={{ fontSize: 22, fontWeight: '800', color: colors.textPrimary, marginTop: 4 }}>
+                      −{formatCurrencyShort(totals.debit)}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 12 }}>
+                  Sur les {transactions.length} dernières opérations affichées, épargne comprise.
+                </Text>
+              </Card>
+            )}
+          </View>
         }
-        ListFooterComponent={
-          hasMore ? (
-            <View style={{ marginTop: 16 }}>
-              <Button
-                title="Voir plus"
-                variant="outline"
-                onPress={() => setPageSize((p) => p + 8)}
-              />
-            </View>
-          ) : null
-        }
-        contentContainerStyle={{
-          padding: 20,
-          paddingBottom: 40,
-          maxWidth: 720,
-          width: '100%',
-          alignSelf: 'center',
-          flexGrow: 1,
-        }}
-        windowSize={7}
-        maxToRenderPerBatch={15}
-        removeClippedSubviews
-        initialNumToRender={10}
+        renderItem={({ item: group }) => (
+          <View>
+            <GroupTitle label={group.label} />
+            <Card padding={14}>
+              {group.transactions.map((transaction, index) => (
+                <TransactionItem
+                  key={transaction.id}
+                  transaction={transaction}
+                  meta={transaction.createdAt.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  showDivider={index < group.transactions.length - 1}
+                />
+              ))}
+            </Card>
+          </View>
+        )}
+        ListEmptyComponent={!isLoading && !error ? (
+          <EmptyTabCard emoji="📝" title="Pas encore de mouvement" description="Ton argent de poche, tes récompenses et tes dépenses apparaîtront ici." />
+        ) : null}
+        ListFooterComponent={isLoading ? (
+          <ActivityIndicator style={{ marginTop: 20 }} color={colors.textPrimary} accessibilityLabel="Chargement de l’historique" />
+        ) : transactions.length >= pageSize ? (
+          <Button title="Voir plus" variant="light" onPress={() => setPageSize((previous) => previous + PAGE_SIZE)} style={{ marginTop: 16 }} />
+        ) : null}
       />
     </SafeAreaView>
   );

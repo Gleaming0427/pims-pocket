@@ -33,6 +33,8 @@ export interface User {
   consentGivenAt?: Timestamp;
 }
 
+export type AllowanceFrequency = 'weekly' | 'biweekly' | 'monthly';
+
 export interface Child {
   id: string;
   familyId?: string;
@@ -42,8 +44,18 @@ export interface Child {
   balance: number;
   totalEarned: number;
   totalSaved: number;
+  // Montant de l'argent de poche, versé à chaque échéance (malgré son nom,
+  // pas forcément chaque semaine : voir allowanceFrequency)
   weeklyAllowance: number;
+  // Jour de la semaine du versement (0 = dimanche) — rythmes weekly / biweekly
   allowanceDay: number;
+  // Rythme du versement ; absent = 'weekly' (anciens enfants)
+  allowanceFrequency?: AllowanceFrequency;
+  // biweekly : date (YYYY-MM-DD, heure de Paris) d'un versement de référence ;
+  // les versements tombent tous les 14 jours à partir de cette date
+  allowanceAnchorDate?: string;
+  // monthly : jour du mois du versement (1 à 28)
+  allowanceDayOfMonth?: number;
   spendingLimit?: number;
   linkedUserId?: string;
   inviteCode?: string;
@@ -101,7 +113,8 @@ export interface Mission {
   icon: string;
   status: MissionStatus;
   isRecurring: boolean;
-  recurringFrequency?: 'daily' | 'weekly' | 'monthly';
+  // biweekly = une semaine sur deux (familles recomposées, garde alternée)
+  recurringFrequency?: 'daily' | 'weekly' | 'biweekly' | 'monthly';
   dueDate?: Timestamp;
   completedAt?: Timestamp;
   autoValidate?: boolean;

@@ -37,8 +37,11 @@ export default function AddChildScreen() {
   const [pinValue, setPinValue] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
   const [pinError, setPinError] = useState<string | null>(null);
+  // Garde anti double-clic : couvre tout le flux (addChild + createChildAuthAccount)
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    if (submitting) return;
     if (limitReached) {
       Alert.alert(
         'Limite atteinte',
@@ -64,6 +67,7 @@ export default function AddChildScreen() {
       return;
     }
 
+    setSubmitting(true);
     try {
       const birthDate = new Date(parseInt(birthYear) || 2015, 0, 1);
       const child = await addChild(user.familyId!, {
@@ -85,6 +89,8 @@ export default function AddChildScreen() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Impossible d'ajouter l'enfant.";
       Alert.alert('Erreur', msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -284,8 +290,8 @@ export default function AddChildScreen() {
         <Button
           title="Ajouter l'enfant"
           onPress={handleSubmit}
-          loading={isLoading}
-          disabled={limitReached || pinValue.length < 4 || pinConfirm.length < 4}
+          loading={submitting || isLoading}
+          disabled={submitting || limitReached || pinValue.length < 4 || pinConfirm.length < 4}
         />
       </ScrollView>
     </SafeAreaView>

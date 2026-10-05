@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { ScrollView, Alert } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMissions } from '@/hooks/useMissions';
 import { useMissionStore } from '@/stores/missionStore';
 import ChildMissionCard from '@/components/child/MissionCard';
 import Header from '@/components/shared/Header';
-import EmptyState from '@/components/shared/EmptyState';
+import EmptyTabCard from '@/components/shared/EmptyTabCard';
+import MissionSummaryCard from '@/components/shared/MissionSummaryCard';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import colors from '@/constants/colors';
 import { useChildThemeStore } from '@/stores/childThemeStore';
 
+type MissionTab = 'todo' | 'pending' | 'done';
+
 export default function ChildMissionsScreen() {
-    const accent = useChildThemeStore((s) => s.accent);
-const { missions, isLoading } = useMissions();
+  const accent = useChildThemeStore((s) => s.accent);
+  const { missions, isLoading } = useMissions();
   const { updateMissionStatus } = useMissionStore();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [tab, setTab] = useState<MissionTab>('todo');
 
   const activeMissions = missions.filter(
     (m) => m.status === 'available' || m.status === 'in_progress'
@@ -32,6 +37,7 @@ const { missions, isLoading } = useMissions();
         {
           text: "J'ai terminé !",
           onPress: async () => {
+            if (loadingId) return;
             setLoadingId(missionId);
             await updateMissionStatus(missionId, 'pending_validation');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -45,140 +51,79 @@ const { missions, isLoading } = useMissions();
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header title="Mes missions" homeButton homeTarget="/(child)/dashboard" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
       >
         {missions.length === 0 ? (
-          <EmptyState
+          <EmptyTabCard
             emoji="🎮"
             title="Pas encore de missions"
             description="Tes parents vont bientôt te donner des missions à accomplir !"
           />
         ) : (
           <>
-            {activeMissions.length > 0 && (
-              <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: '700',
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    🎯 À faire
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: accent + '15',
-                      borderRadius: 8,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: accent }}>
-                      {activeMissions.length}
-                    </Text>
-                  </View>
-                </View>
-                {activeMissions.map((m) => (
+            <MissionSummaryCard
+              title="Mes missions"
+              todo={activeMissions}
+              pending={pendingMissions}
+              done={completedMissions}
+              todoColor={accent}
+              pendingLabel="En attente"
+            />
+
+            <SegmentedControl
+              value={tab}
+              onChange={setTab}
+              style={{ marginBottom: 14 }}
+              options={[
+                { value: 'todo', label: 'À faire', count: activeMissions.length },
+                { value: 'pending', label: 'En attente', count: pendingMissions.length },
+                { value: 'done', label: 'Terminées', count: completedMissions.length },
+              ]}
+            />
+
+            {tab === 'todo' &&
+              (activeMissions.length === 0 ? (
+                <EmptyTabCard
+                  emoji="🎉"
+                  title="Tout est fait !"
+                  description="Bravo, tu n'as plus de mission à faire pour l'instant."
+                />
+              ) : (
+                activeMissions.map((m) => (
                   <ChildMissionCard
                     key={m.id}
                     mission={m}
                     onComplete={() => handleComplete(m.id)}
                     loading={loadingId === m.id}
                   />
-                ))}
-              </>
-            )}
+                ))
+              ))}
 
-            {pendingMissions.length > 0 && (
-              <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: 24,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: '700',
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    ⏳ En attente
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: colors.accentOrange + '15',
-                      borderRadius: 8,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.accentOrange }}>
-                      {pendingMissions.length}
-                    </Text>
-                  </View>
-                </View>
-                {pendingMissions.map((m) => (
-                  <ChildMissionCard key={m.id} mission={m} />
-                ))}
-              </>
-            )}
+            {tab === 'pending' &&
+              (pendingMissions.length === 0 ? (
+                <EmptyTabCard
+                  emoji="⏳"
+                  title="Rien en attente"
+                  description="Quand tu termines une mission, elle attend ici que ton parent la valide."
+                />
+              ) : (
+                pendingMissions.map((m) => <ChildMissionCard key={m.id} mission={m} />)
+              ))}
 
-            {completedMissions.length > 0 && (
-              <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: 24,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: '700',
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    ✅ Terminées
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: colors.success + '15',
-                      borderRadius: 8,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.success }}>
-                      {completedMissions.length}
-                    </Text>
-                  </View>
-                </View>
-                {completedMissions.slice(0, 10).map((m) => (
-                  <ChildMissionCard key={m.id} mission={m} />
-                ))}
-              </>
-            )}
+            {tab === 'done' &&
+              (completedMissions.length === 0 ? (
+                <EmptyTabCard
+                  emoji="🏁"
+                  title="Aucune mission terminée"
+                  description="Tes missions validées apparaîtront ici."
+                />
+              ) : (
+                completedMissions.slice(0, 10).map((m) => <ChildMissionCard key={m.id} mission={m} />)
+              ))}
           </>
         )}
       </ScrollView>

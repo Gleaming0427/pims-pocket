@@ -1,3 +1,7 @@
+const canvas = '#F3F5F9';
+const surface = '#FFFFFF';
+const canvasMuted = '#E5E9F0';
+
 const colors = {
   primary: '#6C5CE7',
   primaryLight: '#A29BFE',
@@ -12,17 +16,17 @@ const colors = {
   error: '#E17055',
   info: '#74B9FF',
 
-  background: '#FDF3E0',
-  surface: '#FFFFFF',
+  background: canvas,
+  canvas,
+  canvasMuted,
+  surface,
   textPrimary: '#2D3436',
   textSecondary: '#636E72',
-  textLight: '#B2BEC3',
-  border: '#EAE6DC',
+  textLight: '#7B8386',
+  border: canvasMuted,
 
-  // Même fond chaud partout : parent et enfant partagent le même canvas
-  childBg: '#FDF3E0',
-  // Surface des cartes côté enfant : blanc chaud qui se détache du fond crème
-  childSurface: '#FFFDF8',
+  childBg: canvas,
+  childSurface: surface,
   starGold: '#FFD93D',
 } as const;
 

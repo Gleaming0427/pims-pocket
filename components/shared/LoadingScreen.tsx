@@ -13,10 +13,10 @@ export default function LoadingScreen({ message }: LoadingScreenProps) {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.background,
+        backgroundColor: colors.canvas,
       }}
     >
-      <ActivityIndicator size="large" color={colors.primary} />
+      <ActivityIndicator size="large" color={colors.textPrimary} accessibilityLabel="Chargement" />
       {message && (
         <Text
           style={{

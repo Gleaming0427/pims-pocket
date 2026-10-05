@@ -44,6 +44,7 @@ export default function EditChildScreen() {
   const isValid = firstName.trim().length > 0 && /^\d{4}$/.test(birthYear);
 
   const handleSave = async () => {
+    if (isSaving) return;
     const nameError = validateName(firstName);
     setError(nameError);
     if (nameError) return;
@@ -74,6 +75,7 @@ export default function EditChildScreen() {
   };
 
   const handleResetPin = async () => {
+    if (resetting) return;
     const err = validatePinCode(pinValue);
     if (err) { setPinError(err); return; }
     if (pinValue !== pinConfirm) {

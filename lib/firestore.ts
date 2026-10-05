@@ -575,6 +575,23 @@ export function onGoalsSnapshot(
   );
 }
 
+// Tous les objectifs de la famille (vue parent). Pas d'orderBy : le tri se
+// fait côté client, ce qui évite un index composite.
+export function onFamilyGoalsSnapshot(
+  familyId: string,
+  callback: (goals: Goal[]) => void
+) {
+  return onSnapshot(
+    query(collection(db, 'goals'), where('familyId', '==', familyId)),
+    (snap) => {
+      callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Goal));
+    },
+    (err) => {
+    logFirestoreError('snapshot', err);
+    }
+  );
+}
+
 export async function deleteGoal(
   goalId: string,
   // Fallback : les objectifs créés avant le fix ne portent pas childDocId.

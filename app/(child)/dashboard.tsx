@@ -6,35 +6,44 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/stores/authStore';
 import { useMissions } from '@/hooks/useMissions';
 import { useNotifications } from '@/hooks/useNotifications';
-import PiggyBank from '@/components/child/PiggyBank';
 import ChildMissionCard from '@/components/child/MissionCard';
 import NotificationBell from '@/components/shared/NotificationBell';
-import NotificationsModal from '@/components/shared/NotificationsModal';
+import BadgeArtwork from '@/components/child/BadgeArtwork';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import Header from '@/components/shared/Header';
+import MoneySplitCard from '@/components/shared/MoneySplitCard';
+import GoalProgressCard from '@/components/shared/GoalProgressCard';
+import EmptyTabCard from '@/components/shared/EmptyTabCard';
 import { onGoalsSnapshot } from '@/lib/firestore';
 import { getEarnedBadges, onBadgesSnapshot } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { Goal, EarnedBadge } from '@/types';
-import { formatCurrencyShort, getAge } from '@/utils/formatters';
-import ProgressBar from '@/components/ui/ProgressBar';
+import Avatar from '@/components/ui/Avatar';
+import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import DashedButton from '@/components/ui/DashedButton';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import badgesDef from '@/constants/badges';
 import colors from '@/constants/colors';
+import { getContrastTextColor, getReadableAccent } from '@/utils/colorContrast';
 import { useChildThemeStore } from '@/stores/childThemeStore';
 
+type HomeTab = 'missions' | 'goals' | 'badges';
+
 export default function ChildDashboard() {
-    const accent = useChildThemeStore((s) => s.accent);
-const router = useRouter();
+  const accent = useChildThemeStore((s) => s.accent);
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { missions } = useMissions();
-  const { unreadCount, notifications, markAsRead, isLoading: notifLoading } = useNotifications();
-  const [notifModalVisible, setNotifModalVisible] = useState(false);
+  const { unreadCount } = useNotifications();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
   const [balance, setBalance] = useState(0);
-  const [birthDate, setBirthDate] = useState<import('@/types').Timestamp | null>(null);
+  const [totalSaved, setTotalSaved] = useState(0);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [avatarId, setAvatarId] = useState<string | null>(null);
+  const [tab, setTab] = useState<HomeTab>('missions');
 
   useEffect(() => {
     if (!user) return;
@@ -77,7 +86,9 @@ const router = useRouter();
         }
         const data = snap.data();
         setBalance(typeof data?.balance === 'number' ? data.balance : 0);
-        setBirthDate(data?.birthDate ?? null);
+        setTotalSaved(typeof data?.totalSaved === 'number' ? data.totalSaved : 0);
+        setTotalEarned(typeof data?.totalEarned === 'number' ? data.totalEarned : 0);
+        setAvatarId(typeof data?.avatarId === 'string' ? data.avatarId : null);
       },
       (err) => console.warn('[ChildDashboard] ERREUR snapshot:', err.code, err.message)
     );
@@ -89,35 +100,29 @@ const router = useRouter();
   );
   // L'accueil montre les 3 premières — la page Missions affiche tout
   const availableMissions = allAvailableMissions.slice(0, 3);
+  const pendingMissionsCount = missions.filter((m) => m.status === 'pending_validation').length;
 
-  const latestGoal = goals.find((g) => g.status === 'active');
+  // Objectifs en cours, les plus avancés en tête
+  const goalProgress = (g: Goal) => (g.targetAmount > 0 ? g.currentAmount / g.targetAmount : 0);
+  const activeGoals = goals
+    .filter((g) => g.status === 'active')
+    .sort((a, b) => goalProgress(b) - goalProgress(a));
 
   const recentBadges = earnedBadges.slice(0, 3);
-
-  // Mode ado : accueil sobre mais chaleureux — sans la tirelire cochon.
-  // Choix produit : appliqué à TOUS les enfants, quel que soit leur âge.
-  // (L'ancien seuil adaptatif : birthDate ? getAge(birthDate) >= 12 : false)
-  const isTeen = true;
-
-  const activeGoalsCount = goals.filter((g) => g.status === 'active').length;
-  const pendingMissionsCount = missions.filter(
-    (m) => m.status === 'pending_validation'
-  ).length;
 
   if (!user) return <LoadingScreen />;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.childBg }}>
-      {/* En-tête identique au côté adulte */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header
         title={`Bonjour ${user?.displayName ?? ''} 👋`}
-        subtitle={isTeen ? 'Tableau de bord' : "Tes missions t'attendent !"}
+        subtitle="Tableau de bord"
         rightAction={
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity onPress={() => router.push('/(child)/history')}>
               <Ionicons name="time-outline" size={26} color={colors.textPrimary} />
             </TouchableOpacity>
-            <NotificationBell count={unreadCount} onPress={() => setNotifModalVisible(true)} />
+            <NotificationBell count={unreadCount} onPress={() => router.push('/notifications')} />
           </View>
         }
       />
@@ -126,328 +131,203 @@ const router = useRouter();
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
       >
-        {/* Héro tirelire : turquoise plein, comme le héro violet côté parent */}
-        <View
-          style={{
-            backgroundColor: accent,
-            borderRadius: 24,
-            marginBottom: 20,
-            overflow: 'hidden',
-          }}
-        >
-          {/* Cercles décoratifs */}
-          <View
-            style={{
-              position: 'absolute',
-              top: -45,
-              right: -35,
-              width: 170,
-              height: 170,
-              borderRadius: 85,
-              backgroundColor: 'rgba(255,255,255,0.12)',
-            }}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              bottom: -55,
-              left: -25,
-              width: 130,
-              height: 130,
-              borderRadius: 65,
-              backgroundColor: colors.starGold + '25',
-            }}
-          />
-          {isTeen ? (
-            <View style={{ padding: 22 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Text style={{ fontSize: 15 }}>💰</Text>
-                <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)' }}>
-                  Mon solde
-                </Text>
-              </View>
-              <Text
-                style={{
-                  fontSize: 34,
-                  fontWeight: '800',
-                  color: '#FFF',
-                  letterSpacing: -0.5,
-                }}
-              >
-                {formatCurrencyShort(balance)}
-              </Text>
-            </View>
-          ) : (
-            <PiggyBank balance={balance} onPink />
-          )}
+        {/* Ma tirelire : disponible / épargné */}
+        <MoneySplitCard
+          title="Ma tirelire"
+          subtitle="Mise à jour en temps réel"
+          headerRight={avatarId ? <Avatar avatarId={avatarId} size={36} /> : null}
+          available={balance}
+          saved={totalSaved}
+          total={totalEarned}
+          totalLabel="Gagné au total"
+          availableColor={accent}
+          savedColor={colors.starGold}
+        />
 
-          {/* Chips trésors — comme les chips du héro adulte */}
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: 10,
-              paddingHorizontal: 20,
-              paddingBottom: 20,
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => router.push('/(child)/goals')}
-              activeOpacity={0.7}
-              style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                backgroundColor: 'rgba(255,255,255,0.16)',
-                borderRadius: 14,
-                paddingVertical: 10,
-                paddingHorizontal: 12,
-              }}
-            >
-              <Text style={{ fontSize: 13 }}>🎯</Text>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#FFF' }}>
-                {goals.filter((g) => g.status === 'active').length} objectif
-                {goals.filter((g) => g.status === 'active').length > 1 ? 's' : ''}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/(child)/badges')}
-              activeOpacity={0.7}
-              style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                backgroundColor: 'rgba(255,255,255,0.16)',
-                borderRadius: 14,
-                paddingVertical: 10,
-                paddingHorizontal: 12,
-              }}
-            >
-              <Text style={{ fontSize: 13 }}>🏅</Text>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#FFF' }}>
-                {earnedBadges.length} badge{earnedBadges.length > 1 ? 's' : ''}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Actions rapides */}
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
-          <Card
-            variant="child"
+        {/* Actions principales */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+          <Button
+            accentColor={accent}
+            title="Demander"
+            variant="primary"
+            fullWidth={false}
+            style={{ flex: 1 }}
+            icon={<Ionicons name="hand-left" size={18} color={getContrastTextColor(accent)} />}
             onPress={() => router.push('/(child)/ask-money')}
-            style={{ flex: 1, alignItems: 'center' }}
-            padding={18}
-          >
-            <View
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                backgroundColor: accent + '15',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {isTeen ? (
-                <Ionicons name="hand-left" size={24} color={accent} />
-              ) : (
-                <Text style={{ fontSize: 26 }}>💌</Text>
-              )}
-            </View>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginTop: 10,
-              }}
-            >
-              Demander
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
-              de l'argent
-            </Text>
-          </Card>
-          <Card
-            variant="child"
+          />
+          <Button
+            accentColor={accent}
+            title="Épargner"
+            variant="light"
+            fullWidth={false}
+            style={{ flex: 1 }}
+            icon={<Ionicons name="flag" size={18} color={getReadableAccent(accent)} />}
             onPress={() => router.push('/(child)/goals')}
-            style={{ flex: 1, alignItems: 'center' }}
-            padding={18}
-          >
-            <View
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                backgroundColor: colors.starGold + '25',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {isTeen ? (
-                <Ionicons name="flag" size={24} color={colors.primary} />
-              ) : (
-                <Text style={{ fontSize: 26 }}>🎯</Text>
-              )}
-            </View>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginTop: 10,
-              }}
-            >
-              Épargner
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
-              pour un rêve
-            </Text>
-          </Card>
+          />
         </View>
 
-        {/* Bannière missions en attente de validation — comme la bannière adulte */}
-        {missions.filter((m) => m.status === 'pending_validation').length > 0 && (
-          <TouchableOpacity
+        {/* Missions en attente de validation */}
+        {pendingMissionsCount > 0 && (
+          <Card
             onPress={() => router.push('/(child)/missions')}
-            activeOpacity={0.7}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: colors.accentOrange + '12',
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.accentOrange + '30',
-              padding: 14,
-              marginBottom: 20,
-            }}
+            padding={14}
+            style={{ marginBottom: 16 }}
           >
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: colors.accentOrange + '20',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="hourglass" size={20} color={colors.accentOrange} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                ⏳ {missions.filter((m) => m.status === 'pending_validation').length} mission
-                {missions.filter((m) => m.status === 'pending_validation').length > 1 ? 's' : ''} en attente
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
-                {isTeen
-                  ? 'En attente de validation par un parent'
-                  : 'Tes parents doivent encore valider !'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-          </TouchableOpacity>
-        )}
-
-        {/* Objectif en cours */}
-        {latestGoal && (
-          <Card variant="child" style={{ marginBottom: 24 }} onPress={() => router.push('/(child)/goals')}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 12,
-              }}
-            >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <View
                 style={{
-                  width: 40,
-                  height: 40,
+                  width: 44,
+                  height: 44,
                   borderRadius: 12,
-                  backgroundColor: colors.starGold + '25',
+                  backgroundColor: colors.accentOrange + '20',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 20 }}>🎯</Text>
+                <Ionicons name="hourglass" size={22} color={colors.accentOrange} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: colors.textPrimary,
-                  }}
-                  numberOfLines={1}
-                >
-                  {latestGoal.title}
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                  {pendingMissionsCount} mission{pendingMissionsCount > 1 ? 's' : ''} en attente
                 </Text>
-                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
-                  {formatCurrencyShort(latestGoal.currentAmount)} / {formatCurrencyShort(latestGoal.targetAmount)}
+                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                  En attente de validation par un parent
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+              <View
+                style={{
+                  backgroundColor: colors.accentOrange + '20',
+                  borderRadius: 999,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  marginLeft: 8,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textPrimary }}>
+                  ⏳ En attente
+                </Text>
+              </View>
             </View>
-            <ProgressBar
-              progress={(() => {
-                const cur = Number(latestGoal.currentAmount);
-                const tgt = Number(latestGoal.targetAmount);
-                if (!Number.isFinite(cur) || !Number.isFinite(tgt) || tgt <= 0) return 0;
-                return cur / tgt;
-              })()}
-              color={colors.starGold}
-              showPercentage
-            />
           </Card>
         )}
 
-        {/* Missions */}
-        {availableMissions.length > 0 ? (
+        {/* Missions / objectifs / badges */}
+        <SegmentedControl
+          value={tab}
+          onChange={setTab}
+          style={{ marginTop: 8, marginBottom: 14 }}
+          options={[
+            { value: 'missions', label: 'Missions', count: allAvailableMissions.length },
+            { value: 'goals', label: 'Objectifs', count: activeGoals.length },
+            { value: 'badges', label: 'Badges', count: earnedBadges.length },
+          ]}
+        />
+
+        {tab === 'missions' &&
+          (availableMissions.length === 0 ? (
+            <EmptyTabCard
+              emoji="🎈"
+              title="Aucune mission pour le moment"
+              description="De nouvelles missions arriveront bientôt."
+            />
+          ) : (
+            <>
+              {availableMissions.map((m) => (
+                <ChildMissionCard
+                  key={m.id}
+                  mission={m}
+                  onPress={() => router.push('/(child)/missions')}
+                />
+              ))}
+              {allAvailableMissions.length > 3 && (
+                <TouchableOpacity
+                  onPress={() => router.push('/(child)/missions')}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingVertical: 12,
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: getReadableAccent(accent) }}>
+                    Tout voir ({allAvailableMissions.length})
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={getReadableAccent(accent)} />
+                </TouchableOpacity>
+              )}
+            </>
+          ))}
+
+        {tab === 'goals' && (
           <>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-                marginBottom: 12,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: '700',
-                  color: colors.textPrimary,
-                }}
-              >
-                Mes missions
-              </Text>
-              <View
-                style={{
-                  backgroundColor: accent + '15',
-                  borderRadius: 8,
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                }}
-              >
-                <Text style={{ fontSize: 12, fontWeight: '700', color: accent }}>
-                  {allAvailableMissions.length}
-                </Text>
-              </View>
-            </View>
-            {availableMissions.map((m) => (
-              <ChildMissionCard
-                key={m.id}
-                mission={m}
-                onPress={() => router.push('/(child)/missions')}
+            {activeGoals.length === 0 ? (
+              <EmptyTabCard
+                emoji="🎯"
+                title="Pas encore d'objectif"
+                description="Choisis un rêve et mets de l'argent de côté pour l'atteindre."
               />
-            ))}
-            {allAvailableMissions.length > 3 && (
+            ) : (
+              activeGoals.slice(0, 3).map((goal) => (
+                <GoalProgressCard
+                  key={goal.id}
+                  goal={goal}
+                  accentColor={colors.starGold}
+                  onPress={() => router.push('/(child)/goals')}
+                />
+              ))
+            )}
+            <DashedButton
+              label="Nouvel objectif"
+              onPress={() => router.push('/(child)/goals/create')}
+            />
+          </>
+        )}
+
+        {tab === 'badges' &&
+          (recentBadges.length === 0 ? (
+            <EmptyTabCard
+              emoji="🏅"
+              title="Pas encore de badge"
+              description="Termine des missions et épargne pour en gagner."
+            />
+          ) : (
+            <>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                {recentBadges.map((b) => {
+                  const def = badgesDef.find((bd) => bd.id === b.badgeType);
+                  return def ? (
+                    <Card key={b.id} style={{ flex: 1, alignItems: 'center' }} padding={14}>
+                      <View
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 14,
+                          backgroundColor: colors.starGold + '25',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <BadgeArtwork badgeId={def.id} size={40} />
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '700',
+                          color: colors.textPrimary,
+                          marginTop: 8,
+                          textAlign: 'center',
+                        }}
+                      >
+                        {def.name}
+                      </Text>
+                    </Card>
+                  ) : null;
+                })}
+              </View>
               <TouchableOpacity
-                onPress={() => router.push('/(child)/missions')}
+                onPress={() => router.push('/(child)/badges')}
                 activeOpacity={0.7}
                 style={{
                   flexDirection: 'row',
@@ -457,103 +337,14 @@ const router = useRouter();
                   paddingVertical: 12,
                 }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: accent }}>
-                  Tout voir ({allAvailableMissions.length})
+                <Text style={{ fontSize: 14, fontWeight: '700', color: getReadableAccent(accent) }}>
+                  Voir tous mes badges
                 </Text>
-                <Ionicons name="chevron-forward" size={16} color={accent} />
+                <Ionicons name="chevron-forward" size={16} color={getReadableAccent(accent)} />
               </TouchableOpacity>
-            )}
-          </>
-        ) : (
-          <View
-            style={{
-              backgroundColor: accent + '08',
-              borderRadius: 16,
-              padding: 16,
-              alignItems: 'center',
-              marginBottom: 16,
-            }}
-          >
-            <Text style={{ fontSize: 28 }}>🎈</Text>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginTop: 6,
-              }}
-            >
-              Aucune mission pour le moment
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {isTeen
-                ? 'De nouvelles missions arriveront bientôt.'
-                : 'Profite de ton temps libre, ça reviendra !'}
-            </Text>
-          </View>
-        )}
-
-        {/* Badges */}
-        {recentBadges.length > 0 && (
-          <>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginTop: 16,
-                marginBottom: 12,
-              }}
-            >
-              Derniers badges
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              {recentBadges.map((b) => {
-                const def = badgesDef.find((bd) => bd.id === b.badgeType);
-                return def ? (
-                  <Card
-                    key={b.id}
-                    variant="child"
-                    style={{ flex: 1, alignItems: 'center' }}
-                    padding={14}
-                  >
-                    <View
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 14,
-                        backgroundColor: colors.starGold + '25',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Text style={{ fontSize: 24 }}>{def.emoji}</Text>
-                    </View>
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: '700',
-                        color: colors.textPrimary,
-                        marginTop: 8,
-                        textAlign: 'center',
-                      }}
-                    >
-                      {def.name}
-                    </Text>
-                  </Card>
-                ) : null;
-              })}
-            </View>
-          </>
-        )}
+            </>
+          ))}
       </ScrollView>
-      <NotificationsModal
-        visible={notifModalVisible}
-        onClose={() => setNotifModalVisible(false)}
-        notifications={notifications}
-        loading={notifLoading}
-        onMarkAsRead={markAsRead}
-      />
     </SafeAreaView>
   );
 }

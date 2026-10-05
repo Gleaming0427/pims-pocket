@@ -15,8 +15,8 @@ import {
 export function useNotifications() {
   const user = useAuthStore((s) => s.user);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -24,7 +24,6 @@ export function useNotifications() {
     try {
       const notifs = await getNotifications(user.id);
       setNotifications(notifs);
-      setUnreadCount(notifs.filter((n) => !n.read).length);
     } catch {
       // silent fail for notifications
     } finally {
@@ -38,7 +37,6 @@ export function useNotifications() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch {
       // silent fail
     }
@@ -54,11 +52,8 @@ export function useNotifications() {
     // (mission à valider, demande d'argent…), pas seulement au lancement.
     const unsub = onNotificationsSnapshot(user.id, (notifs) => {
       setNotifications(notifs);
-      setUnreadCount(notifs.filter((n) => !n.read).length);
       setIsLoading(false);
     });
-    return () => unsub();
-
     const notifSub = addNotificationListener(() => {
       fetchNotifications();
     });
@@ -68,6 +63,7 @@ export function useNotifications() {
     });
 
     return () => {
+      unsub();
       notifSub.remove();
       responseSub.remove();
     };

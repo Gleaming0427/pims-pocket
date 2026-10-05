@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/components/shared/Header';
 import Card from '@/components/ui/Card';
+import GroupTitle from '@/components/ui/GroupTitle';
 import colors from '@/constants/colors';
 
 interface NotifToggleProps {
@@ -12,58 +13,42 @@ interface NotifToggleProps {
   description: string;
   value: boolean;
   onValueChange: (v: boolean) => void;
-  color: string;
-  // Dernier élément de la liste : pas de trait en bas
-  last?: boolean;
 }
 
-function NotifToggle({
-  icon,
-  label,
-  description,
-  value,
-  onValueChange,
-  color,
-  last = false,
-}: NotifToggleProps) {
+function NotifToggle({ icon, label, description, value, onValueChange }: NotifToggleProps) {
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 14,
-        borderBottomWidth: last ? 0 : 1,
-        borderBottomColor: colors.border,
-      }}
-    >
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
       <View
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          backgroundColor: color + '15',
+          width: 38,
+          height: 38,
+          borderRadius: 12,
+          backgroundColor: colors.canvas,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Ionicons name={icon} size={20} color={color} />
+        <Ionicons name={icon} size={19} color={colors.textPrimary} />
       </View>
-      <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
-          {label}
-        </Text>
-        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-          {description}
-        </Text>
+      <View style={{ flex: 1, marginLeft: 12, marginRight: 8 }}>
+        <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>{label}</Text>
+        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>{description}</Text>
       </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: colors.primary + '60' }}
-        thumbColor={value ? colors.primary : '#ccc'}
+        accessibilityLabel={label}
+        trackColor={{ true: colors.primary, false: colors.canvasMuted }}
+        ios_backgroundColor={colors.canvasMuted}
+        thumbColor="#FFF"
       />
     </View>
   );
+}
+
+// Séparateur aligné sur le texte (après l'icône)
+function Divider() {
+  return <View style={{ height: 1, backgroundColor: colors.canvasMuted, marginLeft: 50 }} />;
 }
 
 export default function NotificationSettingsScreen() {
@@ -75,120 +60,88 @@ export default function NotificationSettingsScreen() {
   const [badgeUnlocked, setBadgeUnlocked] = useState(true);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header title="Notifications" showBack />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-        <Card style={{ marginBottom: 20, backgroundColor: colors.info + '15' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="information-circle" size={22} color={colors.info} />
-            <Text
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+      >
+        {/* Explication */}
+        <Card padding={14} style={{ marginBottom: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View
               style={{
-                flex: 1,
-                marginLeft: 10,
-                fontSize: 13,
-                color: colors.textSecondary,
-                lineHeight: 20,
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: colors.primary + '15',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              Les notifications push nécessitent une build de développement ou de
-              production avec les certificats APNs / FCM configurés dans Expo.
+              <Ionicons name="notifications" size={20} color={colors.primary} />
+            </View>
+            <Text style={{ flex: 1, fontSize: 13, color: colors.textSecondary, lineHeight: 19 }}>
+              Choisis les alertes que tu reçois sur ton téléphone quand il se passe quelque chose
+              dans la famille.
             </Text>
           </View>
         </Card>
 
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: '600',
-            color: colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-            marginBottom: 10,
-          }}
-        >
-          Missions
-        </Text>
-        <Card style={{ marginBottom: 20 }}>
+        <GroupTitle label="Missions" first />
+        <Card padding={14}>
           <NotifToggle
-            icon="flash"
+            icon="flash-outline"
             label="Mission assignée"
             description="Quand une mission est créée pour un enfant"
             value={missionAssigned}
             onValueChange={setMissionAssigned}
-            color={colors.accentOrange}
           />
+          <Divider />
           <NotifToggle
-            icon="checkmark-done"
+            icon="checkmark-done-outline"
             label="Mission terminée"
-            description="Quand un enfant marque une mission comme terminée"
+            description="Quand un enfant termine une mission"
             value={missionCompleted}
             onValueChange={setMissionCompleted}
-            color={colors.success}
-            last
           />
         </Card>
 
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: '600',
-            color: colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-            marginBottom: 10,
-          }}
-        >
-          Argent
-        </Text>
-        <Card style={{ marginBottom: 20 }}>
+        <GroupTitle label="Argent" />
+        <Card padding={14}>
           <NotifToggle
-            icon="cash"
+            icon="cash-outline"
             label="Demande d'argent"
-            description="Quand un enfant fait une demande d'argent"
+            description="Quand un enfant demande de l'argent"
             value={moneyRequest}
             onValueChange={setMoneyRequest}
-            color={colors.primary}
           />
+          <Divider />
           <NotifToggle
-            icon="calendar"
-            label="Rappel versement"
-            description="Rappel quand l'argent de poche est versé"
+            icon="calendar-outline"
+            label="Versement d'argent de poche"
+            description="Quand l'argent de poche automatique est versé"
             value={allowanceReminder}
             onValueChange={setAllowanceReminder}
-            color={colors.info}
-            last
           />
         </Card>
 
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: '600',
-            color: colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-            marginBottom: 10,
-          }}
-        >
-          Progres
-        </Text>
-        <Card>
+        <GroupTitle label="Progrès" />
+        <Card padding={14}>
           <NotifToggle
-            icon="trophy"
+            icon="trophy-outline"
             label="Objectif atteint"
             description="Quand un enfant atteint un objectif d'épargne"
             value={goalReached}
             onValueChange={setGoalReached}
-            color={colors.warning}
           />
+          <Divider />
           <NotifToggle
-            icon="ribbon"
+            icon="ribbon-outline"
             label="Badge débloqué"
-            description="Quand un enfant débloque un nouveau badge"
+            description="Quand un enfant gagne un nouveau badge"
             value={badgeUnlocked}
             onValueChange={setBadgeUnlocked}
-            color={colors.secondary}
-            last
           />
         </Card>
       </ScrollView>

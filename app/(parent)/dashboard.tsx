@@ -7,28 +7,40 @@ import { useAuthStore } from '@/stores/authStore';
 import { useChildren } from '@/hooks/useChildren';
 import { useMissions } from '@/hooks/useMissions';
 import { useNotifications } from '@/hooks/useNotifications';
-import { onMoneyRequestsSnapshot } from '@/lib/firestore';
-import { MoneyRequest } from '@/types';
+import { onMoneyRequestsSnapshot, onFamilyGoalsSnapshot } from '@/lib/firestore';
+import { Child, Goal, MoneyRequest } from '@/types';
 import ChildCard from '@/components/parent/ChildCard';
-import Avatar from '@/components/ui/Avatar';
+import FamilyMoneyCard from '@/components/parent/FamilyMoneyCard';
+import ParentArtwork from '@/components/parent/ParentArtwork';
+import GoalProgressCard from '@/components/shared/GoalProgressCard';
+import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import DashedButton from '@/components/ui/DashedButton';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import Header from '@/components/shared/Header';
 import NotificationBell from '@/components/shared/NotificationBell';
-import NotificationsModal from '@/components/shared/NotificationsModal';
 import EmptyState from '@/components/shared/EmptyState';
 import LoadingScreen from '@/components/shared/LoadingScreen';
-import { formatCurrencyShort } from '@/utils/formatters';
 import colors from '@/constants/colors';
+
+type HomeTab = 'children' | 'goals';
+
+// Un objectif ou une mission référence l'enfant par son UID (childId) ou,
+// pour les anciens docs, par l'ID de sa fiche (childDocId).
+function belongsTo(child: Child, item: { childId: string; childDocId?: string }) {
+  return (!!child.linkedUserId && item.childId === child.linkedUserId) || item.childDocId === child.id;
+}
 
 export default function ParentDashboard() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { children, isLoading } = useChildren();
   const { isLoading: missionsLoading, missions } = useMissions();
-  const { unreadCount, notifications, markAsRead, isLoading: notifLoading } = useNotifications();
-  const [notifModalVisible, setNotifModalVisible] = useState(false);
+  const { unreadCount } = useNotifications();
 
   const [moneyRequests, setMoneyRequests] = useState<MoneyRequest[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [tab, setTab] = useState<HomeTab>('children');
   const [verifSent, setVerifSent] = useState(false);
   const [verifLoading, setVerifLoading] = useState(false);
 
@@ -39,7 +51,15 @@ export default function ParentDashboard() {
     return () => unsub();
   }, [user?.id]);
 
+  // Souscription temps réel aux objectifs d'épargne de la famille
+  useEffect(() => {
+    if (!user?.familyId) return;
+    const unsub = onFamilyGoalsSnapshot(user.familyId, setGoals);
+    return () => unsub();
+  }, [user?.familyId]);
+
   const handleResendVerification = async () => {
+    if (verifLoading) return;
     setVerifLoading(true);
     try {
       await useAuthStore.getState().resendVerificationEmail();
@@ -52,6 +72,7 @@ export default function ParentDashboard() {
   };
 
   const handleRefreshVerification = async () => {
+    if (verifLoading) return;
     setVerifLoading(true);
     try {
       const { auth } = await import('@/lib/firebase');
@@ -80,19 +101,36 @@ export default function ParentDashboard() {
   const pendingCount =
     missions.filter((m) => m.status === 'pending_validation').length +
     moneyRequests.filter((r) => r.status === 'pending').length;
-  const totalDistributed = children.reduce((sum, c) => sum + c.totalEarned, 0);
+
+  const activeMissionsFor = (child: Child) =>
+    missions.filter(
+      (m) => (m.status === 'available' || m.status === 'in_progress') && belongsTo(child, m)
+    ).length;
+
+  // Objectifs en cours d'abord (les plus avancés en tête), puis les atteints
+  const goalProgress = (g: Goal) => (g.targetAmount > 0 ? g.currentAmount / g.targetAmount : 0);
+  const visibleGoals = [
+    ...goals
+      .filter((g) => g.status === 'active')
+      .sort((a, b) => goalProgress(b) - goalProgress(a)),
+    ...goals
+      .filter((g) => g.status === 'completed')
+      .sort((a, b) => (b.completedAt?.toMillis() ?? 0) - (a.completedAt?.toMillis() ?? 0))
+      .slice(0, 3),
+  ];
+  const activeGoalsCount = goals.filter((g) => g.status === 'active').length;
 
   if (isLoading || missionsLoading) return <LoadingScreen />;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header
-        title={`Bonjour ${user?.displayName ?? ''} 👋`}
+        title={`Bonjour ${user?.displayName ?? ''}`}
         subtitle="Bienvenue dans votre espace famille"
         rightAction={
           <NotificationBell
             count={unreadCount}
-            onPress={() => setNotifModalVisible(true)}
+            onPress={() => router.push('/notifications')}
           />
         }
       />
@@ -179,308 +217,134 @@ export default function ParentDashboard() {
           </View>
         )}
 
-        {/* Carte héro : la famille d'abord */}
-        <View
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: 24,
-            padding: 22,
-            marginBottom: 20,
-            overflow: 'hidden',
-          }}
-        >
-          {/* Cercles décoratifs */}
-          <View
-            style={{
-              position: 'absolute',
-              top: -45,
-              right: -35,
-              width: 170,
-              height: 170,
-              borderRadius: 85,
-              backgroundColor: colors.primaryLight + '30',
-            }}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              bottom: -55,
-              left: -25,
-              width: 130,
-              height: 130,
-              borderRadius: 65,
-              backgroundColor: colors.starGold + '1A',
-            }}
-          />
+        {/* Vue d'ensemble : l'argent des enfants */}
+        <FamilyMoneyCard children={children} />
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <Text style={{ fontSize: 15 }}>💰</Text>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)' }}>
-              Argent de poche distribué
-            </Text>
-          </View>
-
-          <Text style={{ fontSize: 34, fontWeight: '800', color: '#FFF', letterSpacing: -0.5 }}>
-            {formatCurrencyShort(totalDistributed)}
-          </Text>
-
-          {/* Les enfants, visibles d'un coup d'œil */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginTop: 16,
-              paddingTop: 14,
-              borderTopWidth: 1,
-              borderTopColor: 'rgba(255,255,255,0.12)',
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {children.slice(0, 4).map((child, i) => (
-                <View
-                  key={child.id}
-                  style={{
-                    marginLeft: i === 0 ? 0 : -10,
-                    borderWidth: 2,
-                    borderColor: colors.primary,
-                    borderRadius: 999,
-                  }}
-                >
-                  <Avatar avatarId={child.avatarId} size={36} />
-                </View>
-              ))}
-              {children.length > 4 && (
-                <View
-                  style={{
-                    marginLeft: -10,
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: 'rgba(255,255,255,0.22)',
-                    borderWidth: 2,
-                    borderColor: colors.primary,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>
-                    +{children.length - 4}
-                  </Text>
-                </View>
-              )}
-              <TouchableOpacity
-                onPress={() => router.push('/(parent)/child/add')}
-                activeOpacity={0.7}
-                style={{
-                  marginLeft: children.length > 0 ? -10 : 0,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: 'rgba(255,255,255,0.22)',
-                  borderWidth: 2,
-                  borderColor: colors.primary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name="add" size={18} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-            <Text
-              style={{
-                marginLeft: 12,
-                flex: 1,
-                fontSize: 12,
-                fontWeight: '600',
-                color: 'rgba(255,255,255,0.75)',
-              }}
-            >
-              {children.length > 0
-                ? `${children.length} membre${children.length > 1 ? 's' : ''} dans la famille`
-                : 'Ajoute tes enfants pour commencer'}
-            </Text>
-          </View>
-        </View>
-
-        {/* Actions rapides : grandes, lisibles par toute la famille */}
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
-          <Card
+        {/* Actions principales */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+          <Button
+            title="Envoyer"
+            variant="dark"
+            fullWidth={false}
+            style={{ flex: 1 }}
+            icon={<ParentArtwork name="transfer" size={28} />}
             onPress={() => router.push('/(parent)/send-money')}
-            style={{ flex: 1, alignItems: 'center' }}
-            padding={18}
-          >
-            <View
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                backgroundColor: colors.primary + '15',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 26 }}>💸</Text>
-            </View>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginTop: 10,
-              }}
-            >
-              Envoyer
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
-              de l'argent
-            </Text>
-          </Card>
-          <Card
+          />
+          <Button
+            title="Mission"
+            variant="light"
+            fullWidth={false}
+            style={{ flex: 1 }}
+            icon={<ParentArtwork name="mission" size={28} />}
             onPress={() => router.push('/(parent)/missions/create')}
-            style={{ flex: 1, alignItems: 'center' }}
-            padding={18}
-          >
-            <View
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                backgroundColor: colors.accentOrange + '15',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 26 }}>⭐</Text>
-            </View>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginTop: 10,
-              }}
-            >
-              Mission
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
-              à accomplir
-            </Text>
-          </Card>
+          />
         </View>
 
         {/* Rappel validations en attente */}
         {pendingCount > 0 && (
-          <TouchableOpacity
+          <Card
             onPress={() => router.push('/(parent)/validations')}
-            activeOpacity={0.7}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: colors.accentOrange + '12',
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.accentOrange + '30',
-              padding: 14,
-              marginBottom: 20,
-            }}
+            padding={14}
+            style={{ marginBottom: 16 }}
           >
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: colors.accentOrange + '20',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="checkmark-done" size={20} color={colors.accentOrange} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                📣 {pendingCount} élément{pendingCount > 1 ? 's' : ''} à valider
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
-                Les enfants attendent ta réponse !
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-          </TouchableOpacity>
-        )}
-
-        {/* Section enfants */}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 12,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.textPrimary }}>
-              Mes enfants
-            </Text>
-            {children.length > 0 && (
-              <View
-                style={{
-                  backgroundColor: colors.primary + '12',
-                  borderRadius: 8,
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                }}
-              >
-                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
-                  {children.length}
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ParentArtwork name="validation" size={44} />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                  {pendingCount} élément{pendingCount > 1 ? 's' : ''} à valider
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                  Les enfants attendent ta réponse
                 </Text>
               </View>
-            )}
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push('/(parent)/child/add')}
-            activeOpacity={0.7}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              backgroundColor: colors.primary + '10',
-              borderRadius: 10,
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-            }}
-          >
-            <Ionicons name="add" size={16} color={colors.primary} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
-              Ajouter
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {children.length === 0 ? (
-          <EmptyState
-            emoji="👶"
-            title="Aucun enfant"
-            description="Ajoutez votre premier enfant pour commencer à gérer son argent de poche."
-            actionLabel="Ajouter un enfant"
-            onAction={() => router.push('/(parent)/child/add')}
-          />
-        ) : (
-          children.map((child) => (
-            <ChildCard
-              key={child.id}
-              child={child}
-              onPress={() => router.push(`/(parent)/child/${child.id}`)}
-            />
-          ))
+              <View
+                style={{
+                  backgroundColor: colors.accentOrange + '20',
+                  borderRadius: 999,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  marginLeft: 8,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textPrimary }}>
+                  À traiter
+                </Text>
+              </View>
+            </View>
+          </Card>
         )}
+
+        {/* Enfants / objectifs */}
+        <SegmentedControl
+          value={tab}
+          onChange={setTab}
+          style={{ marginTop: 8, marginBottom: 14 }}
+          options={[
+            { value: 'children', label: 'Enfants', count: children.length },
+            { value: 'goals', label: 'Objectifs', count: activeGoalsCount },
+          ]}
+        />
+
+        {tab === 'children' &&
+          (children.length === 0 ? (
+            <>
+              <EmptyState
+                illustration={<ParentArtwork name="family" size={80} />}
+                title="Aucun enfant"
+                description="Ajoutez votre premier enfant pour commencer à gérer son argent de poche."
+                actionLabel="Ajouter un enfant"
+                onAction={() => router.push('/(parent)/child/add')}
+              />
+              {/* Second parent qui vient de créer son compte : rejoindre la famille existante */}
+              <Card onPress={() => router.push('/(parent)/family-parents')} padding={14}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <ParentArtwork name="family" size={40} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                      L'autre parent utilise déjà l'app ?
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                      Rejoins sa famille avec son code d'invitation
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+                </View>
+              </Card>
+            </>
+          ) : (
+            <>
+              {children.map((child) => (
+                <ChildCard
+                  key={child.id}
+                  child={child}
+                  activeMissions={activeMissionsFor(child)}
+                  onPress={() => router.push(`/(parent)/child/${child.id}`)}
+                />
+              ))}
+              <DashedButton
+                label="Ajouter un enfant"
+                onPress={() => router.push('/(parent)/child/add')}
+              />
+            </>
+          ))}
+
+        {tab === 'goals' &&
+          (visibleGoals.length === 0 ? (
+            <EmptyState
+              illustration={<ParentArtwork name="savings" size={80} />}
+              title="Aucun objectif"
+              description="Tes enfants peuvent créer leurs objectifs d'épargne depuis leur espace."
+            />
+          ) : (
+            visibleGoals.map((goal) => (
+              <GoalProgressCard
+                key={goal.id}
+                goal={goal}
+                child={children.find((c) => belongsTo(c, goal))}
+              />
+            ))
+          ))}
       </ScrollView>
-      <NotificationsModal
-        visible={notifModalVisible}
-        onClose={() => setNotifModalVisible(false)}
-        notifications={notifications}
-        loading={notifLoading}
-        onMarkAsRead={markAsRead}
-      />
     </SafeAreaView>
   );
 }

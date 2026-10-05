@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, Switch, TextInput, Linking } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/stores/authStore';
@@ -10,6 +9,8 @@ import Constants from 'expo-constants';
 import { useSwipeToHome } from '@/hooks/useSwipeToHome';
 import Header from '@/components/shared/Header';
 import Card from '@/components/ui/Card';
+import Avatar from '@/components/ui/Avatar';
+import GroupTitle from '@/components/ui/GroupTitle';
 import colors from '@/constants/colors';
 
 interface SettingItemProps {
@@ -30,11 +31,11 @@ function SettingItem({
   destructive = false,
   showChevron = true,
 }: SettingItemProps) {
-  const accent = destructive ? colors.error : colors.primary;
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityRole="button"
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -46,12 +47,12 @@ function SettingItem({
           width: 38,
           height: 38,
           borderRadius: 12,
-          backgroundColor: accent + '15',
+          backgroundColor: destructive ? colors.error + '15' : colors.canvas,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Ionicons name={icon} size={19} color={accent} />
+        <Ionicons name={icon} size={19} color={destructive ? colors.error : colors.textPrimary} />
       </View>
       <View style={{ flex: 1, marginLeft: 12 }}>
         <Text
@@ -70,24 +71,24 @@ function SettingItem({
         )}
       </View>
       {showChevron && (
-        <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
       )}
     </TouchableOpacity>
   );
 }
 
+// Séparateur aligné sur le texte (après l'icône), comme une liste iOS
 function SettingDivider() {
-  return <View style={{ height: 1, backgroundColor: colors.border }} />;
+  return <View style={{ height: 1, backgroundColor: colors.canvasMuted, marginLeft: 50 }} />;
 }
+
+const MAX_AVATARS = 3;
 
 export default function SettingsScreen() {
   const router = useRouter();
   const swipeToHome = useSwipeToHome();
-  const { user, family, signOut, updateFamilySettings } = useAuthStore();
+  const { user, signOut } = useAuthStore();
   const { children } = useChildren();
-  const [autoValidate, setAutoValidate] = useState(family?.autoValidateMissions ?? false);
-  const [delayHours, setDelayHours] = useState(String(family?.validationDelayHours ?? 24));
-  const [saving, setSaving] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert('Déconnexion', 'Voulez-vous vraiment vous déconnecter ?', [
@@ -103,208 +104,138 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const initials = (user?.displayName ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+  const childrenWithAllowance = children.filter((c) => c.weeklyAllowance > 0).length;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header title="Réglages" homeButton />
       <ScrollView
         {...swipeToHome}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
       >
-        {/* Carte profil héro */}
-        <View
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: 24,
-            padding: 24,
-            marginBottom: 16,
-            overflow: 'hidden',
-            alignItems: 'center',
-          }}
-        >
-          {/* Cercles décoratifs */}
-          <View
-            style={{
-              position: 'absolute',
-              top: -45,
-              right: -35,
-              width: 170,
-              height: 170,
-              borderRadius: 85,
-              backgroundColor: colors.primaryLight + '30',
-            }}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              bottom: -55,
-              left: -25,
-              width: 130,
-              height: 130,
-              borderRadius: 65,
-              backgroundColor: colors.starGold + '1A',
-            }}
-          />
-
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              backgroundColor: 'rgba(255,255,255,0.22)',
-              borderWidth: 3,
-              borderColor: 'rgba(255,255,255,0.25)',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons name="person" size={32} color="#FFF" />
-          </View>
-          <Text
-            style={{
-              fontSize: 22,
-              fontWeight: '800',
-              color: '#FFF',
-              marginTop: 12,
-            }}
-          >
-            {user?.displayName}
-          </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: '600',
-              color: 'rgba(255,255,255,0.75)',
-              marginTop: 3,
-            }}
-          >
-            {children.length > 0
-              ? `${children.length} enfant${children.length > 1 ? 's' : ''} dans la famille`
-              : 'Bienvenue dans ta famille'}
-          </Text>
-        </View>
-
-        {/* Une seule liste de réglages, un seul pattern */}
-        <Card>
-          {/* Auto-validation */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingVertical: 12,
-            }}
-          >
+        {/* Profil */}
+        <Card padding={18}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                backgroundColor: colors.primary + '15',
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: colors.primary + '20',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Ionicons name="flash" size={19} color={colors.primary} />
+              {initials ? (
+                <Text style={{ fontSize: 20, fontWeight: '800', color: colors.primary }}>
+                  {initials}
+                </Text>
+              ) : (
+                <Ionicons name="person" size={26} color={colors.primary} />
+              )}
             </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
-                Auto-valider les missions
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text
+                numberOfLines={1}
+                style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary }}
+              >
+                {user?.displayName}
               </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                {autoValidate
-                  ? 'Activée — les missions se valident toutes seules'
-                  : 'Désactivée — c’est toi qui valides les missions'}
-              </Text>
+              {!!user?.email && (
+                <Text
+                  numberOfLines={1}
+                  style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}
+                >
+                  {user.email}
+                </Text>
+              )}
             </View>
-            <Switch
-              value={autoValidate}
-              onValueChange={async (v) => {
-                Haptics.selectionAsync().catch(() => {});
-                setAutoValidate(v);
-                setSaving(true);
-                try {
-                  await updateFamilySettings({ autoValidateMissions: v });
-                } catch { /* ignore */ }
-                setSaving(false);
-              }}
-              trackColor={{ false: colors.border, true: colors.primary + '60' }}
-              thumbColor={autoValidate ? colors.primary : '#f4f3f4'}
-            />
           </View>
 
-          {!autoValidate && (
-            <>
-              <SettingDivider />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 16,
+              paddingTop: 14,
+              borderTopWidth: 1,
+              borderTopColor: colors.canvasMuted,
+            }}
+          >
+            <Text style={{ flex: 1, fontSize: 13, color: colors.textSecondary }}>
+              {children.length > 0
+                ? `${children.length} enfant${children.length > 1 ? 's' : ''} dans la famille`
+                : 'Aucun enfant pour le moment'}
+            </Text>
+            {children.length > 0 && (
               <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  paddingVertical: 12,
+                  backgroundColor: colors.canvas,
+                  borderRadius: 999,
+                  paddingVertical: 3,
+                  paddingLeft: 3,
+                  paddingRight: children.length > MAX_AVATARS ? 8 : 3,
                 }}
               >
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 12,
-                    backgroundColor: colors.primary + '15',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Ionicons name="timer-outline" size={19} color={colors.primary} />
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
-                    Délai d'auto-validation
+                {children.slice(0, MAX_AVATARS).map((child, i) => (
+                  <View
+                    key={child.id}
+                    style={{
+                      marginLeft: i === 0 ? 0 : -8,
+                      borderWidth: 2,
+                      borderColor: colors.canvas,
+                      borderRadius: 999,
+                    }}
+                  >
+                    <Avatar avatarId={child.avatarId} size={26} />
+                  </View>
+                ))}
+                {children.length > MAX_AVATARS && (
+                  <Text
+                    style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginLeft: 4 }}
+                  >
+                    +{children.length - MAX_AVATARS}
                   </Text>
-                  <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                    En heures — 0 = désactivé
-                  </Text>
-                </View>
-                <TextInput
-                  value={delayHours}
-                  onChangeText={async (t) => {
-                    setDelayHours(t);
-                    const n = parseInt(t, 10);
-                    if (!isNaN(n) && n >= 0 && n <= 720) {
-                      setSaving(true);
-                      try {
-                        await updateFamilySettings({ validationDelayHours: n });
-                      } catch { /* ignore */ }
-                      setSaving(false);
-                    }
-                  }}
-                  keyboardType="number-pad"
-                  placeholder="24"
-                  style={{
-                    backgroundColor: colors.background,
-                    borderRadius: 10,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    fontSize: 16,
-                    fontWeight: '700',
-                    color: colors.textPrimary,
-                    textAlign: 'center',
-                    minWidth: 56,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                />
+                )}
               </View>
-            </>
-          )}
-
+            )}
+          </View>
         </Card>
 
-        {/* Général */}
-        <Card style={{ marginTop: 16 }}>
+        {/* Famille */}
+        <GroupTitle label="Famille" />
+        <Card padding={14}>
           <SettingItem
             icon="repeat"
             label="Versements récurrents"
+            subtitle={
+              childrenWithAllowance > 0
+                ? `Argent de poche automatique pour ${childrenWithAllowance} enfant${childrenWithAllowance > 1 ? 's' : ''}`
+                : 'Aucun versement automatique'
+            }
             onPress={() => router.push('/(parent)/recurring')}
           />
           <SettingDivider />
+          <SettingItem
+            icon="people-outline"
+            label="Parents de la famille"
+            subtitle="Inviter l'autre parent ou rejoindre sa famille"
+            onPress={() => router.push('/(parent)/family-parents')}
+          />
+        </Card>
+
+        {/* Préférences */}
+        <GroupTitle label="Préférences" />
+        <Card padding={14}>
           <SettingItem
             icon="notifications-outline"
             label="Notifications"
@@ -319,7 +250,8 @@ export default function SettingsScreen() {
         </Card>
 
         {/* À propos */}
-        <Card style={{ marginTop: 16 }}>
+        <GroupTitle label="À propos" />
+        <Card padding={14}>
           <SettingItem
             icon="document-text-outline"
             label="Politique de confidentialité"
@@ -335,12 +267,13 @@ export default function SettingsScreen() {
           <SettingItem
             icon="help-circle-outline"
             label="Aide et support"
+            subtitle="privacy@pimspocket.app"
             onPress={() => Linking.openURL('mailto:privacy@pimspocket.app')}
           />
         </Card>
 
         {/* Compte */}
-        <Card style={{ marginTop: 16 }}>
+        <Card padding={14} style={{ marginTop: 20 }}>
           <SettingItem
             icon="log-out-outline"
             label="Se déconnecter"
@@ -350,28 +283,16 @@ export default function SettingsScreen() {
           />
         </Card>
 
-        <View style={{ alignItems: 'center', marginTop: 24 }}>
-          <View
-            style={{
-              backgroundColor: colors.surface,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.border,
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: '600',
-                color: colors.textSecondary,
-              }}
-            >
-              Pims Pocket · v{Constants.expoConfig?.version ?? '1.2.1'}
-            </Text>
-          </View>
-        </View>
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 12,
+            color: colors.textLight,
+            marginTop: 20,
+          }}
+        >
+          Pims Pocket · v{Constants.expoConfig?.version ?? '1.2.1'}
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );

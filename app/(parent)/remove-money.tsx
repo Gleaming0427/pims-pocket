@@ -68,6 +68,7 @@ export default function RemoveMoneyScreen() {
   };
 
   const handleRemove = async () => {
+    if (isLoading) return;
     if (selectedIds.length === 0) {
       Alert.alert('Erreur', 'Sélectionnez au moins un enfant');
       return;

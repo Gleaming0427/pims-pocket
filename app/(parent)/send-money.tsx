@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, Alert, ScrollView, TouchableOpacity } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Input from '@/components/ui/Input';
@@ -26,11 +26,14 @@ const motifs: { type: TransactionType; label: string; emoji: string }[] = [
 
 export default function SendMoneyScreen() {
   const router = useRouter();
+  const { childId: preselectedChildId } = useLocalSearchParams<{ childId?: string }>();
   const user = useAuthStore((s) => s.user);
   const { children } = useChildren();
   const { sendMoney, isLoading } = useTransactionStore();
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    preselectedChildId ? [preselectedChildId] : []
+  );
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<TransactionType>('bonus');
   const [description, setDescription] = useState('');
@@ -57,6 +60,7 @@ export default function SendMoneyScreen() {
   };
 
   const handleSend = async () => {
+    if (isLoading) return;
     if (selectedIds.length === 0) {
       Alert.alert('Erreur', 'Sélectionnez au moins un enfant');
       return;

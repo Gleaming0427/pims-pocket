@@ -9,15 +9,22 @@ import { useSwipeToHome } from '@/hooks/useSwipeToHome';
 import { useAuthStore } from '@/stores/authStore';
 import { useMissionStore } from '@/stores/missionStore';
 import ValidationCard from '@/components/parent/ValidationCard';
+import ParentArtwork from '@/components/parent/ParentArtwork';
 import Card from '@/components/ui/Card';
-import Avatar from '@/components/ui/Avatar';
+import SegmentedControl from '@/components/ui/SegmentedControl';
 import Header from '@/components/shared/Header';
-import EmptyState from '@/components/shared/EmptyState';
+import EmptyTabCard from '@/components/shared/EmptyTabCard';
+import { SplitBar, LegendRow } from '@/components/shared/SplitBar';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import { onMoneyRequestsSnapshot, resolveMoneyRequest } from '@/lib/firestore';
 import { formatCurrencyShort, formatRelativeDate } from '@/utils/formatters';
-import { MoneyRequest, Timestamp } from '@/types';
+import { Mission, MoneyRequest, Timestamp } from '@/types';
 import colors from '@/constants/colors';
+
+type ValidationTab = 'all' | 'missions' | 'requests';
+
+// Date d'un document Firestore, en millisecondes (0 si absente)
+const millis = (t?: Timestamp | null) => (t && typeof t.toMillis === 'function' ? t.toMillis() : 0);
 
 export default function ValidationsScreen() {
   const swipeToHome = useSwipeToHome();
@@ -31,10 +38,14 @@ export default function ValidationsScreen() {
   const pendingMissions = missions.filter((m) => m.status === 'pending_validation');
   const pendingRequests = moneyRequests.filter((r) => r.status === 'pending');
 
+  const [tab, setTab] = useState<ValidationTab>('all');
+
+  const findChild = (item: { childId: string; childDocId?: string }) =>
+    children.find(
+      (c) => (!!c.linkedUserId && c.linkedUserId === item.childId) || c.id === item.childDocId
+    );
   const getChildNameByAuthUid = (authUid: string) =>
     children.find((c) => c.linkedUserId === authUid)?.firstName ?? 'Enfant';
-  const getChildAvatarByAuthUid = (authUid: string) =>
-    children.find((c) => c.linkedUserId === authUid)?.avatarId ?? '';
 
   // Souscription temps réel aux demandes d'argent
   useEffect(() => {
@@ -44,6 +55,7 @@ export default function ValidationsScreen() {
   }, [user?.id]);
 
   const handleApproveMission = async (missionId: string) => {
+    if (loadingId) return;
     const mission = missions.find((m) => m.id === missionId);
     if (!mission || !user) return;
 
@@ -65,6 +77,7 @@ export default function ValidationsScreen() {
         text: 'Refuser',
         style: 'destructive',
         onPress: async () => {
+          if (loadingId) return;
           setLoadingId(missionId);
           await updateMissionStatus(missionId, 'available');
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -84,6 +97,7 @@ export default function ValidationsScreen() {
         {
           text: 'Accepter',
           onPress: async () => {
+            if (loadingId) return;
             setLoadingId(req.id);
             try {
               if (!user) return;
@@ -108,6 +122,7 @@ export default function ValidationsScreen() {
         text: 'Refuser',
         style: 'destructive',
         onPress: async () => {
+          if (loadingId) return;
           setLoadingId(req.id);
           try {
             if (!user) return;
@@ -124,215 +139,138 @@ export default function ValidationsScreen() {
   if (isLoading) return <LoadingScreen />;
 
   const totalPending = pendingMissions.length + pendingRequests.length;
+  const missionsAmount = pendingMissions.reduce((sum, m) => sum + (Number(m.reward) || 0), 0);
+  const requestsAmount = pendingRequests.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+  // File unique, des plus anciennes aux plus récentes
+  type QueueItem =
+    | { kind: 'mission'; id: string; at: number; mission: Mission }
+    | { kind: 'request'; id: string; at: number; request: MoneyRequest };
+  const queue: QueueItem[] = [
+    ...(tab !== 'requests'
+      ? pendingMissions.map((m) => ({
+          kind: 'mission' as const,
+          id: m.id,
+          at: millis(m.completedAt) || millis(m.createdAt),
+          mission: m,
+        }))
+      : []),
+    ...(tab !== 'missions'
+      ? pendingRequests.map((r) => ({ kind: 'request' as const, id: r.id, at: millis(r.createdAt), request: r }))
+      : []),
+  ].sort((a, b) => a.at - b.at);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header title="Validations" homeButton />
-      <ScrollView {...swipeToHome} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-        {totalPending > 0 && (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: colors.accentOrange + '12',
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.accentOrange + '30',
-              padding: 14,
-              marginBottom: 20,
-            }}
-          >
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                backgroundColor: colors.accentOrange + '20',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="notifications" size={20} color={colors.accentOrange} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                📣 {totalPending} élément{totalPending > 1 ? 's' : ''} en attente
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 1 }}>
-                Les enfants attendent ta réponse !
-              </Text>
-            </View>
-          </View>
-        )}
-
+      <ScrollView
+        {...swipeToHome}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+      >
         {totalPending === 0 ? (
-          <EmptyState
-            emoji="✅"
-            title="Rien à valider"
-            description="Toutes les missions et demandes sont à jour."
+          <EmptyTabCard
+            illustration={<ParentArtwork name="validation" size={64} />}
+            title="Tout est à jour"
+            description="Aucune mission ni demande d'argent en attente. Les prochaines apparaîtront ici."
           />
         ) : (
           <>
-            {pendingRequests.length > 0 && (
-              <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginBottom: 12,
-                  }}
+            {/* Synthèse : ce qui attend ta réponse */}
+            <Card padding={20} style={{ marginBottom: 16 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
+                En attente de ta réponse
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                {totalPending} élément{totalPending > 1 ? 's' : ''} à traiter
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 18 }}>
+                <Text
+                  style={{ fontSize: 34, fontWeight: '800', color: colors.textPrimary, letterSpacing: -1 }}
                 >
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                    💸 Demandes d'argent
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: colors.primary + '12',
-                      borderRadius: 8,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
-                      {pendingRequests.length}
-                    </Text>
-                  </View>
-                </View>
-                {pendingRequests.map((req) => (
-                  <Card key={req.id} style={{ marginBottom: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                      <Avatar avatarId={getChildAvatarByAuthUid(req.childId)} size={44} />
-                      <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
-                          {getChildNameByAuthUid(req.childId)}
-                        </Text>
-                        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-                          {formatRelativeDate(req.createdAt)}
-                        </Text>
-                      </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Text
-                          style={{
-                            fontSize: 18,
-                            fontWeight: '800',
-                            color: colors.primary,
-                          }}
-                        >
-                          {formatCurrencyShort(req.amount)}
-                        </Text>
-                        <Text style={{ fontSize: 11, color: colors.textLight, marginTop: 2 }}>
-                          demande
-                        </Text>
-                      </View>
-                    </View>
-                    <View
-                      style={{
-                        backgroundColor: colors.background,
-                        borderRadius: 12,
-                        paddingHorizontal: 12,
-                        paddingVertical: 10,
-                        marginBottom: 12,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          color: colors.textPrimary,
-                          fontStyle: 'italic',
-                        }}
-                      >
-                        « {req.reason} »
-                      </Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      <TouchableOpacity
-                        onPress={() => handleRejectRequest(req)}
-                        disabled={loadingId === req.id}
-                        activeOpacity={0.7}
-                        style={{
-                          flex: 1,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 6,
-                          paddingVertical: 10,
-                          borderRadius: 12,
-                          borderWidth: 1.5,
-                          borderColor: colors.error,
-                          opacity: loadingId === req.id ? 0.5 : 1,
-                        }}
-                      >
-                        <Ionicons name="close" size={16} color={colors.error} />
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: colors.error }}>
-                          Refuser
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleApproveRequest(req)}
-                        disabled={loadingId === req.id}
-                        activeOpacity={0.7}
-                        style={{
-                          flex: 1,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 6,
-                          paddingVertical: 10,
-                          borderRadius: 12,
-                          backgroundColor: colors.success,
-                          opacity: loadingId === req.id ? 0.5 : 1,
-                        }}
-                      >
-                        <Ionicons name="checkmark" size={16} color="#FFF" />
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#FFF' }}>
-                          Accepter
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </Card>
-                ))}
-              </>
-            )}
+                  {formatCurrencyShort(missionsAmount + requestsAmount)}
+                </Text>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginLeft: 8 }}>
+                  à verser si tu acceptes tout
+                </Text>
+              </View>
+              <SplitBar
+                segments={[
+                  { value: pendingMissions.length, color: colors.accentOrange },
+                  { value: pendingRequests.length, color: colors.primary },
+                ]}
+                style={{ marginTop: 14, marginBottom: 12 }}
+              />
+              <LegendRow
+                color={colors.accentOrange}
+                label="Missions terminées"
+                share={`${pendingMissions.length}`}
+                amount={missionsAmount}
+              />
+              <LegendRow
+                color={colors.primary}
+                label="Demandes d'argent"
+                share={`${pendingRequests.length}`}
+                amount={requestsAmount}
+              />
+            </Card>
 
-            {pendingMissions.length > 0 && (
-              <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 8,
-                    marginTop: pendingRequests.length > 0 ? 20 : 0,
-                    marginBottom: 12,
-                  }}
-                >
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-                    🚀 Missions à valider
-                  </Text>
-                  <View
-                    style={{
-                      backgroundColor: colors.primary + '12',
-                      borderRadius: 8,
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
-                      {pendingMissions.length}
-                    </Text>
-                  </View>
-                </View>
-                {pendingMissions.map((m) => (
+            <SegmentedControl
+              value={tab}
+              onChange={setTab}
+              style={{ marginBottom: 14 }}
+              options={[
+                { value: 'all', label: 'Tout', count: totalPending },
+                { value: 'missions', label: 'Missions', count: pendingMissions.length },
+                { value: 'requests', label: 'Demandes', count: pendingRequests.length },
+              ]}
+            />
+
+            {queue.length === 0 ? (
+              <EmptyTabCard
+                illustration={<ParentArtwork name="validation" size={64} />}
+                title={tab === 'missions' ? 'Aucune mission à valider' : 'Aucune demande en attente'}
+                description="Rien à traiter dans cette catégorie pour l'instant."
+              />
+            ) : (
+              queue.map((item) => {
+                if (item.kind === 'mission') {
+                  const m = item.mission;
+                  const child = findChild(m);
+                  return (
+                    <ValidationCard
+                      key={item.id}
+                      kind="mission"
+                      title={m.title}
+                      childName={child?.firstName ?? 'Enfant'}
+                      avatarId={child?.avatarId}
+                      amount={m.reward}
+                      meta={m.completedAt ? formatRelativeDate(m.completedAt) : undefined}
+                      note={m.description || undefined}
+                      onApprove={() => handleApproveMission(m.id)}
+                      onReject={() => handleRejectMission(m.id)}
+                      loading={loadingId === m.id}
+                    />
+                  );
+                }
+                const r = item.request;
+                const child = findChild(r);
+                return (
                   <ValidationCard
-                    key={m.id}
-                    mission={m}
-                    childName={getChildNameByAuthUid(m.childId)}
-                    onApprove={() => handleApproveMission(m.id)}
-                    onReject={() => handleRejectMission(m.id)}
-                    loading={loadingId === m.id}
+                    key={item.id}
+                    kind="request"
+                    title="Demande d'argent"
+                    childName={child?.firstName ?? 'Enfant'}
+                    avatarId={child?.avatarId}
+                    amount={r.amount}
+                    meta={formatRelativeDate(r.createdAt)}
+                    note={r.reason}
+                    onApprove={() => handleApproveRequest(r)}
+                    onReject={() => handleRejectRequest(r)}
+                    loading={loadingId === r.id}
                   />
-                ))}
-              </>
+                );
+              })
             )}
           </>
         )}

@@ -15,14 +15,13 @@ export function useMissions(childId?: string, maxResults?: number) {
 
   useEffect(() => {
     if (!user) return;
-    store.fetchMissions(user.id, user.familyId, user.role, effectiveChildId, maxResults);
-
     const key = `missions|${user.id}|${user.familyId ?? ''}|${user.role}|${effectiveChildId ?? ''}|${maxResults ?? ''}`;
-    const unsub = subscribeCached(key, () =>
-      onMissionsSnapshot(user.id, user.familyId, user.role, effectiveChildId, (missions) => {
+    const unsub = subscribeCached(key, () => {
+      void store.fetchMissions(user.id, user.familyId, user.role, effectiveChildId, maxResults);
+      return onMissionsSnapshot(user.id, user.familyId, user.role, effectiveChildId, (missions) => {
         store.setMissions(missions);
-      }, maxResults)
-    );
+      }, maxResults);
+    });
 
     return () => {
       unsub();

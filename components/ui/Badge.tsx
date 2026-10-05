@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ViewStyle } from 'react-native';
 import colors from '@/constants/colors';
+import { getContrastTextColor } from '@/utils/colorContrast';
 
 interface BadgeProps {
   count?: number;
@@ -38,7 +39,7 @@ export default function Badge({
       {count !== undefined && (
         <Text
           style={{
-            color: '#FFFFFF',
+            color: getContrastTextColor(color),
             fontSize,
             fontWeight: '700',
           }}

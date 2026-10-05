@@ -21,11 +21,6 @@ export default function Card({
     backgroundColor: variant === 'child' ? colors.childSurface : colors.surface,
     borderRadius: 20,
     padding,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
     ...style,
   };
 

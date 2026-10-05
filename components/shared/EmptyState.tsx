@@ -4,7 +4,8 @@ import colors from '@/constants/colors';
 import Button from '@/components/ui/Button';
 
 interface EmptyStateProps {
-  emoji: string;
+  emoji?: string;
+  illustration?: React.ReactNode;
   title: string;
   description: string;
   actionLabel?: string;
@@ -13,6 +14,7 @@ interface EmptyStateProps {
 
 export default function EmptyState({
   emoji,
+  illustration,
   title,
   description,
   actionLabel,
@@ -28,7 +30,11 @@ export default function EmptyState({
         paddingVertical: 60,
       }}
     >
-      <Text style={{ fontSize: 64, marginBottom: 16 }}>{emoji}</Text>
+      {illustration ? (
+        <View style={{ marginBottom: 16 }}>{illustration}</View>
+      ) : emoji ? (
+        <Text style={{ fontSize: 64, marginBottom: 16 }}>{emoji}</Text>
+      ) : null}
       <Text
         style={{
           fontSize: 20,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { View, Text, ScrollView, Alert, Share, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ import Header from '@/components/shared/Header';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import GroupTitle from '@/components/ui/GroupTitle';
 import colors from '@/constants/colors';
 
 export default function SecurityScreen() {
@@ -30,14 +31,16 @@ export default function SecurityScreen() {
   const [isExporting, setIsExporting] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   const isGoogleUser = auth.currentUser?.providerData?.some(
     (p) => p.providerId === 'google.com'
   );
 
   const handleChangePassword = async () => {
+    if (isChanging) return;
     if (!newPassword || !currentPassword) {
-      Alert.alert('Erreur', 'Remplissez tous les champs.');
+      Alert.alert('Erreur', 'Remplis tous les champs.');
       return;
     }
     if (newPassword.length < 6) {
@@ -58,10 +61,11 @@ export default function SecurityScreen() {
       await reauthenticateWithCredential(firebaseUser, credential);
       await updatePassword(firebaseUser, newPassword);
 
-      Alert.alert('Succès', 'Votre mot de passe a été modifié.');
+      Alert.alert('Mot de passe modifié', 'Ton nouveau mot de passe est enregistré.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setShowPasswordForm(false);
     } catch {
       Alert.alert('Erreur', 'Mot de passe actuel incorrect ou erreur réseau.');
     } finally {
@@ -72,7 +76,7 @@ export default function SecurityScreen() {
   const handleDeleteAccount = () => {
     Alert.alert(
       'Supprimer mon compte',
-      'Cette action est irréversible. Toutes vos données et celles de vos enfants seront perdues.',
+      'Cette action est irréversible. Toutes tes données et celles de tes enfants seront perdues.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -85,18 +89,14 @@ export default function SecurityScreen() {
   };
 
   const handleExportData = async () => {
+    if (isExporting) return;
     setIsExporting(true);
     try {
       const callFn = httpsCallable(functions, 'exportUserData');
       const result = await callFn({});
       const json = JSON.stringify((result.data as { data: unknown }).data, null, 2);
-      // Affiche les données dans une alerte simple (limité mais fonctionnel)
-      Alert.alert(
-        'Export réussi',
-        'Vos données sont prêtes. Contactez privacy@pimspocket.app pour les recevoir par email.',
-        [{ text: 'OK' }]
-      );
-      console.log('[exportUserData]', json);
+      // Feuille de partage du téléphone : enregistrer dans Fichiers, envoyer par mail…
+      await Share.share({ title: 'Mes données Pims Pocket', message: json });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Erreur';
       Alert.alert('Erreur', msg);
@@ -106,6 +106,7 @@ export default function SecurityScreen() {
   };
 
   const confirmDeleteAccount = async () => {
+    if (isDeleting) return;
     setIsDeleting(true);
     try {
       const firebaseUser = auth.currentUser;
@@ -125,194 +126,248 @@ export default function SecurityScreen() {
       await signOut();
       router.replace('/');
     } catch {
-      Alert.alert('Erreur', 'Impossible de supprimer le compte. Vérifiez votre mot de passe.');
+      Alert.alert('Erreur', 'Impossible de supprimer le compte. Vérifie ton mot de passe.');
     } finally {
       setIsDeleting(false);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header title="Sécurité" showBack />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}>
-        <Card style={{ marginBottom: 20 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-            <Ionicons name="mail" size={18} color={colors.textSecondary} />
-            <Text style={{ marginLeft: 8, fontSize: 14, color: colors.textSecondary }}>
-              Connecté avec
-            </Text>
-          </View>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: colors.textPrimary }}>
-            {user?.email}
-          </Text>
-          {isGoogleUser && (
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ padding: 20, paddingBottom: 40, maxWidth: 720, width: '100%', alignSelf: 'center' }}
+      >
+        {/* Compte */}
+        <GroupTitle label="Compte" first />
+        <Card padding={14}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View
               style={{
-                flexDirection: 'row',
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: colors.canvas,
                 alignItems: 'center',
-                marginTop: 8,
-                backgroundColor: colors.info + '15',
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 8,
-                alignSelf: 'flex-start',
+                justifyContent: 'center',
               }}
             >
-              <Ionicons name="logo-google" size={14} color={colors.info} />
-              <Text style={{ marginLeft: 6, fontSize: 12, color: colors.info, fontWeight: '600' }}>
-                Compte Google
+              <Ionicons
+                name={isGoogleUser ? 'logo-google' : 'mail-outline'}
+                size={19}
+                color={colors.textPrimary}
+              />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 12, color: colors.textSecondary }}>Connecté avec</Text>
+              <Text
+                numberOfLines={1}
+                style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginTop: 2 }}
+              >
+                {user?.email}
               </Text>
             </View>
+            <View
+              style={{
+                backgroundColor: colors.canvas,
+                borderRadius: 999,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                marginLeft: 8,
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textPrimary }}>
+                {isGoogleUser ? 'Google' : 'Email'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Mot de passe : uniquement pour les comptes email */}
+          {!isGoogleUser && (
+            <>
+              <View style={{ height: 1, backgroundColor: colors.canvasMuted, marginLeft: 50, marginTop: 12 }} />
+              <TouchableOpacity
+                onPress={() => setShowPasswordForm((v) => !v)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showPasswordForm }}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 12 }}
+              >
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 12,
+                    backgroundColor: colors.canvas,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name="key-outline" size={19} color={colors.textPrimary} />
+                </View>
+                <Text
+                  style={{ flex: 1, marginLeft: 12, fontSize: 15, fontWeight: '600', color: colors.textPrimary }}
+                >
+                  Changer le mot de passe
+                </Text>
+                <Ionicons
+                  name={showPasswordForm ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={colors.textLight}
+                />
+              </TouchableOpacity>
+
+              {showPasswordForm && (
+                <View style={{ marginTop: 16 }}>
+                  <Input
+                    label="Mot de passe actuel"
+                    placeholder="Ton mot de passe actuel"
+                    icon="lock-closed-outline"
+                    isPassword
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                  />
+                  <Input
+                    label="Nouveau mot de passe"
+                    placeholder="6 caractères minimum"
+                    icon="lock-open-outline"
+                    isPassword
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                  />
+                  <Input
+                    label="Confirmer"
+                    placeholder="Retape le nouveau mot de passe"
+                    icon="lock-closed-outline"
+                    isPassword
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    error={
+                      confirmPassword.length > 0 && confirmPassword !== newPassword
+                        ? 'Les mots de passe ne correspondent pas'
+                        : null
+                    }
+                  />
+                  <Button
+                    title="Enregistrer le mot de passe"
+                    variant="dark"
+                    onPress={handleChangePassword}
+                    loading={isChanging}
+                  />
+                </View>
+              )}
+            </>
           )}
         </Card>
 
-        {!isGoogleUser && (
-          <>
-            <Text
+        {/* Données personnelles */}
+        <GroupTitle label="Données personnelles" />
+        <Card padding={14}>
+          <TouchableOpacity
+            onPress={handleExportData}
+            disabled={isExporting}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            style={{ flexDirection: 'row', alignItems: 'center', opacity: isExporting ? 0.5 : 1 }}
+          >
+            <View
               style={{
-                fontSize: 13,
-                fontWeight: '600',
-                color: colors.textSecondary,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-                marginBottom: 10,
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: colors.canvas,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              Changer le mot de passe
-            </Text>
-            <Card style={{ marginBottom: 24 }}>
-              <Input
-                label="Mot de passe actuel"
-                placeholder="Votre mot de passe actuel"
-                icon="lock-closed-outline"
-                isPassword
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-              />
-              <Input
-                label="Nouveau mot de passe"
-                placeholder="6 caractères minimum"
-                icon="lock-open-outline"
-                isPassword
-                value={newPassword}
-                onChangeText={setNewPassword}
-              />
-              <Input
-                label="Confirmer"
-                placeholder="Retapez le nouveau mot de passe"
-                icon="lock-closed-outline"
-                isPassword
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-              />
-              <Button
-                title="Modifier le mot de passe"
-                onPress={handleChangePassword}
-                loading={isChanging}
-                style={{ marginTop: 8 }}
-              />
-            </Card>
-          </>
-        )}
-
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: '600',
-            color: colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-            marginBottom: 10,
-          }}
-        >
-          Données personnelles
-        </Text>
-        <Card style={{ marginBottom: 24 }}>
-          <Button
-            title="Exporter mes données"
-            onPress={handleExportData}
-            variant="outline"
-            loading={isExporting}
-            icon={<Ionicons name="download-outline" size={18} color={colors.primary} />}
-          />
+              <Ionicons name="download-outline" size={19} color={colors.textPrimary} />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.textPrimary }}>
+                {isExporting ? 'Préparation…' : 'Exporter mes données'}
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                Une copie de toutes tes données, à enregistrer ou envoyer
+              </Text>
+            </View>
+            <Ionicons name="share-outline" size={18} color={colors.textLight} />
+          </TouchableOpacity>
         </Card>
 
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: '600',
-            color: colors.error,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-            marginBottom: 10,
-          }}
-        >
-          Zone dangereuse
-        </Text>
-        <Card style={{ borderWidth: 1, borderColor: colors.error + '30' }}>
+        {/* Zone sensible */}
+        <GroupTitle label="Zone sensible" />
+        <Card padding={14} style={{ borderWidth: 1, borderColor: colors.error + '30' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: colors.error + '15',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="trash-outline" size={19} color={colors.error} />
+            </View>
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.error }}>
+                Supprimer mon compte
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                Définitif : enfants, transactions et missions seront effacés
+              </Text>
+            </View>
+          </View>
+
           {showDeleteConfirm ? (
-            <>
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: colors.textSecondary,
-                  marginBottom: 12,
-                  lineHeight: 20,
-                }}
-              >
+            <View style={{ marginTop: 16 }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 12, lineHeight: 19 }}>
                 {isGoogleUser
-                  ? 'Confirmez la suppression de votre compte.'
-                  : 'Entrez votre mot de passe pour confirmer la suppression.'}
+                  ? 'Confirme la suppression de ton compte.'
+                  : 'Entre ton mot de passe pour confirmer la suppression.'}
               </Text>
               {!isGoogleUser && (
                 <Input
                   label="Mot de passe"
-                  placeholder="Votre mot de passe"
+                  placeholder="Ton mot de passe"
                   icon="lock-closed-outline"
                   isPassword
                   value={deletePassword}
                   onChangeText={setDeletePassword}
                 />
               )}
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 <Button
                   title="Annuler"
+                  variant="light"
+                  fullWidth={false}
+                  style={{ flex: 1 }}
                   onPress={() => {
                     setShowDeleteConfirm(false);
                     setDeletePassword('');
                   }}
-                  variant="outline"
-                  style={{ flex: 1 }}
                 />
                 <Button
                   title="Supprimer"
-                  onPress={confirmDeleteAccount}
                   variant="danger"
-                  loading={isDeleting}
+                  fullWidth={false}
                   style={{ flex: 1 }}
+                  loading={isDeleting}
+                  onPress={confirmDeleteAccount}
                 />
               </View>
-            </>
+            </View>
           ) : (
-            <>
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: colors.textSecondary,
-                  marginBottom: 12,
-                  lineHeight: 20,
-                }}
-              >
-                La suppression de votre compte est définitive. Toutes les données
-                liées (enfants, transactions, missions) seront perdues.
-              </Text>
-              <Button
-                title="Supprimer mon compte"
-                onPress={handleDeleteAccount}
-                variant="danger"
-                icon={<Ionicons name="trash-outline" size={18} color="#FFF" />}
-              />
-            </>
+            <Button
+              title="Supprimer mon compte"
+              variant="light"
+              onPress={handleDeleteAccount}
+              textStyle={{ color: colors.error }}
+              style={{ marginTop: 14 }}
+            />
           )}
         </Card>
       </ScrollView>
