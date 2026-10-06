@@ -25,8 +25,13 @@ const MAX_PENDING_REQUESTS = 10;
 
 const quickAmounts = [1, 2, 5, 10, 20];
 
-// Idées de motif : le libellé (sans l'emoji) remplit le champ « Pourquoi ? »
-const reasonIdeas = ['🍬 Un goûter', '📚 Un livre', '🎬 Le cinéma', '🎁 Un cadeau', '🎮 Un jeu'];
+const reasonIdeas = [
+  { label: 'Un goûter', icon: 'nutrition-outline' },
+  { label: 'Un livre', icon: 'book-outline' },
+  { label: 'Le cinéma', icon: 'film-outline' },
+  { label: 'Un cadeau', icon: 'gift-outline' },
+  { label: 'Un jeu', icon: 'game-controller-outline' },
+] as const;
 
 const statusConfig: Record<
   MoneyRequest['status'],
@@ -204,11 +209,12 @@ export default function AskMoneyScreen() {
           />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: -4 }}>
             {reasonIdeas.map((idea) => {
-              const label = `Pour ${idea.replace(/^\S+\s/, '').toLowerCase()}`;
+              const label = `Pour ${idea.label.toLowerCase()}`;
               return (
                 <Chip
-                  key={idea}
-                  label={idea}
+                  key={idea.label}
+                  label={idea.label}
+                  left={<Ionicons name={idea.icon} size={18} color={reason === label ? getContrastTextColor(accent) : colors.textSecondary} accessible={false} />}
                   selected={reason === label}
                   surface="card"
                   accentColor={accent}

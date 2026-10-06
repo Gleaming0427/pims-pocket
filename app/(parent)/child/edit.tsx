@@ -136,7 +136,7 @@ export default function EditChildScreen() {
             marginBottom: 10,
           }}
         >
-          👤 Prénom
+          <Ionicons name="person-outline" size={18} color={colors.textSecondary} accessible={false} /> Prénom
         </Text>
         <Input
           label="Prénom"
@@ -159,7 +159,7 @@ export default function EditChildScreen() {
             marginBottom: 10,
           }}
         >
-          🎨 Avatar
+          <Ionicons name="color-palette-outline" size={18} color={colors.textSecondary} accessible={false} /> Avatar
         </Text>
         <View
           style={{
@@ -188,7 +188,7 @@ export default function EditChildScreen() {
             marginBottom: 10,
           }}
         >
-          📅 Année de naissance
+          <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} accessible={false} /> Année de naissance
         </Text>
         <Input
           label="Année de naissance"
@@ -213,7 +213,7 @@ export default function EditChildScreen() {
             marginBottom: 10,
           }}
         >
-          🔑 Code PIN
+          <Ionicons name="key-outline" size={18} color={colors.textSecondary} accessible={false} /> Code PIN
         </Text>
 
         {isActivated ? (

@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';
+import ParentArtwork from '@/components/parent/ParentArtwork';
 import { useAuthStore } from '@/stores/authStore';
 import { useChildStore } from '@/stores/childStore';
 import { updateUserOnboardingStatus } from '@/lib/firestore';
@@ -19,19 +20,19 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SLIDES = [
   {
-    emoji: '👋',
+    artwork: 'family' as const,
     title: 'Bienvenue dans\nPims Pocket !',
     description:
       "L'application qui rend l'argent de poche intelligent et amusant pour toute la famille.",
   },
   {
-    emoji: '📱',
+    artwork: 'transfer' as const,
     title: 'Pour vous,\nle parent',
     description:
       'Créez des missions, validez les travaux, suivez les dépenses et enseignez la valeur de l’argent à vos enfants.',
   },
   {
-    emoji: '🚀',
+    artwork: 'mission' as const,
     title: 'Votre premier enfant\nvous attend',
     description:
       'Nous allons créer un profil démo pour vous montrer le fonctionnement. Vous pourrez le modifier ou le supprimer à tout moment.',
@@ -87,7 +88,9 @@ export default function TutorialScreen() {
           paddingHorizontal: 32,
         }}
       >
-        <Text style={{ fontSize: 72, marginBottom: 24 }}>{item.emoji}</Text>
+        <View style={{ marginBottom: 24 }}>
+          <ParentArtwork name={item.artwork} size={96} />
+        </View>
         <Text
           style={{
             fontSize: 26,

@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ViewStyle } from 'react-native';
+import { View, TouchableOpacity, ViewStyle } from 'react-native';
 import avatars from '@/constants/avatars';
+import AvatarArtwork from '@/components/ui/AvatarArtwork';
+import { getReadableAccent } from '@/utils/colorContrast';
 
 interface AvatarProps {
   avatarId: string;
@@ -22,6 +24,9 @@ const Avatar = React.memo(function Avatar({
 
   const content = (
     <View
+      accessible={!onPress}
+      accessibilityRole="image"
+      accessibilityLabel={`Avatar ${avatar.name}`}
       style={[
         {
           width: dim,
@@ -31,18 +36,24 @@ const Avatar = React.memo(function Avatar({
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: selected ? 3 : 0,
-          borderColor: avatar.color,
+          borderColor: selected ? getReadableAccent(avatar.color) : avatar.color,
         },
         style,
       ]}
     >
-      <Text style={{ fontSize: dim * 0.5 }}>{avatar.emoji}</Text>
+      <AvatarArtwork avatarId={avatar.id} size={dim * 0.82} />
     </View>
   );
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`Choisir l’avatar ${avatar.name}`}
+        accessibilityState={{ selected }}
+      >
         {content}
       </TouchableOpacity>
     );

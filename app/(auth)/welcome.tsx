@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
+import ParentArtwork from '@/components/parent/ParentArtwork';
 import { SplitBar } from '@/components/shared/SplitBar';
 import colors from '@/constants/colors';
 
@@ -25,22 +26,19 @@ const AUTOPLAY_MS = 5000;
 
 const slides = [
   {
-    emoji: '💰',
-    tint: colors.primary,
+    artwork: 'transfer' as const,
     title: 'Argent de poche intelligent',
     description:
       "Gérez l'argent de poche de vos enfants simplement et suivez leurs dépenses en temps réel.",
   },
   {
-    emoji: '🎯',
-    tint: colors.secondary,
+    artwork: 'mission' as const,
     title: 'Missions et récompenses',
     description:
       "Créez des missions pour vos enfants et récompensez-les automatiquement quand c'est validé.",
   },
   {
-    emoji: '🌟',
-    tint: colors.accentOrange,
+    artwork: 'savings' as const,
     title: 'Apprendre à épargner',
     description:
       "Vos enfants fixent des objectifs d'épargne et voient leur tirelire se remplir !",
@@ -103,7 +101,7 @@ function AppPreview() {
           <Text style={{ fontSize: 13, fontWeight: '800', color: colors.success, marginTop: 2 }}>+2,00 €</Text>
         </Card>
         <Card padding={12} style={{ flex: 1, marginTop: 10, transform: [{ rotate: '2deg' }] }}>
-          <Text style={{ fontSize: 20 }}>🚲</Text>
+          <Ionicons name="bicycle-outline" size={24} color={colors.textPrimary} accessible={false} />
           <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginTop: 6 }}>
             Objectif vélo
           </Text>
@@ -351,18 +349,8 @@ export default function WelcomeScreen() {
                     transform: [{ scale }],
                   }}
                 >
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 14,
-                      backgroundColor: item.tint + '15',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 12,
-                    }}
-                  >
-                    <Text style={{ fontSize: 24 }}>{item.emoji}</Text>
+                  <View style={{ marginBottom: 12 }}>
+                    <ParentArtwork name={item.artwork} size={48} />
                   </View>
                   <Text
                     style={{

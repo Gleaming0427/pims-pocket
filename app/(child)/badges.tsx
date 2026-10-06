@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
@@ -28,8 +28,6 @@ export default function BadgesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState<BadgeTab>('all');
   const [selectedBadge, setSelectedBadge] = useState<BadgeDefinition | null>(null);
-  const [gridWidth, setGridWidth] = useState(0);
-  const { fontScale } = useWindowDimensions();
 
   useEffect(() => {
     if (!user) return;
@@ -51,8 +49,8 @@ export default function BadgesScreen() {
   const total = badgesDef.length;
   const progress = total > 0 ? Math.round((earned.length / total) * 100) : 0;
   const visibleBadges = tab === 'earned' ? earned : badgesDef;
-  const columns = Math.max(1, Math.min(3, Math.floor((gridWidth + 12) / (128 * fontScale + 12))));
-  const tileWidth = gridWidth > 0 ? (gridWidth - (columns - 1) * 12) / columns : undefined;
+  const badgeRows: BadgeDefinition[][] = [];
+  for (let i = 0; i < visibleBadges.length; i += 2) badgeRows.push(visibleBadges.slice(i, i + 2));
   const selectedEarned = selectedBadge ? earnedIds.has(selectedBadge.id) : false;
 
   return (
@@ -114,66 +112,68 @@ export default function BadgesScreen() {
         </Text>
         {visibleBadges.length === 0 && (
           <EmptyTabCard
-            emoji="🌱"
+            icon="leaf-outline" iconColor={accent}
             title="Ton premier trophée t’attend !"
             description="Explore la collection pour découvrir les défis à relever."
           />
         )}
-        <View
-          onLayout={(event) => setGridWidth(event.nativeEvent.layout.width)}
-          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}
-        >
-          {visibleBadges.map((badge) => {
-            const isEarned = earnedIds.has(badge.id);
-            return (
-              <TouchableOpacity
-                key={badge.id}
-                onPress={() => setSelectedBadge(badge)}
-                activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel={badge.name + (isEarned ? ', gagné' : ', à débloquer')}
-                accessibilityHint="Afficher la condition de déblocage"
-                style={{
-                  width: tileWidth,
-                  padding: 16,
-                  alignItems: 'center',
-                  backgroundColor: colors.surface,
-                  borderRadius: 24,
-                  borderWidth: 1.5,
-                  borderColor: isEarned ? colors.starGold : colors.canvasMuted,
-                  borderStyle: isEarned ? 'solid' : 'dashed',
-                }}
-              >
-                <View style={{
-                  width: 88, height: 88, borderRadius: 44,
-                  backgroundColor: isEarned ? colors.starGold + '25' : colors.canvas,
-                  borderWidth: 3,
-                  borderColor: isEarned ? colors.starGold : colors.canvasMuted,
-                  alignItems: 'center', justifyContent: 'center', marginBottom: 14,
-                }}>
-                  <BadgeArtwork badgeId={badge.id} size={64} locked={!isEarned} />
-                  <View style={{
-                    position: 'absolute', right: -3, bottom: -3,
-                    width: 28, height: 28, borderRadius: 14,
-                    backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center',
-                    borderWidth: 2, borderColor: isEarned ? colors.starGold : colors.canvasMuted,
-                  }}>
-                    <Ionicons
-                      name={isEarned ? 'checkmark' : 'lock-closed'}
-                      size={15}
-                      color={isEarned ? getReadableAccent(accent) : colors.textSecondary}
-                    />
-                  </View>
-                </View>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary, textAlign: 'center', marginBottom: 8 }}>
-                  {badge.name}
-                </Text>
-                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 'auto' }}>
-                  {isEarned ? 'Gagné !' : 'À débloquer'}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={{ gap: 12 }}>
+          {badgeRows.map((row) => (
+            <View key={row[0].id} style={{ flexDirection: 'row', gap: 12 }}>
+              {row.map((badge) => {
+                const isEarned = earnedIds.has(badge.id);
+                return (
+                  <TouchableOpacity
+                    key={badge.id}
+                    onPress={() => setSelectedBadge(badge)}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={badge.name + (isEarned ? ', gagné' : ', à débloquer')}
+                    accessibilityHint="Afficher la condition de déblocage"
+                    style={{
+                      flex: 1,
+                      padding: 16,
+                      alignItems: 'center',
+                      backgroundColor: colors.surface,
+                      borderRadius: 24,
+                      borderWidth: 1.5,
+                      borderColor: isEarned ? colors.starGold : colors.canvasMuted,
+                      borderStyle: isEarned ? 'solid' : 'dashed',
+                    }}
+                  >
+                    <View style={{
+                      width: 88, height: 88, borderRadius: 44,
+                      backgroundColor: isEarned ? colors.starGold + '25' : colors.canvas,
+                      borderWidth: 3,
+                      borderColor: isEarned ? colors.starGold : colors.canvasMuted,
+                      alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+                    }}>
+                      <BadgeArtwork badgeId={badge.id} size={64} locked={!isEarned} />
+                      <View style={{
+                        position: 'absolute', right: -3, bottom: -3,
+                        width: 28, height: 28, borderRadius: 14,
+                        backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center',
+                        borderWidth: 2, borderColor: isEarned ? colors.starGold : colors.canvasMuted,
+                      }}>
+                        <Ionicons
+                          name={isEarned ? 'checkmark' : 'lock-closed'}
+                          size={15}
+                          color={isEarned ? getReadableAccent(accent) : colors.textSecondary}
+                        />
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary, textAlign: 'center', marginBottom: 8 }}>
+                      {badge.name}
+                    </Text>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginTop: 'auto' }}>
+                      {isEarned ? 'Gagné !' : 'À débloquer'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+              {row.length === 1 && <View style={{ flex: 1 }} />}
+            </View>
+          ))}
         </View>
       </ScrollView>
 

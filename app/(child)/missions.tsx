@@ -59,7 +59,7 @@ export default function ChildMissionsScreen() {
       >
         {missions.length === 0 ? (
           <EmptyTabCard
-            emoji="🎮"
+            icon="game-controller-outline" iconColor={accent}
             title="Pas encore de missions"
             description="Tes parents vont bientôt te donner des missions à accomplir !"
           />
@@ -88,7 +88,7 @@ export default function ChildMissionsScreen() {
             {tab === 'todo' &&
               (activeMissions.length === 0 ? (
                 <EmptyTabCard
-                  emoji="🎉"
+                  icon="sparkles-outline" iconColor={accent}
                   title="Tout est fait !"
                   description="Bravo, tu n'as plus de mission à faire pour l'instant."
                 />
@@ -106,7 +106,7 @@ export default function ChildMissionsScreen() {
             {tab === 'pending' &&
               (pendingMissions.length === 0 ? (
                 <EmptyTabCard
-                  emoji="⏳"
+                  icon="hourglass-outline" iconColor={accent}
                   title="Rien en attente"
                   description="Quand tu termines une mission, elle attend ici que ton parent la valide."
                 />
@@ -117,7 +117,7 @@ export default function ChildMissionsScreen() {
             {tab === 'done' &&
               (completedMissions.length === 0 ? (
                 <EmptyTabCard
-                  emoji="🏁"
+                  icon="flag-outline" iconColor={accent}
                   title="Aucune mission terminée"
                   description="Tes missions validées apparaîtront ici."
                 />

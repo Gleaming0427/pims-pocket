@@ -65,7 +65,7 @@ export default function ChildProfileScreen() {
               <Avatar avatarId={avatarId} size={64} />
             ) : (
               <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: accent + '15', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 32 }}>🧒</Text>
+                <Ionicons name="person-outline" size={32} color={colors.textPrimary} accessible={false} />
               </View>
             )}
             <View style={{ flex: 1 }}>

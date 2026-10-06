@@ -176,7 +176,7 @@ export default function GoalsScreen() {
         {goals.length === 0 ? (
           <>
             <EmptyTabCard
-              emoji="🎯"
+              icon="flag-outline" iconColor={accent}
               title="Aucun objectif"
               description="Fixe-toi un objectif d'épargne pour économiser pour quelque chose qui te fait envie !"
             />
@@ -246,7 +246,7 @@ export default function GoalsScreen() {
               <>
                 {activeGoals.length === 0 ? (
                   <EmptyTabCard
-                    emoji="🌱"
+                    icon="leaf-outline" iconColor={accent}
                     title="Pas d'objectif en cours"
                     description="Choisis ton prochain rêve et commence à épargner."
                   />
@@ -269,7 +269,7 @@ export default function GoalsScreen() {
             {tab === 'completed' &&
               (completedGoals.length === 0 ? (
                 <EmptyTabCard
-                  emoji="🏆"
+                  icon="trophy-outline" iconColor={accent}
                   title="Aucun objectif atteint"
                   description="Tes objectifs réalisés apparaîtront ici. Courage !"
                 />
@@ -399,7 +399,7 @@ export default function GoalsScreen() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 20 }}>🎯</Text>
+                  <Ionicons name="flag-outline" size={22} color={colors.textPrimary} accessible={false} />
                 </View>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary }}>
                   Épargner
@@ -464,7 +464,7 @@ export default function GoalsScreen() {
                       {formatCurrencyShort(Number(selectedGoal.currentAmount) + parsedSaveCents)} /{' '}
                       {formatCurrencyShort(selectedGoal.targetAmount)}
                       {Number(selectedGoal.currentAmount) + parsedSaveCents >= Number(selectedGoal.targetAmount)
-                        ? '  🎉 Objectif atteint !'
+                        ? <>{'  '}<Ionicons name="checkmark-circle-outline" size={15} color={colors.textPrimary} accessible={false} /> Objectif atteint !</>
                         : ''}
                     </Text>
                     <SplitBar

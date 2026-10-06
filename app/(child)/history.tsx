@@ -3,6 +3,7 @@ import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAuthStore } from '@/stores/authStore';
+import { useChildThemeStore } from '@/stores/childThemeStore';
 import Header from '@/components/shared/Header';
 import EmptyTabCard from '@/components/shared/EmptyTabCard';
 import TransactionItem, { isDebitTransaction } from '@/components/parent/TransactionItem';
@@ -28,6 +29,7 @@ function dayLabel(date: Date) {
 }
 
 export default function ChildHistoryScreen() {
+  const accent = useChildThemeStore((state) => state.accent);
   const user = useAuthStore((state) => state.user);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const { transactions, isLoading, error } = useTransactions(user?.id, pageSize);
@@ -60,7 +62,7 @@ export default function ChildHistoryScreen() {
         ListHeaderComponent={
           <View>
             {!!error && (
-              <EmptyTabCard emoji="☁️" title="Chargement interrompu" description="Impossible de récupérer tes dernières opérations. Réessaie dans un instant." />
+              <EmptyTabCard icon="cloud-offline-outline" iconColor={colors.error} title="Chargement interrompu" description="Impossible de récupérer tes dernières opérations. Réessaie dans un instant." />
             )}
             {transactions.length > 0 && (
               <Card padding={20}>
@@ -103,7 +105,7 @@ export default function ChildHistoryScreen() {
           </View>
         )}
         ListEmptyComponent={!isLoading && !error ? (
-          <EmptyTabCard emoji="📝" title="Pas encore de mouvement" description="Ton argent de poche, tes récompenses et tes dépenses apparaîtront ici." />
+          <EmptyTabCard icon="receipt-outline" iconColor={accent} title="Pas encore de mouvement" description="Ton argent de poche, tes récompenses et tes dépenses apparaîtront ici." />
         ) : null}
         ListFooterComponent={isLoading ? (
           <ActivityIndicator style={{ marginTop: 20 }} color={colors.textPrimary} accessibilityLabel="Chargement de l’historique" />

@@ -23,7 +23,14 @@ import { useChildThemeStore } from '@/stores/childThemeStore';
 const quickTargets = [10, 20, 50, 100];
 
 // Idées pour démarrer vite
-const goalIdeas = ['🎮 Jeu vidéo', '🚲 Vélo', '📚 Livre', '🧱 Lego', '🎬 Sortie ciné', '🧸 Peluche'];
+const goalIdeas = [
+  { label: 'Jeu vidéo', icon: 'game-controller-outline' },
+  { label: 'Vélo', icon: 'bicycle-outline' },
+  { label: 'Livre', icon: 'book-outline' },
+  { label: 'Lego', icon: 'cube-outline' },
+  { label: 'Sortie ciné', icon: 'film-outline' },
+  { label: 'Peluche', icon: 'paw-outline' },
+] as const;
 
 // Limite de sécurité : maximum d'objectifs actifs par enfant
 const MAX_ACTIVE_GOALS = 10;
@@ -166,12 +173,13 @@ export default function CreateGoalScreen() {
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {goalIdeas.map((idea) => {
-              const label = idea.replace(/^\S+\s/, '');
+              const label = idea.label;
               return (
                 <Chip
                   accentColor={accent}
-                  key={idea}
-                  label={idea}
+                  key={label}
+                  label={label}
+                  left={<Ionicons name={idea.icon} size={18} color={title === label ? getContrastTextColor(accent) : colors.textSecondary} accessible={false} />}
                   selected={title === label}
                   surface="card"
                   onPress={() => {

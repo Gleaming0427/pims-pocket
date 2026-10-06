@@ -60,7 +60,7 @@ const GoalProgressCard = React.memo(function GoalProgressCard({
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 20 }}>🎯</Text>
+            <Ionicons name="flag-outline" size={22} color={colors.textPrimary} accessible={false} />
           </View>
         )}
         <View style={{ flex: 1, marginLeft: 12 }}>
@@ -91,7 +91,8 @@ const GoalProgressCard = React.memo(function GoalProgressCard({
                 color: colors.textPrimary,
               }}
             >
-              {isCompleted ? '🎉 Atteint' : '🎯 En cours'}
+              <Ionicons name={isCompleted ? 'checkmark-circle-outline' : 'flag-outline'} size={12} color={colors.textPrimary} accessible={false} />{' '}
+              {isCompleted ? 'Atteint' : 'En cours'}
             </Text>
           </View>
         )}

@@ -193,7 +193,7 @@ export default function AddChildScreen() {
             marginBottom: 10,
           }}
         >
-          🔑 Code PIN de connexion
+          <Ionicons name="key-outline" size={18} color={colors.textSecondary} accessible={false} /> Code PIN de connexion
         </Text>
         <Input
           label="Code PIN"

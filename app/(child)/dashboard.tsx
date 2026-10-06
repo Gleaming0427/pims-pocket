@@ -115,7 +115,7 @@ export default function ChildDashboard() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
       <Header
-        title={`Bonjour ${user?.displayName ?? ''} 👋`}
+        title={`Bonjour ${user?.displayName ?? ''}`}
         subtitle="Tableau de bord"
         rightAction={
           <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -204,7 +204,7 @@ export default function ChildDashboard() {
                 }}
               >
                 <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textPrimary }}>
-                  ⏳ En attente
+                  <Ionicons name="time-outline" size={12} color={colors.textPrimary} accessible={false} /> En attente
                 </Text>
               </View>
             </View>
@@ -226,7 +226,7 @@ export default function ChildDashboard() {
         {tab === 'missions' &&
           (availableMissions.length === 0 ? (
             <EmptyTabCard
-              emoji="🎈"
+              icon="sparkles-outline" iconColor={accent}
               title="Aucune mission pour le moment"
               description="De nouvelles missions arriveront bientôt."
             />
@@ -264,7 +264,7 @@ export default function ChildDashboard() {
           <>
             {activeGoals.length === 0 ? (
               <EmptyTabCard
-                emoji="🎯"
+                icon="flag-outline" iconColor={accent}
                 title="Pas encore d'objectif"
                 description="Choisis un rêve et mets de l'argent de côté pour l'atteindre."
               />
@@ -288,7 +288,7 @@ export default function ChildDashboard() {
         {tab === 'badges' &&
           (recentBadges.length === 0 ? (
             <EmptyTabCard
-              emoji="🏅"
+              icon="ribbon-outline" iconColor={accent}
               title="Pas encore de badge"
               description="Termine des missions et épargne pour en gagner."
             />

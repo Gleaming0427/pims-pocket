@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, Dimensions } from 'react-native';
+import { View, Dimensions } from 'react-native';
+import CoinArtwork from '@/components/child/CoinArtwork';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -75,7 +76,7 @@ function Coin({ index, onFinish }: CoinProps) {
         style,
       ]}
     >
-      <Text style={{ fontSize: 32 }}>🪙</Text>
+      <CoinArtwork />
     </Animated.View>
   );
 }

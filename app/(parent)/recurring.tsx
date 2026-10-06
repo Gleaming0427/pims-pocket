@@ -189,7 +189,7 @@ export default function RecurringScreen() {
 
         {children.length === 0 && (
           <EmptyTabCard
-            emoji="👶"
+            icon="people-outline"
             title="Aucun enfant"
             description="Ajoute un enfant pour configurer son argent de poche."
           />

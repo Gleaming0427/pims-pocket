@@ -18,10 +18,10 @@ import { formatCurrencyShort } from '@/utils/formatters';
 import { TransactionType, Child } from '@/types';
 import colors from '@/constants/colors';
 
-const motifs: { type: TransactionType; label: string; emoji: string }[] = [
-  { type: 'bonus', label: 'Bonus', emoji: '⭐' },
-  { type: 'gift', label: 'Cadeau', emoji: '🎁' },
-  { type: 'allowance', label: 'Argent de poche', emoji: '💰' },
+const motifs: { type: TransactionType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { type: 'bonus', label: 'Bonus', icon: 'star-outline' },
+  { type: 'gift', label: 'Cadeau', icon: 'gift-outline' },
+  { type: 'allowance', label: 'Argent de poche', icon: 'wallet-outline' },
 ];
 
 export default function SendMoneyScreen() {
@@ -142,7 +142,7 @@ export default function SendMoneyScreen() {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-              👧 Qui reçoit ?
+              <Ionicons name="person-outline" size={18} color={colors.textSecondary} accessible={false} /> Qui reçoit ?
             </Text>
             {selectedIds.length > 0 && (
               <View
@@ -166,7 +166,7 @@ export default function SendMoneyScreen() {
         {children.length === 0 ? (
           <View style={{ marginBottom: 24 }}>
             <EmptyState
-              emoji="👶"
+              icon="people-outline"
               title="Aucun enfant"
               description="Ajoute un enfant avant d'envoyer de l'argent."
               actionLabel="Ajouter un enfant"
@@ -256,7 +256,7 @@ export default function SendMoneyScreen() {
             marginBottom: 10,
           }}
         >
-          💶 Combien ?
+          <Ionicons name="cash-outline" size={18} color={colors.textSecondary} accessible={false} /> Combien ?
         </Text>
         <Input
           label="Montant par enfant (€)"
@@ -351,7 +351,7 @@ export default function SendMoneyScreen() {
             marginBottom: 10,
           }}
         >
-          🎯 Pourquoi ?
+          <Ionicons name="flag-outline" size={18} color={colors.textSecondary} accessible={false} /> Pourquoi ?
         </Text>
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
           {motifs.map((m) => {
@@ -371,7 +371,7 @@ export default function SendMoneyScreen() {
                   borderColor: isSelectedType ? colors.primary : colors.border,
                 }}
               >
-                <Text style={{ fontSize: 22 }}>{m.emoji}</Text>
+                <Ionicons name={m.icon} size={24} color={isSelectedType ? colors.primary : colors.textSecondary} accessible={false} />
                 <Text
                   style={{
                     fontSize: 12,

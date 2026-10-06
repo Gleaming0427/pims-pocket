@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import IllustrationIcon from '@/components/ui/IllustrationIcon';
 import Header from '@/components/shared/Header';
 import { useAuthStore } from '@/stores/authStore';
 import { validateEmail } from '@/utils/validators';
@@ -46,7 +47,9 @@ export default function ForgotPasswordScreen() {
             paddingHorizontal: 40,
           }}
         >
-          <Text style={{ fontSize: 64, marginBottom: 20 }}>📧</Text>
+          <View style={{ marginBottom: 20 }}>
+            <IllustrationIcon name="mail-open-outline" size={80} />
+          </View>
           <Text
             style={{
               fontSize: 20,

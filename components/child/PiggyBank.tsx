@@ -13,6 +13,7 @@ import { formatCurrencyShort } from '@/utils/formatters';
 import { useResponsive } from '@/hooks/useResponsive';
 import colors from '@/constants/colors';
 import { useChildThemeStore } from '@/stores/childThemeStore';
+import BadgeArtwork from '@/components/child/BadgeArtwork';
 
 interface PiggyBankProps {
   balance: number;
@@ -101,7 +102,7 @@ const { isTablet } = useResponsive();
               fillStyle,
             ]}
           />
-          <Text style={{ fontSize: SIZE * 0.45 }}>🐷</Text>
+          <BadgeArtwork badgeId="first_saver" size={SIZE * 0.6} />
         </View>
       </Animated.View>
 

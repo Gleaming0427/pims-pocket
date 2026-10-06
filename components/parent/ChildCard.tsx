@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '@/components/ui/Card';
+import Avatar from '@/components/ui/Avatar';
 import { Child } from '@/types';
 import avatars from '@/constants/avatars';
 import { formatCurrencyShort, allowancePeriodLabel } from '@/utils/formatters';
@@ -32,18 +33,11 @@ const ChildCard = React.memo(function ChildCard({ child, onPress, activeMissions
   return (
     <Card onPress={onPress} padding={14} style={{ marginBottom: 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            backgroundColor: avatar.color + '20',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 24 }}>{avatar.emoji}</Text>
-        </View>
+        <Avatar
+          avatarId={child.avatarId}
+          size={48}
+          style={{ borderRadius: 14, backgroundColor: avatar.color + '20' }}
+        />
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>
             {child.firstName}

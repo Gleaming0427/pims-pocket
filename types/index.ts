@@ -200,6 +200,5 @@ export interface BadgeDefinition {
 export interface AvatarDefinition {
   id: string;
   name: string;
-  emoji: string;
   color: string;
 }

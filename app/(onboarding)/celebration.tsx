@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '@/components/ui/Button';
+import BadgeArtwork from '@/components/child/BadgeArtwork';
 import colors from '@/constants/colors';
 
 export default function CelebrationScreen() {
@@ -18,7 +19,9 @@ export default function CelebrationScreen() {
         padding: 24,
       }}
     >
-      <Text style={{ fontSize: 80, marginBottom: 16 }}>🎉</Text>
+      <View style={{ marginBottom: 16 }}>
+        <BadgeArtwork badgeId="super_saver" size={104} />
+      </View>
       <Text
         style={{
           fontSize: 26,

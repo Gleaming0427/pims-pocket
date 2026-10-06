@@ -28,6 +28,7 @@ const colors = {
   childBg: canvas,
   childSurface: surface,
   starGold: '#FFD93D',
+  avatarPink: '#FF6B9D',
 } as const;
 
 export default colors;

@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import colors from '@/constants/colors';
 import Button from '@/components/ui/Button';
+import IllustrationIcon from '@/components/ui/IllustrationIcon';
 
 interface EmptyStateProps {
-  emoji?: string;
+  icon?: React.ComponentProps<typeof IllustrationIcon>['name'];
+  iconColor?: string;
   illustration?: React.ReactNode;
   title: string;
   description: string;
@@ -13,7 +15,8 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState({
-  emoji,
+  icon = 'sparkles-outline',
+  iconColor,
   illustration,
   title,
   description,
@@ -30,11 +33,9 @@ export default function EmptyState({
         paddingVertical: 60,
       }}
     >
-      {illustration ? (
-        <View style={{ marginBottom: 16 }}>{illustration}</View>
-      ) : emoji ? (
-        <Text style={{ fontSize: 64, marginBottom: 16 }}>{emoji}</Text>
-      ) : null}
+      <View style={{ marginBottom: 16 }}>
+        {illustration ?? <IllustrationIcon name={icon} size={80} color={iconColor} />}
+      </View>
       <Text
         style={{
           fontSize: 20,

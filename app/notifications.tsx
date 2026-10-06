@@ -68,7 +68,7 @@ export default function NotificationsScreen() {
           <ActivityIndicator style={{ marginTop: 24 }} color={colors.textPrimary} accessibilityLabel="Chargement des notifications" />
         ) : (
           <EmptyTabCard
-            emoji={tab === 'unread' ? '✨' : '🔔'}
+            icon={tab === 'unread' ? 'checkmark-done-outline' : 'notifications-outline'}
             title={tab === 'unread' ? 'Tout est lu !' : 'Aucune notification'}
             description={tab === 'unread'
               ? 'Les prochaines nouvelles apparaîtront ici.'

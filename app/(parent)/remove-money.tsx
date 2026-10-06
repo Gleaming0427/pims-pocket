@@ -16,10 +16,10 @@ import { validateAmount, parseAmountToCents } from '@/utils/validators';
 import { formatCurrencyShort } from '@/utils/formatters';
 import colors from '@/constants/colors';
 
-const motifs = [
-  { label: 'Bêtise', emoji: '😤' },
-  { label: 'Devoirs non faits', emoji: '📚' },
-  { label: 'Autre', emoji: '⚠️' },
+const motifs: { label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { label: 'Bêtise', icon: 'alert-circle-outline' },
+  { label: 'Devoirs non faits', icon: 'book-outline' },
+  { label: 'Autre', icon: 'ellipsis-horizontal-outline' },
 ];
 
 const quickAmounts = [1, 2, 5, 10];
@@ -155,7 +155,7 @@ export default function RemoveMoneyScreen() {
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text style={{ fontSize: 15, fontWeight: '700', color: colors.textPrimary }}>
-              👧 De qui ?
+              <Ionicons name="person-outline" size={18} color={colors.textSecondary} accessible={false} /> De qui ?
             </Text>
             {selectedIds.length > 0 && (
               <View
@@ -180,7 +180,7 @@ export default function RemoveMoneyScreen() {
         {children.length === 0 ? (
           <View style={{ marginBottom: 24 }}>
             <EmptyState
-              emoji="👶"
+              icon="people-outline"
               title="Aucun enfant"
               description="Ajoute un enfant avant de retirer de l'argent."
               actionLabel="Ajouter un enfant"
@@ -273,7 +273,7 @@ export default function RemoveMoneyScreen() {
             marginBottom: 10,
           }}
         >
-          💶 Combien ?
+          <Ionicons name="cash-outline" size={18} color={colors.textSecondary} accessible={false} /> Combien ?
         </Text>
         <Input
           label="Montant par enfant (€)"
@@ -366,7 +366,7 @@ export default function RemoveMoneyScreen() {
                 marginTop: 6,
               }}
             >
-              ⚠️ Le solde de {insufficientChild.firstName} (
+              <Ionicons name="warning-outline" size={16} color={colors.error} accessible={false} /> Le solde de {insufficientChild.firstName} (
               {formatCurrencyShort(insufficientChild.balance)}) est insuffisant
             </Text>
           )}
@@ -381,7 +381,7 @@ export default function RemoveMoneyScreen() {
             marginBottom: 10,
           }}
         >
-          ⚠️ Pourquoi ?
+          <Ionicons name="alert-circle-outline" size={18} color={colors.textSecondary} accessible={false} /> Pourquoi ?
         </Text>
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
           {motifs.map((m) => {
@@ -401,7 +401,7 @@ export default function RemoveMoneyScreen() {
                   borderColor: isSelectedType ? colors.error : colors.border,
                 }}
               >
-                <Text style={{ fontSize: 22 }}>{m.emoji}</Text>
+                <Ionicons name={m.icon} size={24} color={isSelectedType ? colors.error : colors.textSecondary} accessible={false} />
                 <Text
                   style={{
                     fontSize: 12,

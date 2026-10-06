@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { useAuthStore } from '@/stores/authStore';
-import { onAuthChange, getUserData } from '@/lib/auth';
-import { db } from '@/lib/firebase';
+import { useEffect } from "react";
+import { useAuthStore } from "@/stores/authStore";
+import { onAuthChange, getUserData } from "@/lib/auth";
+import { db } from "@/lib/firebase";
 import {
   doc,
   getDoc,
@@ -10,8 +10,8 @@ import {
   query,
   where,
   updateDoc,
-} from 'firebase/firestore';
-import { migrateLegacyParentData } from '@/lib/migrations/legacyToFamily';
+} from "firebase/firestore";
+import { migrateLegacyParentData } from "@/lib/migrations/legacyToFamily";
 
 function wait(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -38,9 +38,9 @@ export function useAuth() {
           userData = await getUserData(firebaseUser.uid).catch(() => null);
         }
         if (!userData) {
-          const existing = await getDoc(doc(db, 'users', firebaseUser.uid)).catch(
-            () => null
-          );
+          const existing = await getDoc(
+            doc(db, "users", firebaseUser.uid),
+          ).catch(() => null);
           if (existing && existing.exists()) {
             userData = { id: existing.id, ...existing.data() } as any;
           }
@@ -57,7 +57,7 @@ export function useAuth() {
           u: any,
           familyId: string,
           childDocId: string,
-          uid: string
+          uid: string,
         ) {
           const merged = { ...u, familyId, childDocId };
           store.setUser(merged);
@@ -66,7 +66,7 @@ export function useAuth() {
             const payload: Record<string, string> = {};
             if (!u.familyId) payload.familyId = familyId;
             if (!u.childDocId) payload.childDocId = childDocId;
-            updateDoc(doc(db, 'users', uid), payload).catch(() => {});
+            updateDoc(doc(db, "users", uid), payload).catch(() => {});
           }
         }
 
@@ -75,21 +75,26 @@ export function useAuth() {
           //    linkedUserId == uid. L'enfant a le droit de lire son propre
           //    doc (isLinkedChild). Plus rapide et ne dépend pas des CF.
           try {
-            const { getDocs, collectionGroup, query, where } = await import('firebase/firestore');
-            const childrenSnap = await getDocs(query(
-              collectionGroup(db, 'children'),
-              where('linkedUserId', '==', uid)
-            ));
+            const { getDocs, collectionGroup, query, where } =
+              await import("firebase/firestore");
+            const childrenSnap = await getDocs(
+              query(
+                collectionGroup(db, "children"),
+                where("linkedUserId", "==", uid),
+              ),
+            );
             if (!childrenSnap.empty) {
               const docData = childrenSnap.docs[0].data();
-              const pathSegments = childrenSnap.docs[0].ref.path.split('/');
+              const pathSegments = childrenSnap.docs[0].ref.path.split("/");
               // path = families/{familyId}/children/{childDocId}
-              const fid = pathSegments.length >= 2 && pathSegments[0] === 'families'
-                ? pathSegments[1]
-                : docData.familyId;
-              const cid = pathSegments.length >= 4 && pathSegments[0] === 'families'
-                ? pathSegments[3]
-                : childrenSnap.docs[0].id;
+              const fid =
+                pathSegments.length >= 2 && pathSegments[0] === "families"
+                  ? pathSegments[1]
+                  : docData.familyId;
+              const cid =
+                pathSegments.length >= 4 && pathSegments[0] === "families"
+                  ? pathSegments[3]
+                  : childrenSnap.docs[0].id;
               if (fid) {
                 setUserWithFamilyData(u, fid, cid, uid);
                 return;
@@ -100,9 +105,10 @@ export function useAuth() {
           }
 
           // 2) Fallback Cloud Function
-          const { httpsCallable, getFunctions } = await import('firebase/functions');
-          const { app } = await import('@/lib/firebase');
-          const functionsInstance = getFunctions(app, 'europe-west1');
+          const { httpsCallable, getFunctions } =
+            await import("firebase/functions");
+          const { app } = await import("@/lib/firebase");
+          const functionsInstance = getFunctions(app, "europe-west1");
           const callFn = httpsCallable<
             Record<string, never>,
             {
@@ -112,7 +118,7 @@ export function useAuth() {
               avatarId?: string | null;
               firstName?: string | null;
             }
-          >(functionsInstance, 'getChildFamilyInfo');
+          >(functionsInstance, "getChildFamilyInfo");
 
           try {
             const result = await callFn({});
@@ -129,7 +135,12 @@ export function useAuth() {
           //    avec un user incomplet. Le store sera rempli par
           //    signInChild entre-temps.
           const storeUser = useAuthStore.getState().user;
-          if (!storeUser || storeUser.id !== uid || !storeUser.familyId || !storeUser.childDocId) {
+          if (
+            !storeUser ||
+            storeUser.id !== uid ||
+            !storeUser.familyId ||
+            !storeUser.childDocId
+          ) {
             store.setUser(u);
           }
         }
@@ -144,14 +155,14 @@ export function useAuth() {
         async function clientRecoverChildDocId(
           u: any,
           uid: string,
-          familyId: string
+          familyId: string,
         ) {
           try {
             const childrenSnap = await getDocs(
               query(
-                collection(db, 'families', familyId, 'children'),
-                where('linkedUserId', '==', uid)
-              )
+                collection(db, "families", familyId, "children"),
+                where("linkedUserId", "==", uid),
+              ),
             );
             if (!childrenSnap.empty) {
               const childDocId = childrenSnap.docs[0].id;
@@ -167,7 +178,7 @@ export function useAuth() {
 
         // ─── Routage selon les données utilisateur ───
 
-        if (userData?.role === 'child') {
+        if (userData?.role === "child") {
           // Si le store a déjà un user complet (posé par signInChild), ne rien
           // faire — les fallbacks asynchrones risquent d'écraser avec un user
           // sans familyId/childDocId et de casser la souscription au solde.
@@ -182,18 +193,22 @@ export function useAuth() {
           }
 
           // Branche C : enfant
-          const familyId =
-            userData?.familyId || storeUser?.familyId || null;
+          const familyId = userData?.familyId || storeUser?.familyId || null;
           const childDocId =
             userData?.childDocId || storeUser?.childDocId || null;
 
           if (familyId && childDocId) {
             // IDs complets → prêt à l'emploi
-            setUserWithFamilyData(userData, familyId, childDocId, firebaseUser.uid);
+            setUserWithFamilyData(
+              userData,
+              familyId,
+              childDocId,
+              firebaseUser.uid,
+            );
           } else if (familyId) {
             // On a familyId mais pas childDocId → chercher côté client
             clientRecoverChildDocId(userData, firebaseUser.uid, familyId).catch(
-              () => {}
+              () => {},
             );
           } else {
             // Aucun ID → Cloud Function (collectionGroup)
@@ -204,47 +219,48 @@ export function useAuth() {
           store.setUser(userData);
           store.fetchFamily(userData.familyId);
 
-          if (userData?.role === 'parent') {
+          if (userData?.role === "parent") {
             migrateLegacyParentData(firebaseUser.uid, userData.familyId).catch(
-              (e) => console.error('[useAuth] Erreur migration legacy :', e)
+              (e) => console.error("[useAuth] Erreur migration legacy :", e),
             );
           }
-        } else if (userData?.role === 'parent') {
+        } else if (userData?.role === "parent") {
           // Branche B : parent sans familyId (rétrocompatibilité)
           const familiesSnap = await getDocs(
             query(
-              collection(db, 'families'),
-              where('parentIds', 'array-contains', firebaseUser.uid)
-            )
-          ).catch(() => ({ empty: true, docs: [] } as any));
+              collection(db, "families"),
+              where("parentIds", "array-contains", firebaseUser.uid),
+            ),
+          ).catch(() => ({ empty: true, docs: [] }) as any);
 
           if (!familiesSnap.empty) {
             const foundFamilyId = familiesSnap.docs[0].id;
-            await updateDoc(doc(db, 'users', firebaseUser.uid), {
+            await updateDoc(doc(db, "users", firebaseUser.uid), {
               familyId: foundFamilyId,
             }).catch(() => {});
             userData = { ...userData, familyId: foundFamilyId };
             store.setUser(userData);
             store.fetchFamily(foundFamilyId);
 
-            migrateLegacyParentData(firebaseUser.uid, foundFamilyId).catch((e) =>
-              console.error('[useAuth] Erreur migration legacy :', e)
+            migrateLegacyParentData(firebaseUser.uid, foundFamilyId).catch(
+              (e) => console.error("[useAuth] Erreur migration legacy :", e),
             );
           } else {
-            const { createFamily, updateUserFamilyId } = await import(
-              '@/lib/firestore'
-            );
+            const { createFamily, updateUserFamilyId } =
+              await import("@/lib/firestore");
             const family = await createFamily(
-              userData.displayName || 'Ma Famille',
-              firebaseUser.uid
+              userData.displayName || "Ma Famille",
+              firebaseUser.uid,
             );
-            await updateUserFamilyId(firebaseUser.uid, family.id).catch(() => {});
+            await updateUserFamilyId(firebaseUser.uid, family.id).catch(
+              () => {},
+            );
             userData = { ...userData, familyId: family.id };
             store.setUser(userData);
             store.fetchFamily(family.id);
 
             migrateLegacyParentData(firebaseUser.uid, family.id).catch((e) =>
-              console.error('[useAuth] Erreur migration legacy :', e)
+              console.error("[useAuth] Erreur migration legacy :", e),
             );
           }
         } else {

@@ -191,7 +191,7 @@ export default function MissionsScreen() {
           <>
             {activeMissions.length === 0 ? (
               <EmptyTabCard
-                emoji="⚡"
+                icon="flash-outline"
                 title="Aucune mission à faire"
                 description="Crée des missions pour motiver tes enfants et les récompenser."
               />
@@ -221,7 +221,7 @@ export default function MissionsScreen() {
         {currentTab === 'pending' &&
           (pendingMissions.length === 0 ? (
             <EmptyTabCard
-              emoji="✅"
+              icon="checkmark-circle-outline"
               title="Rien à valider"
               description="Les missions terminées par tes enfants apparaîtront ici."
             />
@@ -248,7 +248,7 @@ export default function MissionsScreen() {
         {currentTab === 'done' &&
           (completedMissions.length === 0 ? (
             <EmptyTabCard
-              emoji="🏁"
+              icon="flag-outline"
               title="Aucune mission terminée"
               description="Les missions validées apparaîtront ici."
             />

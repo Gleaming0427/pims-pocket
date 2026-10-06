@@ -344,7 +344,7 @@ export default function ChildDetailScreen() {
           <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 24 }}>
             <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <Text style={{ fontSize: 22 }}>🔑</Text>
+                <Ionicons name="key-outline" size={24} color={colors.primary} accessible={false} />
                 <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary }}>
                   Définir le code PIN
                 </Text>
@@ -394,7 +394,7 @@ export default function ChildDetailScreen() {
           <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 24 }}>
             <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 24 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <Text style={{ fontSize: 22 }}>🔑</Text>
+                <Ionicons name="key-outline" size={24} color={colors.primary} accessible={false} />
                 <Text style={{ fontSize: 18, fontWeight: '800', color: colors.textPrimary }}>
                   Réinitialiser le PIN
                 </Text>
@@ -455,7 +455,7 @@ export default function ChildDetailScreen() {
           <>
             {activeMissions.length === 0 ? (
               <EmptyTabCard
-                emoji="🚀"
+                icon="rocket-outline"
                 title="Aucune mission en cours"
                 description={`Propose une mission à ${child.firstName} pour l'aider à gagner son argent de poche.`}
               />
@@ -492,7 +492,7 @@ export default function ChildDetailScreen() {
         {tab === 'goals' &&
           (visibleGoals.length === 0 ? (
             <EmptyTabCard
-              emoji="🎯"
+              icon="flag-outline"
               title="Aucun objectif"
               description={`${child.firstName} peut créer ses objectifs d'épargne depuis son espace.`}
             />
@@ -503,7 +503,7 @@ export default function ChildDetailScreen() {
         {tab === 'history' &&
           (recentTransactions.length === 0 ? (
             <EmptyTabCard
-              emoji="🕐"
+              icon="time-outline"
               title="Aucune transaction"
               description="Les mouvements d'argent apparaîtront ici."
             />
