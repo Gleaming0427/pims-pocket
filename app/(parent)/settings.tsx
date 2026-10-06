@@ -291,7 +291,7 @@ export default function SettingsScreen() {
             marginTop: 20,
           }}
         >
-          Pims Pocket · v{Constants.expoConfig?.version ?? '1.2.1'}
+          Pims Pocket · v{Constants.expoConfig?.version ?? '1.4.0'}
         </Text>
       </ScrollView>
     </SafeAreaView>
